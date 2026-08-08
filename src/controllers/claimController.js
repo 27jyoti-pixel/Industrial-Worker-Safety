@@ -87,7 +87,11 @@ const deleteClaim = asyncHandler(async (req, res) => {
  * Upload Claim Documents Controller
  */
 const uploadClaimDocuments = asyncHandler(async (req, res) => {
-  const claim = await claimService.uploadClaimDocuments(req.params.id, req.files);
+  const claim = await claimService.uploadClaimDocuments(
+  req.params.id,
+  req.files,
+  req.user
+);
   return res.status(200).json({
     success: true,
     message: 'Supporting documents uploaded successfully',

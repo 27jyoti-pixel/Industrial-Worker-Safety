@@ -115,14 +115,22 @@ class ComplaintService {
       throw new ApiError(404, 'Safety complaint not found');
     }
 
-    if (user.role === ROLES.WORKER) {
-      if (complaint.reportedBy.toString() !== user._id.toString()) {
-        throw new ApiError(403, 'You are not authorized to update this complaint');
-      }
-      if (complaint.status !== COMPLAINT_STATUS.OPEN) {
-        throw new ApiError(400, 'Cannot edit complaint that is already in progress or resolved');
-      }
-    }
+
+// Worker can update only his own complaint
+if (complaint.reportedBy.toString() !== user._id.toString()) {
+  throw new ApiError(
+    403,
+    'You are not authorized to update this complaint'
+  );
+}
+
+// Worker can update only open complaints
+if (complaint.status !== COMPLAINT_STATUS.OPEN) {
+  throw new ApiError(
+    400,
+    'Cannot edit complaint that is already in progress or resolved'
+  );
+}
 
     Object.assign(complaint, updateData);
     await complaint.save();
@@ -175,14 +183,21 @@ class ComplaintService {
       throw new ApiError(404, 'Safety complaint not found');
     }
 
-    if (user.role === ROLES.WORKER) {
-      if (complaint.reportedBy.toString() !== user._id.toString()) {
-        throw new ApiError(403, 'You are not authorized to delete this complaint');
-      }
-      if (complaint.status !== COMPLAINT_STATUS.OPEN) {
-        throw new ApiError(400, 'Cannot delete a complaint that is in progress or resolved');
-      }
+    // Worker can delete only his own complaint
+    if (complaint.reportedBy.toString() !== user._id.toString()) {
+      throw new ApiError(
+        403,
+        'You are not authorized to delete this complaint'
+      );
     }
+
+// Worker can delete only open complaints
+if (complaint.status !== COMPLAINT_STATUS.OPEN) {
+  throw new ApiError(
+    400,
+    'Cannot delete a complaint that is in progress or resolved'
+  );
+}
 
     // Delete associated images from Cloudinary
     if (complaint.images && complaint.images.length > 0) {
@@ -203,23 +218,38 @@ class ComplaintService {
    * @param {string} complaintId
    * @param {Array} files - Array of Multer file objects
    */
-  async uploadComplaintImages(complaintId, files) {
+  async uploadComplaintImages(complaintId, files,user) {
     if (!files || files.length === 0) {
       throw new ApiError(400, 'Please upload at least one image');
     }
 
     const complaint = await Complaint.findById(complaintId);
+
     if (!complaint) {
       throw new ApiError(404, 'Safety complaint not found');
+    }
+
+
+    // Worker can upload only on his own complaint
+    if (complaint.reportedBy.toString() !== user._id.toString()) {
+      throw new ApiError(
+        403,
+        'You are not authorized to upload evidence for this complaint'
+      );
     }
 
     const uploadedImages = [];
 
     for (const file of files) {
+      console.log("FILE RECEIVED:", file);
+
       const uploadResult = await cloudinaryService.uploadFile(
         file.path,
         'industrial_worker_safety/complaints'
       );
+
+      console.log("CLOUDINARY RESULT:", uploadResult);
+
       uploadedImages.push({
         url: uploadResult.url,
         publicId: uploadResult.publicId
@@ -227,10 +257,53 @@ class ComplaintService {
     }
 
     complaint.images.push(...uploadedImages);
+    console.log("BEFORE SAVE");
     await complaint.save();
-
+    console.log("AFTER SAVE");
     return complaint;
   }
+
+  async deleteComplaintImage(complaintId, imageId, user) {
+
+  const complaint = await Complaint.findById(complaintId);
+
+  if (!complaint) {
+    throw new ApiError(404, 'Safety complaint not found');
+  }
+
+
+  // only owner can delete image
+  if (complaint.reportedBy.toString() !== user._id.toString()) {
+    throw new ApiError(
+      403,
+      'You are not authorized to delete this image'
+    );
+  }
+
+
+  const image = complaint.images.id(imageId);
+
+  if (!image) {
+    throw new ApiError(
+      404,
+      'Evidence image not found'
+    );
+  }
+
+
+  // delete from cloudinary
+  if (image.publicId) {
+    await cloudinaryService.deleteFile(image.publicId);
+  }
+
+
+  // remove from mongodb
+  complaint.images.pull(imageId);
+
+  await complaint.save();
+
+  return complaint;
+}
 }
 
 module.exports = new ComplaintService();

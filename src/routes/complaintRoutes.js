@@ -6,7 +6,8 @@ const {
   updateComplaint,
   updateComplaintStatus,
   deleteComplaint,
-  uploadComplaintImages
+  uploadComplaintImages,
+  deleteComplaintImage
 } = require('../controllers/complaintController');
 const { protect, authorize } = require('../middlewares/authMiddleware');
 const { uploadMultipleImages } = require('../middlewares/uploadMiddleware');
@@ -72,6 +73,16 @@ router.post(
   '/:id/images',
   uploadMultipleImages,
   uploadComplaintImages
+);
+
+/**
+ * @route   DELETE /api/v1/complaints/:id/images/:imageId
+ * @desc    Delete single evidence image from complaint
+ * @access  Private (Owner only)
+ */
+router.delete(
+  '/:id/images/:imageId',
+  deleteComplaintImage
 );
 
 module.exports = router;

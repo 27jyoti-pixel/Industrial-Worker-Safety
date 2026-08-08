@@ -77,12 +77,33 @@ const deleteComplaint = asyncHandler(async (req, res) => {
  * Upload Complaint Evidence Images Controller
  */
 const uploadComplaintImages = asyncHandler(async (req, res) => {
-  const complaint = await complaintService.uploadComplaintImages(req.params.id, req.files);
+  const complaint = await complaintService.uploadComplaintImages(
+    req.params.id,
+    req.files,
+    req.user
+  );
+
   return res.status(200).json({
     success: true,
     message: 'Complaint evidence images uploaded successfully',
     data: complaint
   });
+});
+
+const deleteComplaintImage = asyncHandler(async (req, res) => {
+
+  const complaint = await complaintService.deleteComplaintImage(
+    req.params.id,
+    req.params.imageId,
+    req.user
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: 'Evidence image deleted successfully',
+    data: complaint
+  });
+
 });
 
 module.exports = {
@@ -92,5 +113,6 @@ module.exports = {
   updateComplaint,
   updateComplaintStatus,
   deleteComplaint,
-  uploadComplaintImages
+  uploadComplaintImages,
+  deleteComplaintImage
 };

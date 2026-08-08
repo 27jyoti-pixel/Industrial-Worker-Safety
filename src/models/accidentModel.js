@@ -41,11 +41,32 @@ const accidentSchema = new mongoose.Schema(
       required: [true, 'Severity level is required']
     },
     images: [
-      {
-        url: { type: String, required: true },
-        publicId: { type: String, required: true }
-      }
-    ],
+  {
+    url: {
+      type: String,
+      required: true
+    },
+
+    publicId: {
+      type: String,
+      required: true
+    },
+
+    uploadedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+
+    uploadedByRole: {
+      type: String
+    },
+
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }
+],
     status: {
       type: String,
       enum: ['Reported', 'Under Investigation', 'Resolved', 'Closed'],
@@ -64,7 +85,16 @@ const accidentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true
-    }
+    },
+    reportSource: {
+    type: String,
+    enum: [
+      "Worker Report",
+      "Factory Inspection",
+      "Government Inspection"
+    ],
+    default: "Worker Report"
+  },
   },
   {
     timestamps: true

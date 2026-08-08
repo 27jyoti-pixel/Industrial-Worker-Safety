@@ -82,50 +82,73 @@ class ClaimService {
    * @param {Object} user
    */
   async getClaimById(claimId, user) {
-    const claim = await Claim.findById(claimId)
-      .populate('submittedBy', 'name email role phone')
-      .populate('worker')
-      .populate('accidentReport')
-      .populate('reviewedBy', 'name email role')
-      .populate('approvedBy', 'name email role');
+
+    console.log("Searching claim ID:", claimId);
+
+    const claim = await Claim.findById(claimId);
+
+    console.log("Claim found:", claim);
 
     if (!claim) {
-      throw new ApiError(404, 'Compensation claim not found');
+        throw new ApiError(404, 'Compensation claim not found');
     }
+
 
     if (user.role === ROLES.WORKER && claim.submittedBy._id.toString() !== user._id.toString()) {
-      throw new ApiError(403, 'You are not authorized to view this claim');
-    }
+  throw new ApiError(403, 'You are not authorized to view this claim');
+}
 
     return claim;
+}
+
+/**
+ * Update claim details (before review/approval)
+ * @param {string} claimId
+ * @param {Object} updateData
+ * @param {Object} user
+ */
+async updateClaim(claimId, updateData, user) {
+
+  const claim = await Claim.findById(claimId);
+
+  if (!claim) {
+    throw new ApiError(404, 'Compensation claim not found');
   }
 
-  /**
-   * Update claim details (before review/approval)
-   * @param {string} claimId
-   * @param {Object} updateData
-   * @param {Object} user
-   */
-  async updateClaim(claimId, updateData, user) {
-    const claim = await Claim.findById(claimId);
-    if (!claim) {
-      throw new ApiError(404, 'Compensation claim not found');
-    }
 
-    if (user.role === ROLES.WORKER) {
-      if (claim.submittedBy.toString() !== user._id.toString()) {
-        throw new ApiError(403, 'You are not authorized to update this claim');
-      }
-      if (claim.status !== CLAIM_STATUS.SUBMITTED) {
-        throw new ApiError(400, 'Cannot update a claim that is already under review or processed');
-      }
-    }
-
-    Object.assign(claim, updateData);
-    await claim.save();
-
-    return claim;
+  // Only worker can update claims
+  if (user.role !== ROLES.WORKER) {
+    throw new ApiError(
+      403,
+      'Only workers can update claims'
+    );
   }
+
+
+  // Worker can update only his own claim
+  if (claim.submittedBy.toString() !== user._id.toString()) {
+    throw new ApiError(
+      403,
+      'You are not authorized to update this claim'
+    );
+  }
+
+
+  // Worker can update only before review
+  if (claim.status !== CLAIM_STATUS.SUBMITTED) {
+    throw new ApiError(
+      400,
+      'Cannot update a claim that is already under review or processed'
+    );
+  }
+
+
+  Object.assign(claim, updateData);
+
+  await claim.save();
+
+  return claim;
+}
 
   /**
    * Update claim status and approval details (Admin / Government Officer workflow)
@@ -183,40 +206,67 @@ class ClaimService {
    * @param {Object} user
    */
   async deleteClaim(claimId, user) {
-    const claim = await Claim.findById(claimId);
-    if (!claim) {
-      throw new ApiError(404, 'Compensation claim not found');
-    }
 
-    if (user.role === ROLES.WORKER) {
-      if (claim.submittedBy.toString() !== user._id.toString()) {
-        throw new ApiError(403, 'You are not authorized to delete this claim');
-      }
-      if (claim.status !== CLAIM_STATUS.SUBMITTED) {
-        throw new ApiError(400, 'Cannot delete a claim that is under review or processed');
-      }
-    }
+  const claim = await Claim.findById(claimId);
 
-    // Clear Cloudinary documents
-    if (claim.documents && claim.documents.length > 0) {
-      for (const doc of claim.documents) {
-        if (doc.publicId) {
-          await cloudinaryService.deleteFile(doc.publicId);
-        }
-      }
-    }
-
-    await claim.deleteOne();
-
-    return { message: 'Compensation claim deleted successfully' };
+  if (!claim) {
+    throw new ApiError(404, 'Compensation claim not found');
   }
+
+
+  // Only workers can delete claims
+  if (user.role !== ROLES.WORKER) {
+    throw new ApiError(
+      403,
+      'Only workers can delete claims'
+    );
+  }
+
+
+  // Worker can delete only his own claim
+  if (claim.submittedBy.toString() !== user._id.toString()) {
+    throw new ApiError(
+      403,
+      'You are not authorized to delete this claim'
+    );
+  }
+
+
+  // Worker can delete only submitted claims
+  if (claim.status !== CLAIM_STATUS.SUBMITTED) {
+    throw new ApiError(
+      400,
+      'Cannot delete a claim that is under review or processed'
+    );
+  }
+
+
+  // Clear Cloudinary documents
+  if (claim.documents && claim.documents.length > 0) {
+
+    for (const doc of claim.documents) {
+
+      if (doc.publicId) {
+        await cloudinaryService.deleteFile(doc.publicId);
+      }
+
+    }
+  }
+
+
+  await claim.deleteOne();
+
+  return {
+    message: 'Compensation claim deleted successfully'
+  };
+}
 
   /**
    * Upload supporting documents for compensation claim
    * @param {string} claimId
    * @param {Array} files - Array of Multer file objects
    */
-  async uploadClaimDocuments(claimId, files) {
+  async uploadClaimDocuments(claimId, files,user) {
     if (!files || files.length === 0) {
       throw new ApiError(400, 'Please upload at least one supporting document');
     }
@@ -225,6 +275,20 @@ class ClaimService {
     if (!claim) {
       throw new ApiError(404, 'Compensation claim not found');
     }
+
+    if (user.role !== ROLES.WORKER) {
+  throw new ApiError(
+    403,
+    'Only workers can upload documents'
+  );
+}
+
+if (claim.submittedBy.toString() !== user._id.toString()) {
+  throw new ApiError(
+    403,
+    'You are not authorized to upload documents for this claim'
+  );
+}
 
     const uploadedDocs = [];
 

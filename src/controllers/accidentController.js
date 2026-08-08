@@ -5,7 +5,13 @@ const asyncHandler = require('../utils/asyncHandler');
  * Create Accident Report Controller
  */
 const createReport = asyncHandler(async (req, res) => {
-  const report = await accidentService.createReport(req.body, req.user._id);
+
+  const report = await accidentService.createReport(
+    req.body,
+    req.user._id,
+    req.user.role
+  );
+
   return res.status(201).json({
     success: true,
     message: 'Accident report created successfully',
@@ -86,7 +92,7 @@ const deleteReport = asyncHandler(async (req, res) => {
  * Upload Accident Report Images Controller
  */
 const uploadReportImages = asyncHandler(async (req, res) => {
-  const report = await accidentService.uploadReportImages(req.params.id, req.files);
+  const report = await accidentService.uploadReportImages(req.params.id, req.files,req.user);
   return res.status(200).json({
     success: true,
     message: 'Accident report images uploaded successfully',

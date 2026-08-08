@@ -157,6 +157,49 @@ class AuthService {
       message: 'Password reset successfully. You can now login with your new password.'
     };
   }
+
+  /**
+ * Update logged-in user profile
+ * @param {string} userId
+ * @param {Object} updateData
+ */
+async updateUserProfile(userId, updateData) {
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+
+  // Allowed fields only
+  if (updateData.name) {
+    user.name = updateData.name;
+  }
+
+  if (updateData.phone) {
+    user.phone = updateData.phone;
+  }
+
+  if (updateData.factoryName) {
+  user.factoryName = updateData.factoryName;
+}
+
+  if (updateData.employeeId) {
+    user.employeeId = updateData.employeeId;
+  }
+
+
+  await user.save();
+
+
+  // remove password before returning
+  const userObj = user.toObject();
+  delete userObj.password;
+
+
+  return userObj;
+}
 }
 
 module.exports = new AuthService();

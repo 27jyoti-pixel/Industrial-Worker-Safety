@@ -3,6 +3,7 @@ const {
   createWorker,
   getAllWorkers,
   getWorkerById,
+  getMyWorkerProfile,
   updateWorker,
   deleteWorker,
   uploadProfileImage
@@ -15,6 +16,8 @@ const router = express.Router();
 
 // Apply protect middleware to all worker endpoints
 router.use(protect);
+
+router.get('/me', getMyWorkerProfile);
 
 /**
  * @route   POST /api/v1/workers
@@ -46,11 +49,17 @@ router.get('/:id', getWorkerById);
  * @desc    Update worker profile details
  * @access  Private (Factory Admin, Government Officer, Super Admin)
  */
+// router.put(
+//   '/:id',
+//   authorize(ROLES.FACTORY_ADMIN, ROLES.GOVERNMENT_OFFICER, ROLES.SUPER_ADMIN),
+//   updateWorker
+// );
+
 router.put(
   '/:id',
-  authorize(ROLES.FACTORY_ADMIN, ROLES.GOVERNMENT_OFFICER, ROLES.SUPER_ADMIN),
   updateWorker
 );
+
 
 /**
  * @route   DELETE /api/v1/workers/:id

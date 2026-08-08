@@ -43,7 +43,11 @@ router.get('/:id', getReportById);
  * @desc    Update accident report details
  * @access  Private (Worker, Factory Admin, Government Officer, Super Admin)
  */
-router.put('/:id', updateReport);
+router.put(
+  '/:id',
+  authorize(ROLES.SUPER_ADMIN),
+  updateReport
+);
 
 /**
  * @route   PATCH /api/v1/accidents/:id/status
@@ -59,9 +63,14 @@ router.patch(
 /**
  * @route   DELETE /api/v1/accidents/:id
  * @desc    Delete accident report
- * @access  Private (Worker, Factory Admin, Super Admin)
+ * @access  Private (Super Admin only)
  */
-router.delete('/:id', deleteReport);
+router.delete(
+  '/:id',
+  authorize(ROLES.SUPER_ADMIN),
+  deleteReport
+);
+
 
 /**
  * @route   POST /api/v1/accidents/:id/images

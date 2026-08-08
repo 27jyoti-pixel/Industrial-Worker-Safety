@@ -38,6 +38,26 @@ const getProfile = asyncHandler(async (req, res) => {
   });
 });
 
+
+/**
+ * Update Current User Profile Controller
+ */
+const updateProfile = asyncHandler(async (req, res) => {
+
+  const updatedUser = await authService.updateUserProfile(
+    req.user._id,
+    req.body
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: 'Profile updated successfully',
+    data: updatedUser
+  });
+
+});
+
+
 /**
  * Forgot Password Controller
  */
@@ -65,9 +85,10 @@ const resetPassword = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  register,
-  login,
-  getProfile,
-  forgotPassword,
-  resetPassword
+register,
+login,
+getProfile,
+updateProfile,
+forgotPassword,
+resetPassword
 };

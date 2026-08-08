@@ -42,11 +42,25 @@ const getWorkerById = asyncHandler(async (req, res) => {
   });
 });
 
+const getMyWorkerProfile = asyncHandler(async (req, res) => {
+  const worker = await workerService.getMyWorkerProfile(req.user._id);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Worker profile fetched successfully',
+    data: worker
+  });
+});
+
 /**
  * Update Worker Controller
  */
 const updateWorker = asyncHandler(async (req, res) => {
-  const worker = await workerService.updateWorker(req.params.id, req.body);
+  const worker = await workerService.updateWorker(
+  req.params.id,
+  req.body,
+  req.user
+);
   return res.status(200).json({
     success: true,
     message: 'Worker profile updated successfully',
@@ -85,6 +99,7 @@ module.exports = {
   createWorker,
   getAllWorkers,
   getWorkerById,
+  getMyWorkerProfile,
   updateWorker,
   deleteWorker,
   uploadProfileImage
