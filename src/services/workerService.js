@@ -31,7 +31,7 @@ class WorkerService {
       employeeId: workerData.employeeId
   });
 
-
+    console.log("WORKER DATA BEFORE CREATE:", workerData);
     const worker = await Worker.create({
       ...workerData,
       user: newUser._id,
