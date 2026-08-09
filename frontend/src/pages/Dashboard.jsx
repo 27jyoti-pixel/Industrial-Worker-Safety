@@ -56,32 +56,59 @@ const Dashboard = () => {
     return <Loader fullPage text="Loading dashboard metrics and activity..." />;
   }
 
-  const kpis = [
+  const kpis = isWorker
+? [
+    {
+      title: 'My Accident Reports',
+      value: dashboardData?.summary?.totalAccidentsReported ?? 0,
+      icon: AlertTriangle,
+      color: 'bg-red-50 text-red-600 border-red-200'
+    },
+    {
+      title: 'My Compensation Claims',
+      value: dashboardData?.summary?.totalClaimsSubmitted ?? 0,
+      icon: FileCheck2,
+      color: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+    },
+    {
+      title: 'Pending Claims',
+      value: dashboardData?.summary?.pendingClaims ?? 0,
+      icon: Clock,
+      color: 'bg-amber-50 text-amber-600 border-amber-200'
+    },
+    {
+      title: 'My Safety Complaints',
+      value: dashboardData?.summary?.totalComplaintsFiled ?? 0,
+      icon: AlertOctagon,
+      color: 'bg-orange-50 text-orange-600 border-orange-200'
+    }
+  ]
+: [
     {
       title: 'Total Active Workers',
-      value: stats?.totalWorkers ?? dashboardData?.totalWorkers ?? 0,
+      value: stats?.workers ?? 0,
       icon: Users,
       color: 'bg-blue-50 text-blue-600 border-blue-200'
     },
     {
       title: 'Accident Reports',
-      value: stats?.totalAccidents ?? dashboardData?.totalAccidents ?? 0,
+      value: stats?.accidents ?? 0,
       icon: AlertTriangle,
       color: 'bg-red-50 text-red-600 border-red-200'
     },
     {
       title: 'Compensation Claims',
-      value: stats?.totalClaims ?? dashboardData?.totalClaims ?? 0,
+      value: stats?.claims ?? 0,
       icon: FileCheck2,
       color: 'bg-emerald-50 text-emerald-600 border-emerald-200'
     },
     {
       title: 'Safety Complaints',
-      value: stats?.totalComplaints ?? dashboardData?.totalComplaints ?? 0,
+      value: stats?.complaints ?? 0,
       icon: AlertOctagon,
       color: 'bg-amber-50 text-amber-600 border-amber-200'
     }
-  ];
+];
 
   return (
     <div className="space-y-6">
