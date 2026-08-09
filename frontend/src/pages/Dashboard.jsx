@@ -177,9 +177,9 @@ const Dashboard = () => {
             </Link>
           }
         >
-          {dashboardData?.recentAccidents && dashboardData.recentAccidents.length > 0 ? (
+          {dashboardData?.recentReports && dashboardData.recentReports.length > 0 ? (
             <div className="divide-y divide-slate-100">
-              {dashboardData.recentAccidents.slice(0, 4).map((acc) => (
+              {dashboardData.recentReports.slice(0, 4).map((acc) => (
                 <div key={acc._id} className="py-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{acc.title}</p>
