@@ -56,6 +56,14 @@ const Dashboard = () => {
     return <Loader fullPage text="Loading dashboard metrics and activity..." />;
   }
 
+  const recentAccidents = isWorker
+  ? dashboardData?.recentReports
+  : dashboardData?.recentAccidentReports;
+
+  const recentClaims = isWorker
+  ? dashboardData?.recentClaims
+  : dashboardData?.recentClaimsList;
+
   const kpis = isWorker
 ? [
     {
@@ -177,9 +185,9 @@ const Dashboard = () => {
             </Link>
           }
         >
-          {dashboardData?.recentReports && dashboardData.recentReports.length > 0 ? (
+          {recentAccidents && recentAccidents.length > 0 ? (
             <div className="divide-y divide-slate-100">
-              {dashboardData.recentReports.slice(0, 4).map((acc) => (
+              {recentAccidents.slice(0, 4).map((acc) => (
                 <div key={acc._id} className="py-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{acc.title}</p>
@@ -212,9 +220,9 @@ const Dashboard = () => {
             </Link>
           }
         >
-          {dashboardData?.recentClaims && dashboardData.recentClaims.length > 0 ? (
+          {recentClaims && recentClaims.length > 0 ? (
             <div className="divide-y divide-slate-100">
-              {dashboardData.recentClaims.slice(0, 4).map((claim) => (
+              {recentClaims.slice(0, 4).map((claim) => (
                 <div key={claim._id} className="py-3 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{claim.claimNumber || 'Claim Request'}</p>
@@ -245,9 +253,9 @@ const Dashboard = () => {
           </Link>
         }
       >
-        {dashboardData?.recentComplaints && dashboardData.recentComplaints.length > 0 ? (
+        {dashboardData?.recentComplaintsList && dashboardData.recentComplaintsList.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {dashboardData.recentComplaints.slice(0, 3).map((comp) => (
+            {dashboardData.recentComplaintsList.slice(0, 3).map((comp) => (
               <div key={comp._id} className="p-4 rounded-lg border border-slate-200 bg-slate-50/50 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">

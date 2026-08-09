@@ -36,10 +36,7 @@ class DashboardService {
     // Summary counts for worker
     const totalAccidentsReported = await Accident.countDocuments({ reportedBy: userId });
     const totalClaimsSubmitted = await Claim.countDocuments({ submittedBy: userId });
-    const pendingClaims = await Claim.countDocuments({
-      submittedBy: userId,
-      status: { $in: [CLAIM_STATUS.SUBMITTED, CLAIM_STATUS.UNDER_REVIEW] }
-    });
+    
     const totalComplaintsFiled = await Complaint.countDocuments({ reportedBy: userId });
     const resolvedComplaints = await Complaint.countDocuments({
       reportedBy: userId,
@@ -112,49 +109,49 @@ class DashboardService {
       .sort({ createdAt: -1 })
       .limit(5);
 
-    const pendingClaimsList = await Claim.find({
-      status: { $in: [CLAIM_STATUS.SUBMITTED, CLAIM_STATUS.UNDER_REVIEW] }
-    })
-      .populate('submittedBy', 'name email phone')
-      .populate('worker', 'name employeeId factoryName')
-      .sort({ createdAt: -1 })
-      .limit(5);
+    const recentClaimsList = await Claim.find()
+    .populate('submittedBy', 'name email phone')
+    .populate('worker', 'name employeeId factoryName')
+    .sort({ createdAt: -1 })
+    .limit(5);
 
-    const resolvedComplaintsList = await Complaint.find({
-      status: COMPLAINT_STATUS.RESOLVED
-    })
-      .populate('reportedBy', 'name email')
-      .populate('assignedTo', 'name email')
-      .sort({ updatedAt: -1 })
-      .limit(5);
+    const recentComplaintsList = await Complaint.find()
+  .populate('reportedBy', 'name email')
+  .populate('assignedTo', 'name email')
+  .sort({ createdAt: -1 })
+  .limit(5);
 
     return {
-      overview: {
-        totalWorkers,
-        totalHospitals,
-        totalAccidents,
-        totalClaims,
-        totalComplaints
-      },
-      accidentStats: {
-        total: totalAccidents,
-        bySeverity: accidentsBySeverity,
-        byStatus: accidentsByStatus
-      },
-      claimStats: {
-        total: totalClaims,
-        byStatus: claimsByStatus,
-        financials: claimFinancials[0] || { totalClaimed: 0, totalApproved: 0 }
-      },
-      complaintStats: {
-        total: totalComplaints,
-        byType: complaintsByType,
-        byStatus: complaintsByStatus
-      },
-      recentAccidentReports,
-      pendingClaimsList,
-      resolvedComplaintsList
-    };
+  overview: {
+    totalWorkers,
+    totalHospitals,
+    totalAccidents,
+    totalClaims,
+    totalComplaints
+  },
+
+  accidentStats: {
+    total: totalAccidents,
+    bySeverity: accidentsBySeverity,
+    byStatus: accidentsByStatus
+  },
+
+  claimStats: {
+    total: totalClaims,
+    byStatus: claimsByStatus,
+    financials: claimFinancials[0] || { totalClaimed: 0, totalApproved: 0 }
+  },
+
+  complaintStats: {
+    total: totalComplaints,
+    byType: complaintsByType,
+    byStatus: complaintsByStatus
+  },
+
+  recentAccidentReports,
+  recentClaimsList,
+  recentComplaintsList
+};
   }
 
   /**
