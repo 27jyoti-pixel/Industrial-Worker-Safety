@@ -40,6 +40,7 @@ const Dashboard = () => {
       // Fetch role specific metrics
       if (isWorker) {
         const workerDash = await dashboardService.getWorkerDashboard();
+        console.log("WORKER DASHBOARD DATA:", workerDash);
         setDashboardData(workerDash.data || workerDash);
       } else {
         const adminDash = await dashboardService.getAdminDashboard();
@@ -60,9 +61,13 @@ const Dashboard = () => {
   ? dashboardData?.recentReports
   : dashboardData?.recentAccidentReports;
 
-  const recentClaims = isWorker
+const recentClaims = isWorker
   ? dashboardData?.recentClaims
   : dashboardData?.recentClaimsList;
+
+const recentComplaints = isWorker
+  ? dashboardData?.recentComplaints
+  : dashboardData?.recentComplaintsList;
 
   const kpis = isWorker
 ? [
@@ -253,9 +258,9 @@ const Dashboard = () => {
           </Link>
         }
       >
-        {dashboardData?.recentComplaintsList && dashboardData.recentComplaintsList.length > 0 ? (
+        {recentComplaints && recentComplaints.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {dashboardData.recentComplaintsList.slice(0, 3).map((comp) => (
+            {recentComplaints.slice(0, 3).map((comp) => (
               <div key={comp._id} className="p-4 rounded-lg border border-slate-200 bg-slate-50/50 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">

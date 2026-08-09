@@ -37,6 +37,16 @@ class DashboardService {
     const totalAccidentsReported = await Accident.countDocuments({ reportedBy: userId });
     const totalClaimsSubmitted = await Claim.countDocuments({ submittedBy: userId });
     
+    const pendingClaims = await Claim.countDocuments({
+  submittedBy: userId,
+  status: {
+    $in: [
+      CLAIM_STATUS.SUBMITTED,
+      CLAIM_STATUS.UNDER_REVIEW
+    ]
+  }
+});
+
     const totalComplaintsFiled = await Complaint.countDocuments({ reportedBy: userId });
     const resolvedComplaints = await Complaint.countDocuments({
       reportedBy: userId,
