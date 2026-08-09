@@ -11,6 +11,10 @@ export const hospitalService = {
     return response.data;
   },
 
+  getHospitalDetails: async (id) => {
+const response = await api.get(`/hospitals/${id}/details`);
+return response.data;
+},
   // getNearbyHospitals: async (lat, lng, radius = 50) => {
   //   const response = await api.get('/hospitals/nearby', {
   //     params: { lat, lng, radius }

@@ -63,6 +63,21 @@ const getEmergencyContacts = asyncHandler(async (req, res) => {
   });
 });
 
+
+/**
+ * Get Hospital Complete Details Controller
+ */
+const getHospitalDetails = asyncHandler(async (req, res) => {
+  const details = await hospitalService.getHospitalDetails(req.params.id);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Hospital complete details fetched successfully',
+    data: details
+  });
+});
+
+
 /**
  * Update Hospital Controller
  */
@@ -92,6 +107,7 @@ module.exports = {
   getNearbyHospitals,
   getHospitalById,
   getEmergencyContacts,
+  getHospitalDetails,
   updateHospital,
   deleteHospital
 };

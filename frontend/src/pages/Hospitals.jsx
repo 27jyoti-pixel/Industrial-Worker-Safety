@@ -8,46 +8,23 @@ import { useToast } from "../context/ToastContext";
 import hospitalService from "../services/hospitalService";
 
 import {
-  Building2,
-  Plus,
-  Search,
-  Phone,
-  Ambulance,
-  MapPin,
-  Edit,
-  Trash2,
-  Eye,
   Compass
 } from "lucide-react";
-
 
 import Card from "../components/common/Card";
 import Button from "../components/common/Button";
 import Table from "../components/common/Table";
-import Input from "../components/common/Input";
 import SearchBar from "../components/common/SearchBar";
-import Pagination from "../components/common/Pagination";
-import Modal from "../components/common/Modal";
-import ConfirmDialog from "../components/common/ConfirmDialog";
 import Breadcrumb from "../components/common/Breadcrumb";
-
 
 
 const Hospitals = () => {
 
 
 const {
-  isAdminOrOfficer,
-  isSuperAdmin,
-  isGovernmentOfficer
-} = useAuth();
-
-
-const {
   showSuccess,
   showError
 } = useToast();
-
 
 
 
@@ -73,8 +50,7 @@ useState(0);
 
 
 
-
-// Nearby hospital data
+// Nearby hospitals
 
 const [nearbyActive,setNearbyActive] =
 useState(false);
@@ -84,58 +60,6 @@ useState(null);
 
 const [nearbyHospitals,setNearbyHospitals] =
 useState([]);
-
-
-
-
-// Modal states
-
-const [createModalOpen,setCreateModalOpen] =
-useState(false);
-
-const [editModalOpen,setEditModalOpen] =
-useState(false);
-
-const [viewModalOpen,setViewModalOpen] =
-useState(false);
-
-const [deleteDialogOpen,setDeleteDialogOpen] =
-useState(false);
-
-
-const [selectedHospital,setSelectedHospital] =
-useState(null);
-
-
-const [submitting,setSubmitting] =
-useState(false);
-
-
-
-
-// Form
-
-const [formData,setFormData] = useState({
-
-name:"",
-registrationNumber:"",
-phone:"",
-
-address:{
-  street:"",
-  city:"",
-  state:"",
-  pincode:""
-},
-
-latitude:19.076,
-longitude:72.8777,
-
-ambulanceNumbers:"",
-
-facilities:"ICU, Trauma Center, Emergency OT"
-
-});
 
 
 
@@ -154,12 +78,9 @@ searchQuery
 
 
 
-
 const fetchHospitals = async()=>{
 
-
 setLoading(true);
-
 
 try{
 
@@ -201,24 +122,21 @@ dataList.length
 
 
 }
-catch(error){
 
+catch(error){
 
 showError(
 error.message ||
 "Failed to fetch hospitals"
 );
 
-
 }
-finally{
 
+finally{
 
 setLoading(false);
 
-
 }
-
 
 };
 
@@ -228,7 +146,7 @@ setLoading(false);
 
 
 
-// FIND NEARBY LIVE HOSPITALS
+// FIND NEARBY HOSPITALS
 
 const handleNearbySearch = ()=>{
 
@@ -254,12 +172,12 @@ navigator.geolocation.getCurrentPosition(
 async(position)=>{
 
 
-const {
-latitude,
-longitude
-}
-=
-position.coords;
+const latitude =
+position.coords.latitude;
+
+
+const longitude =
+position.coords.longitude;
 
 
 
@@ -313,22 +231,20 @@ showSuccess(
 
 catch(error){
 
-
 showError(
 error.message ||
 "Failed to load nearby hospitals"
 );
 
-
 }
+
 
 finally{
 
-
 setLoading(false);
 
-
 }
+
 
 
 },
@@ -336,14 +252,11 @@ setLoading(false);
 
 ()=>{
 
-
 showError(
 "Unable to get GPS location"
 );
 
-
 setLoading(false);
-
 
 }
 
@@ -353,147 +266,303 @@ setLoading(false);
 
 };
 
+
+
+
+
+
 return (
-  <div className="p-6">
 
-    <Breadcrumb />
-
-    <div className="flex justify-between items-center mb-6">
-
-      <div>
-        <h1 className="text-2xl font-bold">
-          Industrial Hospitals Directory
-        </h1>
-
-        <p className="text-gray-500">
-          Emergency trauma centers, burn units, and 24/7 ambulance dispatch numbers
-        </p>
-      </div>
+<div>
 
 
-      <Button
-        onClick={handleNearbySearch}
-      >
-        <Compass size={18}/>
-        Find Nearby (GPS)
-      </Button>
-
-    </div>
+<Breadcrumb />
 
 
 
-    <SearchBar
-      value={searchQuery}
-      onChange={(e)=>setSearchQuery(e.target.value)}
-      placeholder="Search hospitals by name, city, or registration..."
-    />
+<div className="flex justify-between items-center mb-6">
+
+
+<div>
+
+<h1 className="text-2xl font-bold">
+
+Industrial Hospitals Directory
+
+</h1>
+
+
+<p className="text-gray-500">
+
+Emergency trauma centers, burn units, and 24/7 ambulance dispatch numbers
+
+</p>
+
+
+</div>
 
 
 
-    <div className="mt-6">
+<Button
+onClick={handleNearbySearch}
+>
 
-      <GoogleMapComponent
+<Compass size={18}/>
 
-        hospitals={hospitals}
+Find Nearby (GPS)
 
-        userLocation={userLocation}
+</Button>
 
-        showNearby={nearbyActive}
 
-        nearbyHospitals={nearbyHospitals}
-
-      />
-
-    </div>
+</div>
 
 
 
-    {
-      nearbyActive &&
-      nearbyHospitals.length > 0 && (
-
-        <div className="mt-8">
-
-          <h2 className="text-xl font-bold mb-4">
-            Nearby Emergency Hospitals
-          </h2>
 
 
-          {
-            nearbyHospitals.map((hospital)=>(
-              
-              <Card
-                key={hospital._id || hospital.id}
-                className="mb-4 p-4"
-              >
+<SearchBar
 
-                <h3 className="font-bold text-lg">
-                  🏥 {hospital.name}
-                </h3>
+value={searchQuery}
 
+onChange={(e)=>
+setSearchQuery(e.target.value)
+}
 
-                <p>
-                📍 {
-                  hospital.address
-                    ? `${hospital.address.street || ""}, 
-                      ${hospital.address.city || ""}, 
-                      ${hospital.address.state || ""} 
-                      ${hospital.address.pincode || ""}`
-                    : "Address not available"
-                }
-                </p>
+placeholder="Search hospitals by name, city, or registration..."
+
+ />
 
 
-                <p>
-                  ☎️ 
-                  {
-                    hospital.phone ||
-                    "Phone not available"
-                  }
-                </p>
 
 
-                <p>
-                  🩺
-                  {
-                    hospital.speciality ||
-                    "General Hospital"
-                  }
-                </p>
 
 
-                <p>
-                  🕒
-                  {
-                    hospital.openingHours ||
-                    "Not available"
-                  }
-                </p>
+
+<div className="mt-6">
 
 
-              </Card>
-
-            ))
-          }
+<GoogleMapComponent
 
 
-        </div>
+hospitals={hospitals}
 
+
+userLocation={userLocation}
+
+
+showNearby={nearbyActive}
+
+
+nearbyHospitals={nearbyHospitals}
+
+
+/>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+{
+nearbyActive &&
+nearbyHospitals.length > 0 && (
+
+
+<div className="mt-8">
+
+
+<h2 className="text-xl font-bold mb-4">
+
+Nearby Emergency Hospitals
+
+</h2>
+
+
+
+
+
+{
+nearbyHospitals.map((hospital)=>(
+
+
+<Card
+
+key={hospital.id}
+
+className="mb-4 p-4"
+
+>
+
+
+
+<h3 className="font-bold text-lg">
+
+🏥 {hospital.name}
+
+</h3>
+
+
+
+
+<p>
+
+📍 {hospital.address || "Address not available"}
+
+</p>
+
+
+
+
+<p>
+
+☎️ {
+
+hospital.phone ||
+
+"Phone not available"
+
+}
+
+</p>
+
+
+
+
+
+<p>
+
+🩺 {
+
+hospital.speciality ||
+
+"General Hospital"
+
+}
+
+</p>
+
+
+
+
+
+<p>
+
+🕒 {
+
+hospital.openingHours ||
+
+"Timing unavailable"
+
+}
+
+</p>
+
+
+
+
+<div className="flex gap-3 mt-4">
+
+  <Button
+    variant="primary"
+    size="sm"
+    onClick={() =>
+      window.open(
+        `https://www.google.com/maps/dir/?api=1&destination=${hospital.latitude},${hospital.longitude}`,
+        "_blank"
       )
     }
+  >
+    📍 Get Directions
+  </Button>
 
 
 
-    <div className="mt-8">
+  <Button
 
-      <Table
-        data={hospitals}
-      />
+    variant="primary"
 
-    </div>
+    size="sm"
+
+    onClick={()=>{
+
+      const message =
+      `🚨 Emergency Hospital Location
+
+🏥 Hospital:
+${hospital.name}
+
+📍 Address:
+${hospital.address}
+
+🗺️ Navigation:
+https://www.google.com/maps/dir/?api=1&destination=${hospital.latitude},${hospital.longitude}`;
 
 
-  </div>
+      window.open(
+        `https://wa.me/?text=${encodeURIComponent(message)}`,
+        "_blank"
+      );
+
+    }}
+
+  >
+    📲 Share Location
+  </Button>
+
+
+</div>
+
+
+
+
+
+</Card>
+
+
+))
+
+}
+
+
+
+</div>
+
+
+)
+
+}
+
+
+
+
+
+
+
+<div className="mt-8">
+
+
+<Table
+
+data={hospitals}
+
+/>
+
+
+</div>
+
+
+
+
+
+</div>
+
+
 );
 
 

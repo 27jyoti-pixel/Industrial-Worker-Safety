@@ -6,6 +6,7 @@ const {
   getHospitalById,
   getEmergencyContacts,
   updateHospital,
+  getHospitalDetails,
   deleteHospital
 } = require('../controllers/hospitalController');
 const { protect, authorize } = require('../middlewares/authMiddleware');
@@ -29,6 +30,8 @@ router.get('/nearby', getNearbyHospitals);
  * @access  Private (Worker, Factory Admin, Government Officer, Super Admin)
  */
 router.get('/:id/emergency-contacts', getEmergencyContacts);
+
+router.get('/:id/details', getHospitalDetails);
 
 /**
  * @route   POST /api/v1/hospitals

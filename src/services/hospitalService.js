@@ -1,7 +1,7 @@
 const Hospital = require('../models/hospitalModel');
 const ApiError = require('../utils/ApiError');
 const axios = require('axios');
-
+require('dotenv').config();
 
 class HospitalService {
 
@@ -168,185 +168,173 @@ class HospitalService {
 
     }
 
-
-
-
-
-
-
-    /**
-     * Get live nearby hospitals
-     * Using OpenStreetMap Overpass API
-     */
-    async getNearbyHospitals(
-        latitude,
-        longitude,
-        radiusInKm = 10
-    ){
-        if(!latitude || !longitude){
-
-            throw new ApiError(
-                400,
-                "Latitude and longitude required"
-            );
-
-        }
-const query = `
-
-[out:json][timeout:15];
-
-(
-node["amenity"="hospital"]
-(around:${radiusInKm*1000},${latitude},${longitude});
-
-way["amenity"="hospital"]
-(around:${radiusInKm*1000},${latitude},${longitude});
-
-);
-
-out center tags;
-
-`;
-        try{
-            const response =
-            await axios.get(
-               "https://overpass-api.de/api/interpreter",
-                {
-                    params:{
-                        data:query
-                    },
-                    timeout:30000,
-                    headers:{
-                        "User-Agent":
-                        "Industrial-Worker-Safety-App"
-                    }
-                }
-            );
-
-            const hospitals =
-
-            response.data.elements.map(
-            hospital=>{
-
-
-                const lat =
-                hospital.lat ||
-                hospital.center?.lat;
-
-
-
-                const lng =
-                hospital.lon ||
-                hospital.center?.lon;
-
-
-
-
-                return {
-
-
-                    id:hospital.id,
-
-
-
-                    name:
-                    hospital.tags?.name ||
-                    "Unnamed Hospital",
-
-
-                  phone:
-                  hospital.tags?.phone ||
-                  hospital.tags?.["contact:phone"] ||
-                  hospital.tags?.["contact:mobile"] ||
-                  hospital.tags?.mobile ||
-                  "Not available",
-
-
-
-
-                    speciality:
-                    hospital.tags?.healthcare ||
-                    hospital.tags?.["healthcare:speciality"] ||
-                    hospital.tags?.speciality ||
-                    "General Hospital",
-
-
-                  address:
-                  hospital.tags?.["addr:full"] ||
-                  [
-                  hospital.tags?.["addr:housenumber"],
-                  hospital.tags?.["addr:street"],
-                  hospital.tags?.["addr:city"],
-                  hospital.tags?.["addr:state"]
-                  ]
-                  .filter(Boolean)
-                  .join(", ")
-                  ||
-                  hospital.tags?.["is_in"]
-                  ||
-                  "Address not available",
-
-                  openingHours:
-                  hospital.tags?.opening_hours ||
-                  hospital.tags?.["opening_hours:covid19"] ||
-                  "Timing unavailable",
-
-                  latitude:lat,
-                  longitude:lng
-                };
-
-
-
-            });
-
-            const validHospitals = hospitals.filter(
-    hospital =>
-    hospital.latitude &&
-    hospital.longitude
-);
-
-
-return validHospitals.slice(0,10);
-
-
-
-
-
-        }
-
-        catch(error){
-
-
-            console.log(
-
-                "OSM ERROR:",
-
-                error.response?.data ||
-                error.message
-
-            );
-
-
-
-            throw new ApiError(
-
-                500,
-
-                "Unable to fetch live nearby hospitals"
-
-            );
-
-
-        }
-
-
+/**
+ * Get live nearby hospitals
+ * Using Geoapify Places API
+ */
+async getNearbyHospitals(
+    latitude,
+    longitude,
+    radiusInKm = 10
+){
+
+    if(!latitude || !longitude){
+
+        throw new ApiError(
+            400,
+            "Latitude and longitude required"
+        );
 
     }
 
 
+    try{
+
+        const response = await axios.get(
+            "https://api.geoapify.com/v2/places",
+            {
+                params:{
+                    categories:"healthcare.hospital",
+                    filter:`circle:${longitude},${latitude},${radiusInKm * 1000}`,
+                    limit:10,
+                    apiKey:process.env.GEOAPIFY_API_KEY
+                }
+            }
+        );
 
 
+        const hospitals = response.data.features.map(
+            hospital=>{
 
+                const properties = hospital.properties;
+                console.log("PLACE ID:", properties.place_id);
+                const coordinates = hospital.geometry.coordinates;
+
+
+                return {
+
+                    id: properties.place_id,
+
+                    name:
+                    properties.name ||
+                    "Unnamed Hospital",
+
+
+                    address:
+                    properties.formatted ||
+                    "Address not available",
+
+
+                    latitude:
+                    coordinates[1],
+
+
+                    longitude:
+                    coordinates[0],
+
+
+                    speciality:
+                    properties.categories?.join(", ") ||
+                    "Hospital",
+
+
+                    phone:
+                    properties.contact?.phone ||
+                    "Not available",
+
+
+                    openingHours:
+                    properties.opening_hours ||
+                    "Timing unavailable"
+
+                };
+
+            }
+        );
+
+
+        return hospitals;
+
+
+    }
+    catch(error){
+
+        console.log(
+            "GEOAPIFY ERROR:",
+            error.response?.data ||
+            error.message
+        );
+
+
+        throw new ApiError(
+            500,
+            "Unable to fetch nearby hospitals"
+        );
+
+    }
+
+}
+
+
+/**
+ * Get detailed hospital information from Geoapify
+ */
+async getHospitalDetails(placeId){
+
+    try{
+        console.log("DETAIL PLACE ID:", placeId);
+
+        const response = await axios.get(
+            "https://api.geoapify.com/v2/place-details",
+            {
+                params:{
+                    id: placeId,
+                    apiKey: process.env.GEOAPIFY_API_KEY
+                }
+            }
+        );
+
+
+        const properties = response.data.features[0].properties;
+
+
+        return {
+
+            name: properties.name,
+
+            address:
+            properties.formatted ||
+            "Address not available",
+
+            phone:
+            properties.contact?.phone ||
+            "Phone not available",
+
+            openingHours:
+            properties.opening_hours ||
+            "Timing unavailable"
+
+        };
+
+
+    }
+    catch(error){
+
+        console.log(
+            "GEOAPIFY DETAILS ERROR:",
+            error.response?.data ||
+            error.message
+        );
+
+
+        throw new ApiError(
+            500,
+            "Unable to fetch hospital details"
+        );
+
+    }
+
+}
 
 
 
