@@ -383,7 +383,7 @@ const AccidentReports = () => {
   {isAdminOrOfficer && (
     <button
       onClick={() => openStatusModal(row)}
-      className="p-1.5 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+      className="p-1.5 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-700 transition-colors"
       title="Update Status"
     >
       <CheckCircle className="w-4 h-4" />
@@ -414,7 +414,9 @@ const AccidentReports = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Workplace Accident Reports</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Workplace Accident Reports
+          </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Log, track, investigate and resolve industrial accidents
           </p>

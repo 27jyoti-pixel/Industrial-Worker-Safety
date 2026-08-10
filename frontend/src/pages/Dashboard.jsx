@@ -101,7 +101,7 @@ const recentComplaints = isWorker
       title: 'Total Active Workers',
       value: stats?.workers ?? 0,
       icon: Users,
-      color: 'bg-blue-50 text-blue-600 border-blue-200'
+      color: 'bg-slate-50 text-slate-700 border-slate-200'
     },
     {
       title: 'Accident Reports',
@@ -126,13 +126,13 @@ const recentComplaints = isWorker
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
         <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold mb-2">
-            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+         <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold mb-2">
+            <span className="w-2 h-2 rounded-full bg-orange-500"></span>
             {user?.role} Access Mode
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">
             Welcome back, {user?.name}
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -165,7 +165,10 @@ const recentComplaints = isWorker
         {kpis.map((kpi, index) => {
           const Icon = kpi.icon;
           return (
-            <div key={index} className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
+           <div 
+  key={index} 
+ className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex items-center justify-between"
+>
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{kpi.title}</p>
                 <h3 className="text-2xl font-extrabold text-slate-900 mt-1">{kpi.value}</h3>
@@ -185,7 +188,7 @@ const recentComplaints = isWorker
           title="Recent Workplace Accidents"
           subtitle="Latest safety incident logs"
           action={
-            <Link to="/accidents" className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
+            <Link to="/accidents" className="text-xs font-semibold text-orange-600 hover:underline flex items-center gap-1">
               View All <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           }
@@ -200,7 +203,7 @@ const recentComplaints = isWorker
                       {acc.factory} &bull; {new Date(acc.date).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <StatusBadge status={acc.severity} />
                     <StatusBadge status={acc.status} />
                   </div>
@@ -220,7 +223,7 @@ const recentComplaints = isWorker
           title="Compensation Claims"
           subtitle="Submitted and under-review claims"
           action={
-            <Link to="/claims" className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
+            <Link to="/claims" className="text-xs font-semibold text-orange-600 hover:underline flex items-center gap-1">
               View All <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           }
@@ -253,7 +256,7 @@ const recentComplaints = isWorker
         title="Safety Hazards & Complaints"
         subtitle="Reported machine faults, gas leaks, and electrical risks"
         action={
-          <Link to="/complaints" className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
+          <Link to="/complaints" className="text-xs font-semibold text-orange-600 hover:underline flex items-center gap-1">
             View All <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         }
@@ -261,9 +264,9 @@ const recentComplaints = isWorker
         {recentComplaints && recentComplaints.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {recentComplaints.slice(0, 3).map((comp) => (
-              <div key={comp._id} className="p-4 rounded-lg border border-slate-200 bg-slate-50/50 space-y-2">
+              <div key={comp._id} className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                  <span className="text-xs font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded border border-orange-100">
                     {comp.complaintType}
                   </span>
                   <StatusBadge status={comp.status} />

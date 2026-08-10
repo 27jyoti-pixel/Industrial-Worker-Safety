@@ -289,7 +289,7 @@ const handleDeleteComplaint = async () => {
 };
   const columns = [
     {
-      header: 'Complaint Reference',
+      header: 'Complaint Title',
       render: (row) => (
         <div>
           <span className="font-mono text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
@@ -302,7 +302,7 @@ const handleDeleteComplaint = async () => {
     {
       header: 'Hazard Type',
       render: (row) => (
-        <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded bg-blue-50 text-blue-700 border border-blue-100">
+        <span className="inline-block px-2.5 py-1 text-xs font-semibold rounded bg-blue-50 text-orange-700 border border-orange-100">
           {row.complaintType}
         </span>
       )
@@ -397,7 +397,7 @@ const handleDeleteComplaint = async () => {
         </div>
 
         <Button variant="primary" icon={Plus} onClick={openCreateModal}>
-          File Hazard Complaint
+          File Safety Complaint
         </Button>
       </div>
 
@@ -411,7 +411,7 @@ const handleDeleteComplaint = async () => {
               setCurrentPage(1);
             }}
             onClear={() => setSearchQuery('')}
-            placeholder="Search complaints by title, factory, or department..."
+            placeholder="Search by complaint title, factory, or department..."
           />
 
           <Select

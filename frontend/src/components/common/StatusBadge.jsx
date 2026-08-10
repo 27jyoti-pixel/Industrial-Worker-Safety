@@ -24,7 +24,7 @@ const StatusBadge = ({ status, type = 'status', className = '' }) => {
     normalized === 'moderate' ||
     normalized === 'medium'
   ) {
-    colorClasses = 'bg-amber-50 text-amber-700 border-amber-200';
+    colorClasses = 'bg-orange-50 text-orange-700 border-orange-200';
   } else if (
     normalized === 'rejected' ||
     normalized === 'critical' ||

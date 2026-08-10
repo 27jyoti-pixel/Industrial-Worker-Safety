@@ -2,497 +2,338 @@ import React, { useState, useEffect } from "react";
 
 import GoogleMapComponent from "../components/GoogleMapComponent";
 
-import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-
 import hospitalService from "../services/hospitalService";
 
-import {
-  Compass
-} from "lucide-react";
+import { Compass } from "lucide-react";
 
 import Card from "../components/common/Card";
 import Button from "../components/common/Button";
-import Table from "../components/common/Table";
 import SearchBar from "../components/common/SearchBar";
 import Breadcrumb from "../components/common/Breadcrumb";
 
 
 const Hospitals = () => {
 
+  const { showSuccess, showError } = useToast();
 
-const {
-  showSuccess,
-  showError
-} = useToast();
 
+  const [hospitals, setHospitals] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const [searchQuery, setSearchQuery] = useState("");
 
-// Hospital data
+  const [currentPage, setCurrentPage] = useState(1);
 
-const [hospitals,setHospitals] =
-useState([]);
 
-const [loading,setLoading] =
-useState(true);
+  const [nearbyActive, setNearbyActive] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [nearbyHospitals, setNearbyHospitals] = useState([]);
 
-const [searchQuery,setSearchQuery] =
-useState("");
 
-const [currentPage,setCurrentPage] =
-useState(1);
 
-const [totalPages,setTotalPages] =
-useState(1);
+  useEffect(() => {
+    fetchHospitals();
+  }, [currentPage, searchQuery]);
 
-const [totalItems,setTotalItems] =
-useState(0);
 
 
+  const fetchHospitals = async () => {
 
-// Nearby hospitals
+    setLoading(true);
 
-const [nearbyActive,setNearbyActive] =
-useState(false);
+    try {
 
-const [userLocation,setUserLocation] =
-useState(null);
+      const response = await hospitalService.getAllHospitals({
 
-const [nearbyHospitals,setNearbyHospitals] =
-useState([]);
+        search: searchQuery,
+        page: currentPage,
+        limit: 10
 
+      });
 
 
+      const dataList =
+        response.hospitals ||
+        response.data ||
+        [];
 
 
-useEffect(()=>{
+      setHospitals(dataList);
 
-fetchHospitals();
 
-},[
-currentPage,
-searchQuery
-]);
+    } catch(error){
 
+      showError(
+        error.message || "Failed to fetch hospitals"
+      );
 
+    }
+    finally{
 
+      setLoading(false);
 
+    }
 
-const fetchHospitals = async()=>{
+  };
 
-setLoading(true);
 
-try{
 
+  const handleNearbySearch = () => {
 
-const response =
-await hospitalService.getAllHospitals({
 
-search:searchQuery,
+    if(!navigator.geolocation){
 
-page:currentPage,
+      showError("Geolocation not supported");
+      return;
 
-limit:10
+    }
 
-});
 
+    setLoading(true);
 
-const dataList =
-response.hospitals ||
-response.data ||
-[];
 
 
+    navigator.geolocation.getCurrentPosition(
 
-setHospitals(dataList);
+      async(position)=>{
 
 
-setTotalPages(
-response.pages ||
-response.totalPages ||
-1
-);
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
 
 
-setTotalItems(
-response.total ||
-dataList.length
-);
+        setUserLocation({
+          latitude,
+          longitude
+        });
 
 
 
-}
+        try{
 
-catch(error){
 
-showError(
-error.message ||
-"Failed to fetch hospitals"
-);
+          const response =
+            await hospitalService.getNearbyHospitals(
+              latitude,
+              longitude,
+              10
+            );
 
-}
 
-finally{
+          const nearby =
+            response.hospitals ||
+            response.data ||
+            [];
 
-setLoading(false);
 
-}
 
-};
+          setNearbyHospitals(nearby);
 
+          setNearbyActive(true);
 
 
+          showSuccess(
+            "Loaded nearby emergency hospitals"
+          );
 
 
+        }
+        catch(error){
 
+          showError(
+            error.message ||
+            "Failed to load nearby hospitals"
+          );
 
-// FIND NEARBY HOSPITALS
+        }
+        finally{
 
-const handleNearbySearch = ()=>{
+          setLoading(false);
 
+        }
 
-if(!navigator.geolocation){
+      },
 
-showError(
-"Geolocation not supported"
-);
 
-return;
+      ()=>{
 
-}
+        showError(
+          "Unable to get GPS location"
+        );
 
+        setLoading(false);
 
+      }
 
-setLoading(true);
+    );
 
+  };
 
 
-navigator.geolocation.getCurrentPosition(
 
-async(position)=>{
+  return (
 
+    <div className="space-y-6">
 
-const latitude =
-position.coords.latitude;
 
+      <Breadcrumb 
+        items={[
+          {label:"Hospitals"}
+        ]}
+      />
 
-const longitude =
-position.coords.longitude;
 
+      <div className="flex items-center justify-between">
 
+        <div>
 
-setUserLocation({
+          <h1 className="text-2xl font-bold text-slate-900">
+            Industrial Hospitals Directory
+          </h1>
 
-latitude,
 
-longitude
+          <p className="text-sm text-slate-500 mt-1">
+            Find nearby emergency hospitals, trauma centers, and ambulance services
+          </p>
 
-});
+        </div>
 
 
+        <Button
+          variant="primary"
+          icon={Compass}
+          onClick={handleNearbySearch}
+        >
 
-try{
+          Find Nearby Hospitals
 
+        </Button>
 
-const response =
-await hospitalService.getNearbyHospitals(
-latitude,
-longitude,
-10
-);
 
+      </div>
 
 
-const nearby =
-response.hospitals ||
-response.data ||
-[];
 
+      <SearchBar
 
+        value={searchQuery}
 
+        onChange={(e)=>
+          setSearchQuery(e.target.value)
+        }
 
-setNearbyHospitals(
-nearby
-);
+        placeholder="Search hospitals by name, city, or specialization..."
 
+      />
 
 
-setNearbyActive(true);
 
+      <GoogleMapComponent
 
+        hospitals={hospitals}
 
-showSuccess(
-"Loaded nearby emergency hospitals"
-);
+        userLocation={userLocation}
 
+        showNearby={nearbyActive}
 
+        nearbyHospitals={nearbyHospitals}
 
-}
+      />
 
-catch(error){
 
-showError(
-error.message ||
-"Failed to load nearby hospitals"
-);
 
-}
 
 
-finally{
+      {
+        nearbyActive &&
+        nearbyHospitals.length > 0 && (
 
-setLoading(false);
 
-}
+          <Card
+            title="Nearby Emergency Hospitals"
+            className="mt-6"
+          >
 
 
+          <div className="space-y-4">
 
-},
 
+          {
+            nearbyHospitals.map((hospital)=>(
 
-()=>{
 
-showError(
-"Unable to get GPS location"
-);
+              <div
+                key={hospital.id}
+                className="border border-slate-200 rounded-lg p-4"
+              >
 
-setLoading(false);
 
-}
+                <h3 className="font-semibold text-slate-800">
 
+                  🏥 {hospital.name}
 
-);
+                </h3>
 
 
-};
 
+                <p className="text-sm text-slate-600 mt-2">
 
+                  📍 {hospital.address || "Address not available"}
 
+                </p>
 
 
 
-return (
+                <p className="text-sm text-slate-600">
 
-<div>
+                  ☎️ {hospital.phone || "Phone not available"}
 
+                </p>
 
-<Breadcrumb />
 
 
+                <p className="text-sm text-slate-600">
 
-<div className="flex justify-between items-center mb-6">
+                  🩺 {hospital.speciality || "General Hospital"}
 
+                </p>
 
-<div>
 
-<h1 className="text-2xl font-bold">
 
-Industrial Hospitals Directory
+                <p className="text-sm text-slate-600">
 
-</h1>
+                  🕒 {hospital.openingHours || "Timing unavailable"}
 
+                </p>
 
-<p className="text-gray-500">
 
-Emergency trauma centers, burn units, and 24/7 ambulance dispatch numbers
 
-</p>
-
-
-</div>
-
-
+               <div className="flex items-center gap-3 mt-5">
 
 <Button
-onClick={handleNearbySearch}
+  variant="primary"
+  size="sm"
+  className="px-5 py-2"
+  onClick={()=>{
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${hospital.latitude},${hospital.longitude}`,
+      "_blank"
+    );
+  }}
 >
-
-<Compass size={18}/>
-
-Find Nearby (GPS)
-
+   Get Directions
 </Button>
 
 
-</div>
-
-
-
-
-
-<SearchBar
-
-value={searchQuery}
-
-onChange={(e)=>
-setSearchQuery(e.target.value)
-}
-
-placeholder="Search hospitals by name, city, or registration..."
-
- />
-
-
-
-
-
-
-
-<div className="mt-6">
-
-
-<GoogleMapComponent
-
-
-hospitals={hospitals}
-
-
-userLocation={userLocation}
-
-
-showNearby={nearbyActive}
-
-
-nearbyHospitals={nearbyHospitals}
-
-
-/>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-{
-nearbyActive &&
-nearbyHospitals.length > 0 && (
-
-
-<div className="mt-8">
-
-
-<h2 className="text-xl font-bold mb-4">
-
-Nearby Emergency Hospitals
-
-</h2>
-
-
-
-
-
-{
-nearbyHospitals.map((hospital)=>(
-
-
-<Card
-
-key={hospital.id}
-
-className="mb-4 p-4"
-
->
-
-
-
-<h3 className="font-bold text-lg">
-
-🏥 {hospital.name}
-
-</h3>
-
-
-
-
-<p>
-
-📍 {hospital.address || "Address not available"}
-
-</p>
-
-
-
-
-<p>
-
-☎️ {
-
-hospital.phone ||
-
-"Phone not available"
-
-}
-
-</p>
-
-
-
-
-
-<p>
-
-🩺 {
-
-hospital.speciality ||
-
-"General Hospital"
-
-}
-
-</p>
-
-
-
-
-
-<p>
-
-🕒 {
-
-hospital.openingHours ||
-
-"Timing unavailable"
-
-}
-
-</p>
-
-
-
-
-<div className="flex gap-3 mt-4">
-
-  <Button
-    variant="primary"
-    size="sm"
-    onClick={() =>
-      window.open(
-        `https://www.google.com/maps/dir/?api=1&destination=${hospital.latitude},${hospital.longitude}`,
-        "_blank"
-      )
-    }
-  >
-    📍 Get Directions
-  </Button>
-
-
-
-  <Button
-
-    variant="primary"
-
-    size="sm"
-
-    onClick={()=>{
-
-      const message =
-      `🚨 Emergency Hospital Location
+<Button
+  variant="primary"
+  size="sm"
+  className="px-5 py-2"
+  onClick={()=>{
+    
+    const message =
+`🚨 Emergency Hospital Location
 
 🏥 Hospital:
 ${hospital.name}
@@ -504,67 +345,40 @@ ${hospital.address}
 https://www.google.com/maps/dir/?api=1&destination=${hospital.latitude},${hospital.longitude}`;
 
 
-      window.open(
-        `https://wa.me/?text=${encodeURIComponent(message)}`,
-        "_blank"
-      );
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(message)}`,
+      "_blank"
+    );
 
-    }}
-
-  >
-    📲 Share Location
-  </Button>
-
-
-</div>
-
-
-
-
-
-</Card>
-
-
-))
-
-}
-
+  }}
+>
+   Share Location
+</Button>
 
 
 </div>
 
 
-)
-
-}
+              </div>
 
 
+            ))
+          }
 
 
+          </div>
 
 
-
-<div className="mt-8">
-
-
-<Table
-
-data={hospitals}
-
-/>
+          </Card>
 
 
-</div>
+        )
+      }
 
 
+    </div>
 
-
-
-</div>
-
-
-);
-
+  );
 
 };
 

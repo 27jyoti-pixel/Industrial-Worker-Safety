@@ -374,7 +374,7 @@ const CompensationClaims = () => {
 
         {!isAdminOrOfficer && (
   <Button variant="primary" icon={Plus} onClick={openCreateModal}>
-    Submit New Claim
+    File Compensation Claim
   </Button>
 )}
       </div>
@@ -389,7 +389,7 @@ const CompensationClaims = () => {
               setCurrentPage(1);
             }}
             onClear={() => setSearchQuery('')}
-            placeholder="Search by claim number, disability type, or description..."
+            placeholder="Search by claim number, worker , or description..."
           />
 
           <Select

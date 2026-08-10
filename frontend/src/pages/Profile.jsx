@@ -4,9 +4,7 @@ import { useToast } from '../context/ToastContext';
 import authService from '../services/authService';
 import {
   User,
-  ShieldCheck,
   Mail,
-  Phone,
   Building,
   KeyRound,
   BadgeCheck,
@@ -101,7 +99,7 @@ const Profile = () => {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'User Profile' }]} />
+      {/* <Breadcrumb items={[{ label: 'User Profile' }]} /> */}
 
       {/* Header */}
       <div>
