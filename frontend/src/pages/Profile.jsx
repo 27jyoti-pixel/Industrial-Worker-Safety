@@ -112,7 +112,7 @@ const Profile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Card */}
         <Card className="lg:col-span-1" bodyClassName="p-6 text-center">
-          <div className="w-20 h-20 bg-blue-600 text-white rounded-full flex items-center justify-center text-3xl font-extrabold mx-auto mb-4 border-4 border-blue-100 shadow-xs">
+          <div className="w-20 h-20 bg-slate-900 text-white rounded-full flex items-center justify-center text-3xl font-extrabold mx-auto mb-4 border-4 border-orange-100 shadow-xs">
             {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
           </div>
 
@@ -126,7 +126,7 @@ const Profile = () => {
 {(
   <Button
   variant="outline"
-  className="px-3 py-1.5 text-xs mt-3"
+  className="px-3 py-1.5 text-xs mt-3 border-orange-200 text-orange-600 hover:bg-orange-50"
   onClick={() => setEditMode(!editMode)}
 >
   {editMode ? 'Cancel Edit' : 'Edit Profile'}
@@ -152,28 +152,28 @@ const Profile = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex items-center gap-2 text-slate-500 font-medium mb-1">
-                  <User className="w-4 h-4 text-blue-600" /> Full Name
+                  <User className="w-4 h-4 text-orange-600" /> Full Name
                 </div>
                 <p className="text-sm font-semibold text-slate-800">{user?.name}</p>
               </div>
 
               <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex items-center gap-2 text-slate-500 font-medium mb-1">
-                  <Mail className="w-4 h-4 text-blue-600" /> Email Address
+                  <Mail className="w-4 h-4 text-orange-600" /> Email Address
                 </div>
                 <p className="text-sm font-semibold text-slate-800">{user?.email}</p>
               </div>
 
               <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex items-center gap-2 text-slate-500 font-medium mb-1">
-                  <Building className="w-4 h-4 text-blue-600" /> Factory Unit
+                  <Building className="w-4 h-4 text-orange-600" /> Factory Unit
                 </div>
                 <p className="text-sm font-semibold text-slate-800">{user?.factoryName || 'N/A'}</p>
               </div>
 
               <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex items-center gap-2 text-slate-500 font-medium mb-1">
-                  <BadgeCheck className="w-4 h-4 text-blue-600" /> Employee ID
+                  <BadgeCheck className="w-4 h-4 text-orange-600" /> Employee ID
                 </div>
                 <p className="text-sm font-mono font-semibold text-slate-800">{user?.employeeId || 'N/A'}</p>
               </div>
