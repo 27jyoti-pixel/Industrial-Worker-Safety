@@ -13,12 +13,12 @@ const Button = ({
   onClick,
   ...props
 }) => {
-  const baseStyle = 'font-medium rounded-lg transition-all duration-150 inline-flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed';
+ const baseStyle = 'font-medium rounded-lg transition-all duration-150 inline-flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-60 disabled:cursor-not-allowed';
 
   const variants = {
     primary: 'bg-orange-600 hover:bg-orange-700 text-white shadow-sm',
     secondary: 'bg-slate-50 hover:bg-slate-100 text-slate-700',
-    outline: 'border border-slate-200 hover:bg-slate-50 text-slate-700 bg-white',
+    outline: 'border border-orange-200 hover:bg-orange-50 text-orange-600 bg-white',
     danger: 'bg-red-600 hover:bg-red-700 text-white shadow-sm',
     success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm',
     ghost: 'hover:bg-slate-100 text-slate-600'
