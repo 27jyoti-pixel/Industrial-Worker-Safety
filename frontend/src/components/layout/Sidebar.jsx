@@ -24,14 +24,20 @@ const Sidebar = ({ mobileOpen, onMobileClose }) => {
   };
 
   const navItems = [
-    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'Workers', path: '/workers', icon: Users },
-    { label: 'Accidents', path: '/accidents', icon: AlertTriangle },
-    { label: 'Claims', path: '/claims', icon: FileCheck2 },
-    { label: 'Complaints', path: '/complaints', icon: AlertOctagon },
-    { label: 'Hospitals', path: '/hospitals', icon: Building2 },
-    { label: 'Profile', path: '/profile', icon: UserCheck }
-  ];
+{ label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+
+...(user?.role !== 'Worker'
+  ? [
+      { label: 'Workers', path: '/workers', icon: Users }
+    ]
+  : []),
+
+{ label: 'Accidents', path: '/accidents', icon: AlertTriangle },
+{ label: 'Claims', path: '/claims', icon: FileCheck2 },
+{ label: 'Complaints', path: '/complaints', icon: AlertOctagon },
+{ label: 'Hospitals', path: '/hospitals', icon: Building2 },
+{ label: 'Profile', path: '/profile', icon: UserCheck }
+];
 
   return (
     <>
