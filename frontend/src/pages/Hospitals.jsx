@@ -284,29 +284,11 @@ const Hospitals = () => {
                 </p>
 
 
-
                 <p className="text-sm text-slate-600">
 
                   ☎️ {hospital.phone || "Phone not available"}
 
                 </p>
-
-
-
-                <p className="text-sm text-slate-600">
-
-                  🩺 {hospital.speciality || "General Hospital"}
-
-                </p>
-
-
-
-                <p className="text-sm text-slate-600">
-
-                  🕒 {hospital.openingHours || "Timing unavailable"}
-
-                </p>
-
 
 
                <div className="flex items-center gap-3 mt-5">
