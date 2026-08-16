@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 const Modal = ({
@@ -7,7 +8,8 @@ const Modal = ({
   title,
   children,
   maxWidth = 'max-w-xl',
-  footer
+  footer,
+  dialogClassName = ''
 }) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -29,20 +31,24 @@ const Modal = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 overflow-y-auto">
+
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-[#3E5C54]/40 backdrop-blur-xs transition-opacity"
+        className="fixed top-0 left-0 w-screen h-screen bg-[#3E5C54]/40 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Dialog */}
       <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
+
+        {/* OUTER MODAL BOX */}
         <div
-          className={`relative w-full ${maxWidth} transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all border border-[#E0E0E0] my-8`}
+          className={`relative w-full ${maxWidth} min-h-[70vh] ${dialogClassName} transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all border border-[#E0E0E0] my-8`}
           onClick={(e) => e.stopPropagation()}
         >
+
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#E0E0E0] bg-[#EEF2F0]">
             <h3 className="text-base font-semibold text-[#3E5C54]">
@@ -58,7 +64,7 @@ const Modal = ({
             </button>
           </div>
 
-          {/* Content */}
+          {/* CONTENT BOX */}
           <div className="px-6 py-5 max-h-[calc(100vh-200px)] overflow-y-auto">
             {children}
           </div>
@@ -69,9 +75,11 @@ const Modal = ({
               {footer}
             </div>
           )}
+
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
