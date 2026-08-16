@@ -13,61 +13,89 @@ const Navbar = ({ onMobileMenuToggle }) => {
   };
 
   return (
-    <header className="app-navbar sticky top-0 z-30 h-16 px-4 sm:px-6 flex items-center justify-between">
-      {/* Left: Mobile Toggle & Brand Logo */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onMobileMenuToggle}
-          className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
-          aria-label="Open navigation menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+    <header className="app-navbar sticky top-0 z-30 px-4 sm:px-6 lg:px-8">
+      <div className="app-navbar-inner">
 
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
-            <Shield className="w-5 h-5" />
+        {/* LEFT — Product identity */}
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            onClick={onMobileMenuToggle}
+            className="lg:hidden p-2 rounded-xl text-sand-600 hover:bg-sand-100"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          <div className="navbar-product-mark">
+            <Shield />
           </div>
-          <div>
-            <h1 className="text-sm sm:text-base font-bold text-slate-800 tracking-tight leading-tight">
+
+          <div className="min-w-0 leading-tight">
+            <h1 className="text-[16px] sm:text-[17px] font-semibold text-[#18231d] tracking-[-0.01em] truncate">
               Industrial Worker Safety
             </h1>
-            <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
+
+            <p className="mt-0.5 text-[10px] sm:text-[11px] font-medium text-[#7a847d] truncate">
               Compensation & Administration Platform
             </p>
           </div>
         </div>
-      </div>
 
-      {/* Right: User Information & Actions */}
-      <div className="flex items-center gap-3">
+        {/* RIGHT — User controls */}
         {user && (
-          <div className="flex items-center gap-3 border-l border-slate-200 pl-4">
-            <div className="text-right hidden md:block">
-              <p className="text-xs font-semibold text-slate-800">{user.name}</p>
-              <div className="flex items-center justify-end gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span className="text-[11px] text-slate-500 font-medium">{user.role}</span>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 sm:gap-3">
 
-            <div
-              onClick={() => navigate('/profile')}
-              className="w-9 h-9 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 font-semibold cursor-pointer hover:bg-blue-100 transition-colors"
-              title="View Profile"
+            {/* Notifications */}
+            <button
+              className="navbar-icon-button hidden sm:flex"
+              title="Notifications"
             >
-              {user.name ? user.name.charAt(0).toUpperCase() : <User className="w-4 h-4" />}
-            </div>
+              <Bell className="w-4 h-4" />
+            </button>
 
+            <div className="navbar-user-divider" />
+
+            {/* User */}
+            <button
+              onClick={() => navigate('/profile')}
+              className="navbar-user-summary"
+            >
+              <div className="hidden md:block text-right leading-tight">
+                <p className="text-[14px] font-semibold text-[#243229]">
+                  {user.name}
+                </p>
+
+                <div className="mt-0.5 flex items-center justify-end gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+
+                  <span className="text-[10px] font-medium text-[#7a847d]">
+                    {user.role}
+                  </span>
+                </div>
+              </div>
+
+              {/* Avatar */}
+              <div className="navbar-avatar">
+                {user.name ? (
+                  user.name.charAt(0).toUpperCase()
+                ) : (
+                  <User className="w-4 h-4" />
+                )}
+              </div>
+            </button>
+
+            {/* Logout */}
             <button
               onClick={handleLogout}
-              className="p-2 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+              className="navbar-logout"
               title="Logout"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4" />
             </button>
+
           </div>
         )}
+
       </div>
     </header>
   );

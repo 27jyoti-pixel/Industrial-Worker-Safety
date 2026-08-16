@@ -15,7 +15,7 @@ const Table = ({
 }) => {
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className={`industrial-card overflow-hidden ${className}`}>
         <Loader text="Loading records..." />
       </div>
     );
@@ -25,7 +25,10 @@ const Table = ({
     return (
       <EmptyState
         title={emptyTitle || 'No items available'}
-        description={emptyDescription || 'There are no records matching your current filter criteria.'}
+        description={
+          emptyDescription ||
+          'There are no records matching your current filter criteria.'
+        }
         onAction={onEmptyAction}
         actionText={emptyActionText}
       />
@@ -33,27 +36,41 @@ const Table = ({
   }
 
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden ${className}`}>
+    <div className={`industrial-card overflow-hidden ${className}`}>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50/80 border-b border-slate-200">
-              {columns.map((col, idx) => (
-                <th
-                  key={idx}
-                  className={`px-4 py-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider ${col.className || ''}`}
-                >
-                  {col.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
+  <tr className="bg-[#f6f4ee] border-b border-sand-200">
+    {columns.map((col, idx) => (
+      <th
+        key={idx}
+        className={`px-4 py-3 text-sm font-extrabold text-sand-500 tracking-[.12em] ${
+          col.className?.includes('text-right')
+            ? '!text-right'
+            : '!text-left'
+        }`}
+      >
+        {col.header}
+      </th>
+    ))}
+  </tr>
+</thead>
+          <tbody className="divide-y divide-sand-100">
             {data.map((row, rowIdx) => (
-              <tr key={row[keyField] || rowIdx} className="hover:bg-slate-50/70 transition-colors">
+              <tr
+                key={row[keyField] || rowIdx}
+                className="hover:bg-[#faf9f5] transition-colors"
+              >
                 {columns.map((col, colIdx) => (
-                  <td key={colIdx} className={`px-4 py-3 text-sm text-slate-700 ${col.cellClassName || ''}`}>
-                    {col.render ? col.render(row, rowIdx) : row[col.accessor]}
+                  <td
+                    key={colIdx}
+                    className={`px-4 py-3 text-sm text-sand-700 ${
+                      col.cellClassName || ''
+                    }`}
+                  >
+                    {col.render
+                      ? col.render(row, rowIdx)
+                      : row[col.accessor]}
                   </td>
                 ))}
               </tr>

@@ -30,7 +30,6 @@ import Pagination from '../components/common/Pagination';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import FileUpload from '../components/common/FileUpload';
-import Breadcrumb from '../components/common/Breadcrumb';
 
 const AccidentReports = () => {
   const { user, isAdminOrOfficer, isSuperAdmin, isFactoryAdmin } = useAuth();
@@ -307,36 +306,55 @@ const AccidentReports = () => {
   };
 
   const columns = [
-    {
-      header: 'Incident Title',
-      render: (row) => (
-        <div>
-          <p className="font-semibold text-slate-800 text-sm">{row.title}</p>
-          <p className="text-xs text-slate-500 truncate max-w-xs">{row.description}</p>
-        </div>
-      )
-    },
+      {
+    header: 'Incident Title',
+    render: (row) => (
+      <p className="font-semibold text-[#1E1E1E] text-sm">
+        {row.title}
+      </p>
+    )
+  },
     {
       header: 'Factory & Dept',
       render: (row) => (
-        <span className="text-xs font-medium text-slate-700">
+        <span className="text-sm font-medium text-[#3E5C54]">
           {row.factory} ({row.department})
         </span>
       )
     },
     {
-      header: 'Date & Time',
-      render: (row) => (
-        <div className="text-xs text-slate-600">
-          <p>{new Date(row.date).toLocaleDateString()}</p>
-          <p className="text-slate-400">{row.time}</p>
-        </div>
-      )
-    },
-    {
-      header: 'Severity',
-      render: (row) => <StatusBadge status={row.severity} />
-    },
+  header: 'Date & Time',
+  render: (row) => {
+    const formatTime = (time) => {
+      if (!time) return '-';
+
+      // Already contains AM/PM
+      if (/AM|PM/i.test(time)) {
+        return time;
+      }
+
+      // Convert HH:mm → hh:mm AM/PM
+      const [hours, minutes] = time.split(':').map(Number);
+
+      if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+        return time;
+      }
+
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+
+      return `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+    };
+
+    return (
+      <div className="text-sm text-[#6C757D]">
+        <p>{new Date(row.date).toLocaleDateString()}</p>
+        <p className="text-[#6C757D]">{formatTime(row.time)}</p>
+      </div>
+    );
+  }
+},
+    
     {
       header: 'Status',
       render: (row) => <StatusBadge status={row.status} />
@@ -345,7 +363,7 @@ const AccidentReports = () => {
     {
   header: 'Report Source',
   render: (row) => (
-    <span className="text-xs font-medium text-slate-700">
+    <span className="text-sm font-medium text-[#3E5C54]">
       {row.reportSource || 'Worker Report'}
     </span>
   )
@@ -360,7 +378,7 @@ const AccidentReports = () => {
   {/* View */}
   <button
     onClick={() => openViewModal(row)}
-    className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors"
+    className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#EEF2F0] hover:text-[#3E5C54] transition-colors"
     title="View Details"
   >
     <Eye className="w-4 h-4" />
@@ -371,7 +389,7 @@ const AccidentReports = () => {
   {(user?.role === "Worker" || isFactoryAdmin || isSuperAdmin) && (
     <button
       onClick={() => openImageModal(row)}
-      className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-blue-600 transition-colors"
+      className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#EEF2F0] hover:text-[#3E5C54] transition-colors"
       title="Upload Evidence"
     >
       <Upload className="w-4 h-4" />
@@ -383,7 +401,7 @@ const AccidentReports = () => {
   {isAdminOrOfficer && (
     <button
       onClick={() => openStatusModal(row)}
-      className="p-1.5 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+      className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#EEF2F0] hover:text-[#3E5C54] transition-colors"
       title="Update Status"
     >
       <CheckCircle className="w-4 h-4" />
@@ -395,7 +413,7 @@ const AccidentReports = () => {
   {isSuperAdmin && (
     <button
       onClick={() => openDeleteDialog(row)}
-      className="p-1.5 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+      className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#FDEEEF] hover:text-[#E63946] transition-colors"
       title="Delete Report"
     >
       <Trash2 className="w-4 h-4" />
@@ -408,18 +426,157 @@ const AccidentReports = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <Breadcrumb items={[{ label: 'Accident Reports' }]} />
+    <>
+      
+<style>{`
+  .accidents-page-enter {
+    animation: accidentsPageEnter 0.5s ease-out both;
+  }
+
+  .accidents-breadcrumb {
+    animation: accidentsFadeUp 0.45s ease-out both;
+  }
+
+  .accidents-header {
+    animation: accidentsHeaderEnter 0.58s cubic-bezier(.22,1,.36,1) 0.04s both;
+  }
+
+  .accidents-filter {
+    animation: accidentsFadeUp 0.55s ease-out 0.1s both;
+  }
+
+  .accidents-table {
+    animation: accidentsFadeUp 0.6s ease-out 0.16s both;
+    transition: box-shadow 220ms ease, transform 220ms ease;
+  }
+
+  .accidents-table:hover {
+    box-shadow: 0 14px 34px rgba(62, 92, 84, 0.07);
+  }
+
+  .accidents-page-enter button,
+  .accidents-page-enter input,
+  .accidents-page-enter select,
+  .accidents-page-enter textarea {
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease;
+  }
+
+  .accidents-page-enter button:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .accidents-page-enter button:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .accidents-page-enter tbody tr {
+    transition: background-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .accidents-page-enter tbody tr:hover {
+    background-color: #f8faf9;
+  }
+
+  .accidents-page-enter [role="dialog"] {
+    animation: accidentsModalEnter 220ms cubic-bezier(.22,1,.36,1) both;
+  }
+
+  @keyframes accidentsPageEnter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes accidentsFadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(7px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes accidentsHeaderEnter {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(.99);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes accidentsModalEnter {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .accidents-page-enter,
+    .accidents-breadcrumb,
+    .accidents-header,
+    .accidents-filter,
+    .accidents-table,
+    .accidents-page-enter [role="dialog"] {
+      animation: none !important;
+    }
+
+    .accidents-page-enter button,
+    .accidents-page-enter input,
+    .accidents-page-enter select,
+    .accidents-page-enter textarea,
+    .accidents-table,
+    .accidents-page-enter tbody tr {
+      transition: none !important;
+    }
+
+    .accidents-page-enter button:hover:not(:disabled) {
+      transform: none !important;
+    }
+  }
+`}</style>
+
+      <div className="space-y-6 accidents-page-enter">
+      {/* Refined Breadcrumb */}
+      <div className="accidents-breadcrumb flex items-center gap-2 text-sm">
+        <span className="text-[#6C757D]">Dashboard</span>
+        <span className="text-[#E0E0E0]">/</span>
+        <span className="font-medium text-[#3E5C54]">Accidents</span>
+      </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Workplace Accident Reports
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Log, track, investigate and resolve industrial accidents
-          </p>
+      <div className="accidents-header flex flex-col lg:flex-row lg:items-end justify-between gap-5">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-[#EEF2F0] border border-[#B9C9C3] text-[#3E5C54] flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+
+          <div>
+            <h1 className="text-xl xs:text-[28px] font-medium text-[#1E1E1E] " style={{ letterSpacing: '0em' }}>
+              Accident Reports
+            </h1>
+            <p className="text-sm text-[#6C757D] mt-1 max-w-xl">
+              Log, track, investigate and resolve industrial accidents
+            </p>
+          </div>
         </div>
 
         <Button variant="primary" icon={Plus} onClick={openCreateModal}>
@@ -428,17 +585,24 @@ const AccidentReports = () => {
       </div>
 
       {/* Search & Severity Filters */}
-      <Card bodyClassName="p-4">
-        <div className="flex flex-col md:flex-row items-center gap-3">
-          <SearchBar
-            value={searchQuery}
-            onChange={(val) => {
-              setSearchQuery(val);
-              setCurrentPage(1);
-            }}
-            onClear={() => setSearchQuery('')}
-            placeholder="Search by accident title, factory, or department..."
-          />
+      <div className="accidents-filter"><Card bodyClassName="p-4 sm:p-4.5">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
+            <Search className="w-4 h-4 text-[#6C757D]" />
+            <span className="text-sm font-medium text-[#3E5C54]">Find an accident</span>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <SearchBar
+              value={searchQuery}
+              onChange={(val) => {
+                setSearchQuery(val);
+                setCurrentPage(1);
+              }}
+              onClear={() => setSearchQuery('')}
+              placeholder="Search by accident title, factory, or department..."
+            />
+          </div>
 
           <div className="flex items-center gap-2 w-full md:w-auto">
             <Select
@@ -464,9 +628,10 @@ const AccidentReports = () => {
             />
           </div>
         </div>
-      </Card>
+      </Card></div>
 
       {/* Reports Table */}
+      <div className="accidents-table overflow-hidden rounded-2xl">
       <Table
         columns={columns}
         data={reports}
@@ -476,6 +641,7 @@ const AccidentReports = () => {
         onEmptyAction={openCreateModal}
         emptyActionText="Create Accident Report"
       />
+      </div>
 
       {/* Pagination */}
       <Pagination
@@ -517,8 +683,8 @@ const AccidentReports = () => {
             />
           </div>
 
-          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-3">
-            <p className="text-xs font-semibold text-slate-700">Witness Details</p>
+          <div className="p-3 bg-[#FFF8E8] rounded-xl border border-[#E0E0E0] space-y-3">
+            <p className="text-xs font-semibold text-[#3E5C54]">Witness Details</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Input label="Witness Name" name="witnessDetails.name" value={formData.witnessDetails?.name} onChange={handleInputChange} />
               <Input label="Witness Phone" name="witnessDetails.phone" value={formData.witnessDetails?.phone} onChange={handleInputChange} />
@@ -565,10 +731,10 @@ const AccidentReports = () => {
       >
         {selectedReport && (
           <div className="space-y-4">
-            <div className="flex items-start justify-between gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="flex items-start justify-between gap-3 p-4 bg-[#FFF8E8] rounded-2xl border border-[#E0E0E0]">
               <div>
-                <h3 className="text-base font-bold text-slate-800">{selectedReport.title}</h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <h3 className="text-base font-bold text-[#1E1E1E]">{selectedReport.title}</h3>
+                <p className="text-xs text-[#6C757D] mt-1">
                   {selectedReport.factory} &bull; Department: {selectedReport.department}
                 </p>
               </div>
@@ -579,15 +745,15 @@ const AccidentReports = () => {
             </div>
 
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Description</p>
-              <p className="text-sm text-slate-700 bg-white p-3 rounded-lg border border-slate-200 leading-relaxed">
+              <p className="text-xs font-semibold text-[#6C757D] uppercase tracking-wider mb-1">Description</p>
+              <p className="text-sm text-[#3E5C54] bg-white p-3 rounded-xl border border-[#E0E0E0] leading-relaxed">
                 {selectedReport.description}
               </p>
             </div>
 
            {selectedReport.images && selectedReport.images.length > 0 && (
   <div>
-    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+    <p className="text-xs font-semibold text-[#6C757D] uppercase tracking-wider mb-2">
       Evidence Photo Attachments
     </p>
 
@@ -595,7 +761,7 @@ const AccidentReports = () => {
       {selectedReport.images.map((img, idx) => (
         <div
           key={idx}
-          className="border border-slate-200 rounded-lg p-3"
+          className="border border-[#E0E0E0] rounded-xl p-3"
         >
 
           <a
@@ -606,12 +772,12 @@ const AccidentReports = () => {
             <img
               src={img.url}
               alt="Evidence"
-              className="w-32 h-32 object-cover rounded-lg"
+              className="w-32 h-32 object-cover rounded-xl"
             />
           </a>
 
 
-          <div className="mt-2 text-xs text-slate-600">
+          <div className="mt-2 text-xs text-[#6C757D]">
 
             <p>
               Uploaded By:
@@ -704,7 +870,8 @@ const AccidentReports = () => {
         message="Are you sure you want to permanently delete this accident report?"
         loading={submitting}
       />
-    </div>
+      </div>
+    </>
   );
 };
 

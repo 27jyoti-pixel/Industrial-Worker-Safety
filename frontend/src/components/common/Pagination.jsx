@@ -9,11 +9,11 @@ const Pagination = ({ currentPage = 1, totalPages = 1, onPageChange, totalItems 
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-white border border-slate-200 rounded-xl mt-4">
-      <div className="text-xs text-slate-500 font-medium">
-        Showing <span className="font-semibold text-slate-700">{startItem}</span> to{' '}
-        <span className="font-semibold text-slate-700">{endItem}</span> of{' '}
-        <span className="font-semibold text-slate-700">{totalItems}</span> results
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-white border border-sand-200 rounded-2xl mt-4">
+      <div className="text-xs text-sand-500 font-medium">
+        Showing <span className="font-semibold text-sand-700">{startItem}</span> to{' '}
+        <span className="font-semibold text-sand-700">{endItem}</span> of{' '}
+        <span className="font-semibold text-sand-700">{totalItems}</span> results
       </div>
 
       <div className="flex items-center gap-1.5">
@@ -28,7 +28,7 @@ const Pagination = ({ currentPage = 1, totalPages = 1, onPageChange, totalItems 
         </Button>
 
         <div className="flex items-center gap-1 px-2">
-          <span className="text-xs font-semibold text-slate-700">
+          <span className="text-xs font-semibold text-sand-700">
             Page {currentPage} of {totalPages}
           </span>
         </div>

@@ -33,7 +33,7 @@ export const ToastProvider = ({ children }) => {
       <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4 sm:px-0 pointer-events-none">
         {toasts.map((toast) => {
           let bg = 'bg-white border-slate-200 text-slate-800';
-          let icon = <Info className="w-5 h-5 text-blue-500 shrink-0" />;
+          let icon = <Info className="w-5 h-5 text-brand-500 shrink-0" />;
 
           if (toast.type === 'success') {
             bg = 'bg-white border-emerald-200 text-slate-800';

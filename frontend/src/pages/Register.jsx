@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import Input from '../components/common/Input';
+
 import {
   Shield,
   ShieldCheck,
@@ -13,10 +15,10 @@ import {
   BadgeCheck,
   HardHat,
   Building2,
+  Factory,
+  CircleCheck,
   Cpu,
-  ArrowRight,
-  Activity,
-  Radio
+  ArrowRight
 } from 'lucide-react';
 
 const ROLE_OPTIONS = [
@@ -25,32 +27,40 @@ const ROLE_OPTIONS = [
     role: 'Industrial Worker',
     badge: 'WORKER PORTAL',
     icon: HardHat,
-    color: 'border-orange-500/40 bg-orange-500/5 text-orange-400 hover:border-orange-500',
-    badgeBg: 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+    color:
+      'border-[#3E5C54]/40 bg-[#3E5C54]/5 text-[#3E5C54] hover:border-[#3E5C54]',
+    badgeBg:
+      'bg-[#3E5C54]/10 text-[#3E5C54] border-[#3E5C54]/20'
   },
   {
     value: 'Factory Admin',
     role: 'Factory Administrator',
     badge: 'PLANT OPERATIONS',
     icon: Building2,
-    color: 'border-amber-500/40 bg-amber-500/5 text-amber-400 hover:border-amber-500',
-    badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+    color:
+      'border-[#C9A66B]/40 bg-[#C9A66B]/5 text-[#9A7436] hover:border-[#C9A66B]',
+    badgeBg:
+      'bg-[#C9A66B]/10 text-[#9A7436] border-[#C9A66B]/20'
   },
   {
     value: 'Government Officer',
     role: 'Government Safety Officer',
     badge: 'GOVT AUDIT PORTAL',
     icon: Shield,
-    color: 'border-emerald-500/40 bg-emerald-500/5 text-emerald-400 hover:border-emerald-500',
-    badgeBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+    color:
+      'border-[#2A9D8F]/40 bg-[#2A9D8F]/5 text-[#2A9D8F] hover:border-[#2A9D8F]',
+    badgeBg:
+      'bg-[#2A9D8F]/10 text-[#2A9D8F] border-[#2A9D8F]/20'
   },
   {
     value: 'Super Admin',
     role: 'Super Administrator',
     badge: 'SYSTEM GOVERNANCE',
     icon: Cpu,
-    color: 'border-slate-700 bg-slate-900/80 text-slate-300 hover:border-blue-500/70',
-    badgeBg: 'bg-slate-800 text-slate-300 border-slate-700'
+    color:
+      'border-[#E0E0E0] bg-[#1E1E1E]/80 text-[#F4F4F4] hover:border-[#3E5C54]/70',
+    badgeBg:
+      'bg-[#3E5C54] text-[#F4F4F4] border-[#E0E0E0]'
   }
 ];
 
@@ -64,42 +74,63 @@ const Register = () => {
     factoryName: '',
     employeeId: ''
   });
+
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
-  const selectedRoleOption = ROLE_OPTIONS.find(r => r.value === formData.role) || ROLE_OPTIONS[0];
+  const selectedRoleOption =
+    ROLE_OPTIONS.find((r) => r.value === formData.role) ||
+    ROLE_OPTIONS[0];
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   const handleSelectRole = (roleValue) => {
-    setFormData({ ...formData, role: roleValue });
+    setFormData({
+      ...formData,
+      role: roleValue
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.password) {
+
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.password
+    ) {
       showError('Please fill out all required fields.');
       return;
     }
 
     setLoading(true);
+
     try {
       await register(formData);
-      showSuccess('Registration successful! Welcome to the platform.');
+
+      showSuccess(
+        'Registration successful! Welcome to the platform.'
+      );
+
       navigate('/dashboard');
     } catch (err) {
-      showError(err.message || 'Registration failed. Please verify your details.');
+      showError(
+        err.message ||
+          'Registration failed. Please verify your details.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Dynamic field labels based on selected role
   const getFieldLabels = () => {
     switch (formData.role) {
       case 'Factory Admin':
@@ -109,13 +140,15 @@ const Register = () => {
           org: 'Organization / Factory Name',
           id: 'Admin ID / Code'
         };
+
       case 'Government Officer':
         return {
           name: 'Officer Name',
           email: 'Government Email Address',
           org: 'Department / Agency Name',
-          id: 'Officer Badge / ID #'
+          id: 'Officer Badge / ID'
         };
+
       case 'Super Admin':
         return {
           name: 'System Admin Name',
@@ -123,7 +156,8 @@ const Register = () => {
           org: 'System Unit / Zone',
           id: 'Admin Access Key'
         };
-      default: // Worker
+
+      default:
         return {
           name: 'Full Worker Name',
           email: 'Personal / Work Email',
@@ -136,326 +170,339 @@ const Register = () => {
   const labels = getFieldLabels();
 
   return (
-    <div className="min-h-screen bg-[#050811] text-slate-100 flex flex-col justify-between p-4 sm:p-6 font-sans overflow-x-hidden selection:bg-orange-600 selection:text-white">
+    <div className="register-page-enter public-canvas
       
-      {/* Laser Scan Keyframe Overlay Style */}
       <style>{`
-        @keyframes scan-laser {
-          0% { top: -10%; opacity: 0; }
-          25% { opacity: 0.6; }
-          75% { opacity: 0.6; }
-          100% { top: 110%; opacity: 0; }
+        .register-page-enter {
+          animation: registerPageEnter 0.45s ease-out both;
         }
-        .animate-laser {
-          animation: scan-laser 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      
+        @keyframes registerPageEnter {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-      `}</style>
+      
+        @media (prefers-reduced-motion: reduce) {
+          .register-page-enter {
+            animation: none;
+          }
+        }
+      `}</style> min-h-screen flex items-start lg:items-center justify-center p-3 sm:p-4 lg:p-5">
+      <div className="public-window w-full max-w-[1380px] min-h-[680px] grid lg:grid-cols-[0.92fr_1.08fr] overflow-hidden">
 
-      {/* Industrial Blueprint Grid & Ambient Glow */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b18_1px,transparent_1px),linear-gradient(to_bottom,#1e293b18_1px,transparent_1px)] bg-[size:3rem_3rem]" />
-        <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-orange-600/10 rounded-full blur-[180px]" />
-        <div className="absolute -bottom-40 right-1/3 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-[180px]" />
-      </div>
+        {/* ================= LEFT INDUSTRIAL VISUAL ================= */}
+        <section className="auth-visual hidden lg:flex relative flex-col overflow-hidden">
 
-      {/* ================= TOP COMMAND BAR ================= */}
-      <header className="relative z-10 max-w-6xl mx-auto w-full flex items-center justify-between py-2 border-b border-slate-800/80 text-xs font-mono text-slate-400">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center border border-slate-700 text-orange-500">
-            <HardHat className="w-4 h-4" />
-          </div>
-          <span className="font-semibold text-slate-200 text-sm hidden sm:inline">
-            Industrial Worker Safety Platform
-          </span>
-        </div>
+          {/* soft industrial background */}
+          <div className="absolute inset-0 bg-[#EEF2F0]" />
+          <div className="absolute -top-28 -left-24 w-[420px] h-[420px] rounded-full bg-[#E1ECE8]" />
+          <div className="absolute -bottom-28 -right-24 w-[390px] h-[390px] rounded-full bg-[#F3E7D6]" />
+          <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(#B9C9C3_1px,transparent_1px)] [background-size:18px_18px]" />
 
-        {/* Telemetry Status Strip */}
-        <div className="flex items-center gap-4 sm:gap-6">
-          <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>SYSTEM STATUS: ONLINE</span>
-          </div>
-          <div className="hidden md:flex items-center gap-1.5 text-slate-300">
-            <Radio className="w-3.5 h-3.5 text-orange-400 animate-pulse" />
-            <span>REGISTRATION NETWORK: SECURE</span>
-          </div>
-        </div>
-      </header>
-
-      {/* ================= CENTER REGISTRATION CONSOLE ================= */}
-      <main className="relative z-10 my-auto py-6 max-w-4xl mx-auto w-full">
-        
-        {/* Registration Console Card */}
-        <div className="rounded-2xl bg-[#0A0F1D]/95 border border-slate-800 p-6 sm:p-8 backdrop-blur-xl shadow-2xl space-y-6 overflow-hidden relative">
-          
-          {/* Laser Scan Beam */}
-          <div className="absolute left-0 right-0 h-14 bg-gradient-to-b from-transparent via-orange-500/10 to-transparent animate-laser pointer-events-none" />
-
-          {/* Console Header */}
-          <div className="text-center space-y-1.5 relative z-10">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[11px] font-mono font-semibold tracking-wider uppercase mb-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>AUTHORIZED USER REGISTRATION</span>
+          {/* brand */}
+          <Link
+            to="/"
+            className="relative z-20 flex items-center gap-3 w-fit px-7 pt-7"
+          >
+            <div className="w-11 h-11 rounded-2xl bg-[#F4F4F4] text-[#3E5C54] flex items-center justify-center shadow-sm">
+              <HardHat className="w-5 h-5" />
             </div>
-            
-            <h1 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
-              Register Safety Access
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400 font-normal max-w-md mx-auto">
-              Create your authorized identity for the Industrial Worker Safety Platform
-            </p>
-          </div>
-
-          {/* ROLE SELECTION CARDS */}
-          <div className="space-y-3 relative z-10">
-            <div className="flex items-center justify-between text-xs font-mono text-slate-400 px-1">
-              <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5 text-orange-400" /> SELECT SYSTEM ROLE:
-              </span>
-              <span className="text-[11px] text-slate-500">Fields will adapt to selected role</span>
+            <div>
+              <div className="font-semibold text-[#1E1E1E]">
+                MIDC Safety
+              </div>
+              <div className="text-[10px] text-[#6C757D] mt-0.5">
+                Industrial worker protection
+              </div>
             </div>
+          </Link>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {ROLE_OPTIONS.map((opt) => {
-                const Icon = opt.icon;
-                const isSelected = formData.role === opt.value;
+          {/* rotating industrial scene */}
+          <div className="relative z-10 flex-1 flex items-center justify-center px-10 py-8">
+            <div className="relative w-[430px] h-[430px]">
 
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleSelectRole(opt.value)}
-                    className={`group p-3 rounded-xl border text-left transition-all duration-200 relative overflow-hidden flex flex-col justify-between space-y-3 ${
-                      isSelected
-                        ? 'border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/10'
-                        : `${opt.color} bg-slate-900/60`
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-200 group-hover:scale-105 transition-transform">
-                        <Icon className="w-4 h-4 text-orange-400" />
-                      </div>
-                      <span className={`text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded border ${opt.badgeBg}`}>
-                        {opt.badge.split(' ')[0]}
-                      </span>
+              {/* orbit rings */}
+              <div className="absolute inset-[18px] rounded-full border border-[#C9D8D2]" />
+              <div className="absolute inset-[52px] rounded-full border border-dashed border-[#B9C9C3] animate-[spin_22s_linear_infinite]" />
+              <div className="absolute inset-[92px] rounded-full border border-[#E0E0E0]" />
+
+              {/* rotating industry tiles */}
+              <div className="absolute inset-0 animate-[spin_26s_linear_infinite]">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-14 h-14 rounded-2xl bg-white border border-[#E0E0E0] shadow-[0_12px_28px_rgba(24,55,40,.10)] flex items-center justify-center text-[#3E5C54]">
+                  <Factory className="w-6 h-6" />
+                </div>
+
+                <div className="absolute bottom-9 left-10 w-14 h-14 rounded-2xl bg-white border border-[#E0E0E0] shadow-[0_12px_28px_rgba(24,55,40,.10)] flex items-center justify-center text-[#C9A66B]">
+                  <HardHat className="w-6 h-6" />
+                </div>
+
+                <div className="absolute bottom-10 right-9 w-14 h-14 rounded-2xl bg-white border border-[#E0E0E0] shadow-[0_12px_28px_rgba(24,55,40,.10)] flex items-center justify-center text-[#8a79b7]">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+              </div>
+
+              {/* counter-rotating inner tiles */}
+              <div className="absolute inset-[54px] animate-[spin_18s_linear_infinite_reverse]">
+                <div className="absolute top-4 right-2 w-10 h-10 rounded-xl bg-[#F3E7D6] border border-white shadow-sm flex items-center justify-center text-[#C9A66B]">
+                  <CircleCheck className="w-5 h-5" />
+                </div>
+
+                <div className="absolute bottom-8 left-2 w-10 h-10 rounded-xl bg-[#EEF2F0] border border-white shadow-sm flex items-center justify-center text-[#3E5C54]">
+                  <Building2 className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* central card */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[290px] rounded-[30px] bg-white border border-white shadow-[0_24px_60px_rgba(24,55,40,.14)] p-5 rotate-[-3deg]">
+                <div className="h-[210px] rounded-[22px] bg-[#F4F4F4] border border-dashed border-[#D6E2DD] relative overflow-hidden">
+
+                  <div className="absolute -top-14 -right-14 w-32 h-32 rounded-full bg-[#E1ECE8]" />
+                  <div className="absolute -bottom-12 -left-8 w-28 h-28 rounded-full bg-[#F3E7D6]" />
+
+                  {/* factory illustration */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="relative w-32 h-24">
+                      <div className="absolute bottom-2 left-2 w-28 h-16 rounded-lg bg-[#DCE8E2] border border-[#C9D8D2]" />
+                      <div className="absolute bottom-18 left-5 w-12 h-12 bg-[#3E5C54] rounded-t-lg" />
+                      <div className="absolute bottom-18 left-19 w-8 h-16 bg-[#B9C9C3] rounded-t-lg" />
+                      <div className="absolute bottom-2 left-8 w-6 h-8 bg-white rounded-t-md" />
+                      <div className="absolute bottom-11 left-18 w-5 h-5 bg-white rounded-sm" />
+                      <div className="absolute bottom-11 left-27 w-5 h-5 bg-white rounded-sm" />
+                      <div className="absolute bottom-18 left-27 w-5 h-2 bg-[#C9A66B] rounded-full" />
                     </div>
+                  </div>
 
-                    <div>
-                      <p className="text-xs font-semibold text-white group-hover:text-orange-400 transition-colors">
-                        {opt.role}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
+                  <div className="absolute left-4 bottom-4 text-[9px] uppercase tracking-[.18em] font-bold text-[#C9A66B]">
+                    Industrial safety
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="text-xl font-semibold text-[#1E1E1E]">
+                    One account. Every responsibility.
+                  </div>
+                  <p className="text-xs text-[#6C757D] mt-1.5 leading-5">
+                    Your role controls the workspace and the information you can manage.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* DYNAMIC REGISTRATION FORM */}
-          <form onSubmit={handleSubmit} className="space-y-4 relative z-10 pt-2 border-t border-slate-800/80">
-            
-            {/* Row 1: Name & Email */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-medium text-slate-300 flex items-center justify-between">
-                  <span>{labels.name.toUpperCase()}</span>
-                  <span className="text-[10px] text-orange-400 font-normal">REQUIRED</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                    <User className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter full name"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition duration-200 font-mono"
-                  />
+          {/* bottom workflow note */}
+          <div className="relative z-20 px-7 pb-7">
+            <div className="inline-flex items-center gap-3 rounded-2xl bg-white/90 border border-white shadow-[0_12px_30px_rgba(24,55,40,.08)] px-4 py-3">
+              <div className="w-9 h-9 rounded-xl bg-[#EEF2F0] text-[#3E5C54] flex items-center justify-center">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-[#1E1E1E]">
+                  Role-aware registration
+                </div>
+                <div className="text-[10px] text-[#6C757D] mt-0.5">
+                  Fields adapt to your selected responsibility
                 </div>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-medium text-slate-300 flex items-center justify-between">
-                  <span>{labels.email.toUpperCase()}</span>
-                  <span className="text-[10px] text-orange-400 font-normal">REQUIRED</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                    <Mail className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="email"
-                    required
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="user@factory.com"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition duration-200 font-mono"
-                  />
-                </div>
-              </div>
-
             </div>
+          </div>
+        </section>
 
-            {/* Row 2: Password & Phone */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-medium text-slate-300 flex items-center justify-between">
-                  <span>ACCESS PASSWORD</span>
-                  <span className="text-[10px] text-orange-400 font-normal">MIN 6 CHARS</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                    <Lock className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="password"
-                    required
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition duration-200 font-mono"
-                  />
-                </div>
-              </div>
+        {/* ================= RIGHT FORM ================= */}
+        <main className="auth-panel flex flex-col">
+          <div className="w-full max-w-[620px] mx-auto px-6 py-6 sm:px-8 lg:px-10">
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-medium text-slate-300 flex items-center justify-between">
-                  <span>PHONE NUMBER</span>
-                  <span className="text-[10px] text-slate-500 font-normal">OPTIONAL</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                    <Phone className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="+91 9876543210"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition duration-200 font-mono"
-                  />
-                </div>
-              </div>
-
-            </div>
-
-            {/* Row 3: Factory / Organization & Employee ID */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-medium text-slate-300 flex items-center justify-between">
-                  <span>{labels.org.toUpperCase()}</span>
-                  <span className="text-[10px] text-slate-500 font-normal">ORGANIZATION</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                    <Building className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    name="factoryName"
-                    value={formData.factoryName}
-                    onChange={handleChange}
-                    placeholder="Apex Steel Unit 4"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition duration-200 font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-medium text-slate-300 flex items-center justify-between">
-                  <span>{labels.id.toUpperCase()}</span>
-                  <span className="text-[10px] text-slate-500 font-normal">IDENTIFIER</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                    <BadgeCheck className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    name="employeeId"
-                    value={formData.employeeId}
-                    onChange={handleChange}
-                    placeholder="EMP-1024"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-900/90 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition duration-200 font-mono"
-                  />
-                </div>
-              </div>
-
-            </div>
-
-            {/* Selected Role Status & Submit Button */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
-              
-              <div className="flex items-center gap-2 text-xs text-slate-400 font-mono w-full sm:w-auto">
-                <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                <span>SELECTED ROLE:</span>
-                <span className="text-orange-400 font-semibold">{selectedRoleOption.role}</span>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full sm:w-auto px-8 py-3 text-xs sm:text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 hover:from-orange-500 hover:to-amber-500 border border-orange-400/40 shadow-lg shadow-orange-600/30 hover:shadow-orange-500/50 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+            {/* TOP NAV */}
+            <div className="flex items-center justify-between mb-5">
+              <Link
+                to="/"
+                className="text-xs font-semibold text-[#6C757D] hover:text-[#3E5C54] transition-colors"
               >
-                {loading ? (
-                  <span>REGISTERING...</span>
-                ) : (
-                  <>
-                    <span>Complete Registration</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
+                ← Back to home
+              </Link>
 
+              <div className="text-xs text-[#6C757D]">
+                Already registered?{' '}
+                <Link
+                  to="/login"
+                  className="font-semibold text-[#3E5C54] hover:text-[#3E5C54]-dark transition-colors"
+                >
+                  Sign in
+                </Link>
+              </div>
             </div>
 
-          </form>
+            {/* TITLE */}
+            <div className="mb-4">
+              <div className="midc-section-label">
+                <span className="midc-dot bg-[#C9A66B]" />
+                New safety profile
+              </div>
 
-          {/* Bottom Login Link */}
-          <div className="pt-2 text-center text-xs text-slate-400 border-t border-slate-800/80 relative z-10">
-            <span>Already registered? </span>
-            <Link to="/login" className="font-semibold text-orange-400 hover:text-orange-300 transition">
-              Sign In &rarr;
-            </Link>
+              <h1 className="mt-2 text-[38px] sm:text-[44px] leading-[.98] font-semibold tracking-[-0.045em] text-[#1E1E1E]">
+                Build your
+                <br />
+                <span className="text-[#C9A66B]">
+                  safety workspace.
+                </span>
+              </h1>
+
+              <p className="text-sm text-[#6C757D] mt-2 max-w-[540px] leading-5">
+                Select your responsibility and enter the details used by your existing registration workflow.
+              </p>
+            </div>
+
+            {/* ROLE SELECTION */}
+            <div className="mb-5">
+              <div className="flex items-center justify-between mb-2.5">
+                <label className="text-sm font-semibold text-[#1E1E1E]">
+                  Choose responsibility
+                </label>
+                <span className="text-[10px] text-[#6C757D]">
+                  Fields adapt automatically
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {ROLE_OPTIONS.map((opt) => {
+                  const Icon = opt.icon;
+                  const selected = formData.role === opt.value;
+
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleSelectRole(opt.value)}
+                      className={`auth-role-card ${selected ? 'selected' : ''}`}
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${
+                          selected
+                            ? 'bg-[#3E5C54] text-white'
+                            : 'bg-[#3E5C54]-soft text-[#3E5C54]'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </div>
+
+                      <div className="text-[11px] font-semibold text-[#1E1E1E] leading-tight">
+                        {opt.role}
+                      </div>
+
+                      <div className="text-[8px] text-[#6C757D] mt-1 uppercase tracking-wider">
+                        {opt.badge.split(' ')[0]}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* REGISTRATION FORM */}
+            <form onSubmit={handleSubmit} className="space-y-2.5">
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Input
+                  label={labels.name}
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter full name"
+                  required
+                  icon={User}
+                />
+
+                <Input
+                  label={labels.email}
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="you@organization.com"
+                  required
+                  icon={Mail}
+                />
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Input
+                  label="Password"
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Create a password"
+                  required
+                  icon={Lock}
+                />
+
+                <Input
+                  label="Phone number"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="Enter phone number"
+                  icon={Phone}
+                />
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Input
+                  label={labels.org}
+                  name="factoryName"
+                  value={formData.factoryName}
+                  onChange={handleChange}
+                  placeholder="Organization / factory name"
+                  icon={Building}
+                />
+
+                <Input
+                  label={labels.id}
+                  name="employeeId"
+                  value={formData.employeeId}
+                  onChange={handleChange}
+                  placeholder="Employee / officer ID"
+                  icon={BadgeCheck}
+                />
+              </div>
+
+              {/* SUBMIT */}
+              <div className="pt-1 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs text-[#6C757D]">
+                  <Shield className="w-4 h-4 text-[#3E5C54]" />
+                  <span>Selected:</span>
+                  <span className="font-semibold text-[#3E5C54]">
+                    {selectedRoleOption.role}
+                  </span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full sm:w-auto min-h-[48px] px-6 rounded-2xl bg-[#3E5C54]-dark text-white font-semibold flex items-center justify-center gap-2 hover:bg-[#3E5C54] hover:-translate-y-px transition-all duration-200 disabled:opacity-50"
+                >
+                  {loading ? (
+                    'Creating account...'
+                  ) : (
+                    <>
+                      Create workspace
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-
-        </div>
-      </main>
-
-      {/* ================= BOTTOM TELEMETRY STRIP ================= */}
-      <footer className="relative z-10 max-w-6xl mx-auto w-full py-3 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs font-mono">
-        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-          <span className="text-slate-500 text-[10px] block">SYSTEM STATUS</span>
-          <span className="text-emerald-400 font-semibold">ONLINE</span>
-        </div>
-
-        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-          <span className="text-slate-500 text-[10px] block">REGISTRATION NETWORK</span>
-          <span className="text-white font-semibold">SECURE</span>
-        </div>
-
-        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-          <span className="text-slate-500 text-[10px] block">STATUTORY AUDIT</span>
-          <span className="text-white font-semibold">VERIFIED</span>
-        </div>
-
-        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-          <span className="text-slate-500 text-[10px] block">SAFETY SUPPORT</span>
-          <span className="text-orange-400 font-semibold">24/7 ACTIVE</span>
-        </div>
-      </footer>
-
+        </main>
+      </div>
     </div>
   );
+
 };
 
 export default Register;

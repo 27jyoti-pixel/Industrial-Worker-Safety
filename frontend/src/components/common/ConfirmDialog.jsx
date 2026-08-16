@@ -36,7 +36,7 @@ const ConfirmDialog = ({
           <AlertTriangle className="w-6 h-6" />
         </div>
         <div>
-          <p className="text-sm text-slate-600 leading-relaxed">{message}</p>
+          <p className="text-sm text-sand-600 leading-relaxed">{message}</p>
         </div>
       </div>
     </Modal>

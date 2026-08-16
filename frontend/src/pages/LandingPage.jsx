@@ -1,688 +1,831 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Shield,
-  ShieldAlert,
-  HeartPulse,
-  FileText,
-  CheckCircle,
-  ArrowRight,
-  Building2,
-  UserCheck,
-  Activity,
-  Factory,
-  Siren,
-  Flame,
   ShieldCheck,
-  CheckCircle2,
-  Phone,
-  FileCheck2,
-  Cpu,
-  ChevronRight,
   HardHat,
-  Radio,
-  Lock,
-  Zap,
-  Layers,
-  Sparkles,
-  Server,
-  UserPlus,
-  AlertTriangle
+  ArrowRight,
+  Users,
+  AlertTriangle,
+  FileCheck2,
+  Hospital,
+  ShieldAlert,
+  Building2,
+  Menu,
+  X,
+  ClipboardCheck,
+  MapPin,
+  CheckCircle2,
+  FileText,
+  Search
 } from 'lucide-react';
 
-import Button from '../components/common/Button';
-
-// Static Data Definitions (Accurate & Grounded)
 const SYSTEM_CAPABILITIES = [
   {
-    title: "Worker Safety Profile",
-    desc: "Digital worker onboarding with identity verification, factory unit assignment, and health profile logging.",
-    icon: UserPlus,
-    tag: "ROSTER MANAGEMENT",
-    color: "border-blue-500/30 text-blue-400 bg-blue-500/10",
-    hoverGlow: "hover:border-blue-500/60 hover:shadow-blue-500/10"
+    title: 'Worker Safety Profiles',
+    desc: 'Keep worker identity, assignment and safety information organized.',
+    icon: Users,
+    tone: 'green'
   },
   {
-    title: "Accident Incident Reporting",
-    desc: "Smart digital reporting of shopfloor accidents with injury severity ratings, time logs, and photo evidence upload.",
-    icon: ShieldAlert,
-    tag: "INCIDENT TRACKING",
-    color: "border-red-500/30 text-red-400 bg-red-500/10",
-    hoverGlow: "hover:border-red-500/60 hover:shadow-red-500/10"
+    title: 'Incident Reporting',
+    desc: 'Capture workplace accidents and keep follow-up visible.',
+    icon: AlertTriangle,
+    tone: 'coral'
   },
   {
-    title: "Compensation Claim Management",
-    desc: "Statutory disability claim filing with medical expense bill tracking, officer approval trails, and relief payout logs.",
+    title: 'Compensation Claims',
+    desc: 'Move claims from submission through review in one workflow.',
     icon: FileCheck2,
-    tag: "RELIEF DISBURSEMENT",
-    color: "border-amber-500/30 text-amber-400 bg-amber-500/10",
-    hoverGlow: "hover:border-amber-500/60 hover:shadow-amber-500/10"
+    tone: 'lavender'
   },
   {
-    title: "Safety Hazard Complaints",
-    desc: "Direct filing of factory risk reports regarding gas leaks, unshielded machinery, and electrical hazards.",
-    icon: Flame,
-    tag: "HAZARD TRIAGE",
-    color: "border-orange-500/30 text-orange-400 bg-orange-500/10",
-    hoverGlow: "hover:border-orange-500/60 hover:shadow-orange-500/10"
+    title: 'Safety Complaints',
+    desc: 'Record hazards, inspections and corrective action.',
+    icon: ShieldAlert,
+    tone: 'amber'
   },
   {
-    title: "Emergency Hospital Support",
-    desc: "GPS radius directory of nearby industrial trauma centers, specialized burn units, and 108 ambulance dispatch link.",
-    icon: HeartPulse,
-    tag: "24/7 TRAUMA NETWORK",
-    color: "border-emerald-500/30 text-emerald-400 bg-emerald-500/10",
-    hoverGlow: "hover:border-emerald-500/60 hover:shadow-emerald-500/10"
+    title: 'Emergency Support',
+    desc: 'Find hospital and trauma support when an incident requires care.',
+    icon: Hospital,
+    tone: 'green'
   }
 ];
 
-const PIPELINE_STEPS_DATA = [
+const ROLES = [
   {
-    step: "01",
-    title: "Incident Reporting",
-    desc: "Worker or supervisor files digital accident report with injury severity rating and photo evidence.",
-    icon: Siren,
-    status: "Digital Log"
-  },
-  {
-    step: "02",
-    title: "Factory Verification",
-    desc: "Plant administrator verifies incident details, isolates hazard zone, and logs immediate safety response.",
-    icon: Factory,
-    status: "On-Site Review"
-  },
-  {
-    step: "03",
-    title: "Emergency Medical Support",
-    desc: "Trauma hospital directory search and 108 emergency ambulance hotline dispatch for critical care.",
-    icon: HeartPulse,
-    status: "Care Dispatched"
-  },
-  {
-    step: "04",
-    title: "Government Compliance Review",
-    desc: "State safety officer reviews statutory compliance, inspects factory floor, and audits medical bills.",
-    icon: ShieldCheck,
-    status: "Statutory Audit"
-  },
-  {
-    step: "05",
-    title: "Compensation Settlement",
-    desc: "Approved relief funds are disbursed transparently to the affected worker while safety retrofits are certified.",
-    icon: CheckCircle2,
-    status: "Payout Complete"
-  }
-];
-
-const ROLES_DATA = [
-  {
-    role: "Industrial Worker",
-    desc: "Log workplace accidents, submit medical expense claims, report hazards, and access emergency trauma support.",
+    title: 'Industrial Worker',
+    desc: 'Report incidents, submit claims and access safety services.',
     icon: HardHat,
-    badge: "WORKER PORTAL",
-    color: "border-orange-500/30 hover:border-orange-500/80 hover:shadow-orange-500/15",
-    iconColor: "text-orange-400",
-    badgeBg: "bg-orange-500/10 text-orange-400 border-orange-500/20"
+    tone: 'green'
   },
   {
-    role: "Factory Administrator",
-    desc: "Manage worker rosters, conduct on-site incident investigations, log safety actions, and maintain statutory standards.",
+    title: 'Factory Administrator',
+    desc: 'Manage workers, investigate incidents and maintain plant safety.',
     icon: Building2,
-    badge: "PLANT OPERATIONS",
-    color: "border-amber-500/30 hover:border-amber-500/80 hover:shadow-amber-500/15",
-    iconColor: "text-amber-400",
-    badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/20"
+    tone: 'coral'
   },
   {
-    role: "Government Safety Officer",
-    desc: "Audit plant safety compliance, inspect high-severity workplace incidents, and authorize statutory compensation payouts.",
-    icon: Shield,
-    badge: "GOVT AUDIT PORTAL",
-    color: "border-emerald-500/30 hover:border-emerald-500/80 hover:shadow-emerald-500/15",
-    iconColor: "text-emerald-400",
-    badgeBg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-  },
-  {
-    role: "Super Administrator",
-    desc: "Platform governance over user role authorizations, trauma hospital registries, and system audit logs.",
-    icon: Cpu,
-    badge: "SYSTEM GOVERNANCE",
-    color: "border-slate-700 hover:border-blue-500/70 hover:shadow-blue-500/15",
-    iconColor: "text-blue-400",
-    badgeBg: "bg-slate-800 text-slate-300 border-slate-700"
+    title: 'Government Safety Officer',
+    desc: 'Review compliance, incidents and statutory compensation.',
+    icon: ShieldCheck,
+    tone: 'lavender'
   }
 ];
 
-const SAFETY_ZONES_DATA = [
-  { id: "ZONE-A", name: "Plant Floor Unit 4", status: "Verified Safe", incidents: "0 Critical", workers: 142, score: "99.1%" },
-  { id: "ZONE-B", name: "Chemical Handling Unit", status: "Under Review", incidents: "1 Hazard Logged", workers: 88, score: "96.4%" },
-  { id: "ZONE-C", name: "Assembly & Fabrication", status: "Verified Safe", incidents: "Zero Incidents", workers: 310, score: "99.8%" },
-  { id: "ZONE-D", name: "Power Grid Substation", status: "Audit Passed", incidents: "Normal Load", workers: 45, score: "98.7%" }
-];
-
-const RECENT_EVENTS_LOG = [
-  { id: "EVT-801", time: "10:42 AM", msg: "Shopfloor Hazard Report #CMP-109 Resolved by Plant Admin", status: "RESOLVED", color: "text-emerald-400" },
-  { id: "EVT-802", time: "10:38 AM", msg: "Compensation Claim #CLM-9042 (₹50,000) Approved by State Officer", status: "APPROVED", color: "text-amber-400" },
-  { id: "EVT-803", time: "10:15 AM", msg: "Accident Report #INC-409 Investigated & First Aid Logged", status: "AUDITED", color: "text-emerald-400" },
-  { id: "EVT-804", time: "09:50 AM", msg: "Emergency Trauma Hospital Dispatch Linked with 108 Ambulance", status: "ACTIVE", color: "text-blue-400" }
-];
+const toneClasses = {
+  green:
+    'bg-[#EEF2F0] text-[#3E5C54] border-[#D6E2DD]',
+  coral:
+    'bg-[#F3E7D6] text-[#C9A66B] border-[#E8D6B8]',
+  amber:
+    'bg-[#FAF3DE] text-[#9A7A28] border-[#E9C46A]',
+  lavender:
+    'bg-[#EAF3FB] text-[#2196F3] border-[#C9E1F5]'
+};
 
 const LandingPage = () => {
-  const capabilities = SYSTEM_CAPABILITIES || [];
-  const pipelineSteps = PIPELINE_STEPS_DATA || [];
-  const roles = ROLES_DATA || [];
-  const safetyZones = SAFETY_ZONES_DATA || [];
-  const recentLogs = RECENT_EVENTS_LOG || [];
-
-  const [workerCount, setWorkerCount] = useState(1240);
-  const [activeLogIndex, setActiveLogIndex] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pageRef = useRef(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setWorkerCount(prev => prev + (Math.random() > 0.5 ? 1 : -1));
-    }, 4500);
-    return () => clearInterval(interval);
+    const page = pageRef.current;
+
+    if (!page) return;
+
+    const animatedElements = page.querySelectorAll(
+      '[data-reveal], [data-reveal-child]'
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          } else {
+            entry.target.classList.remove('is-visible');
+          }
+        });
+      },
+      {
+        threshold: 0.12,
+        rootMargin: '-40px 0px -60px 0px'
+      }
+    );
+
+    animatedElements.forEach((element) => {
+      observer.observe(element);
+    });
+
+    return () => {
+      animatedElements.forEach((element) => {
+        observer.unobserve(element);
+      });
+
+      observer.disconnect();
+    };
   }, []);
 
-  useEffect(() => {
-    const logInterval = setInterval(() => {
-      setActiveLogIndex(prev => (prev + 1) % recentLogs.length);
-    }, 3800);
-    return () => clearInterval(logInterval);
-  }, [recentLogs.length]);
-
   return (
-    <div className="min-h-screen bg-[#050811] text-slate-100 flex flex-col font-sans overflow-x-hidden selection:bg-orange-600 selection:text-white">
-      
-      {/* Refined Industrial Telemetry Animations */}
+    <div
+      ref={pageRef}
+      className="midc-public-page overflow-x-hidden" landing-page-motion
+    >
       <style>{`
-        @keyframes scanline-radar {
-          0% { top: -10%; opacity: 0; }
-          25% { opacity: 0.7; }
-          75% { opacity: 0.7; }
-          100% { top: 110%; opacity: 0; }
+        .landing-page-motion .midc-public-header {
+          transition: background-color .25s ease, box-shadow .25s ease;
         }
-        @keyframes float-panel {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-5px); }
+
+        .landing-page-motion .midc-public-header:hover {
+          box-shadow: 0 8px 28px rgba(30, 30, 30, .06);
         }
-        .animate-radar {
-          animation: scanline-radar 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+        .landing-page-motion .midc-brand-mark {
+          transition: transform .3s ease, box-shadow .3s ease;
         }
-        .animate-float-panel {
-          animation: float-panel 6s ease-in-out infinite;
+
+        .landing-page-motion .midc-brand-mark:hover {
+          transform: translateY(-2px) rotate(-3deg);
+          box-shadow: 0 8px 18px rgba(62, 92, 84, .16);
+        }
+
+        .landing-page-motion .landing-pin {
+          transition: transform .3s ease, box-shadow .3s ease;
+        }
+
+        .landing-page-motion .landing-pin:hover {
+          transform: translateY(-5px) scale(1.07);
+          box-shadow: 0 12px 24px rgba(62, 92, 84, .18);
+        }
+
+        .landing-page-motion .landing-float-card {
+          transition: transform .35s ease, box-shadow .35s ease;
+        }
+
+        .landing-page-motion .landing-float-card:hover {
+          transform: translateY(-6px) scale(1.02);
+          box-shadow: 0 18px 32px rgba(30, 30, 30, .12);
+        }
+
+        .landing-page-motion .landing-search-field {
+          transition: transform .25s ease, background-color .25s ease;
+        }
+
+        .landing-page-motion .landing-search-field:hover {
+          transform: translateY(-2px);
+          background-color: rgba(255, 255, 255, .82);
+        }
+
+        .landing-page-motion .landing-search-button {
+          transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+        .landing-page-motion .landing-search-button:hover {
+          transform: translateY(-2px) scale(1.04);
+          box-shadow: 0 10px 22px rgba(62, 92, 84, .20);
+        }
+
+        .landing-page-motion .midc-feature-card,
+        .landing-page-motion .midc-role-card {
+          transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+        }
+
+        .landing-page-motion .midc-feature-card:hover,
+        .landing-page-motion .midc-role-card:hover {
+          transform: translateY(-7px);
+          box-shadow: 0 16px 34px rgba(30, 30, 30, .09);
+          border-color: rgba(62, 92, 84, .28);
+        }
+
+        .landing-page-motion .midc-feature-icon {
+          transition: transform .3s ease;
+        }
+
+        .landing-page-motion .midc-feature-card:hover .midc-feature-icon,
+        .landing-page-motion .midc-role-card:hover .midc-feature-icon {
+          transform: translateY(-2px) scale(1.06);
+        }
+
+        .landing-page-motion .midc-workflow-row {
+          transition: transform .25s ease, box-shadow .25s ease, background-color .25s ease;
+        }
+
+        .landing-page-motion .midc-workflow-row:hover {
+          transform: translateX(5px);
+          box-shadow: 0 8px 20px rgba(30, 30, 30, .06);
+        }
+
+        .landing-page-motion .landing-workspace-card {
+          transition: transform .35s ease, box-shadow .35s ease;
+        }
+
+        .landing-page-motion .landing-workspace-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 22px 45px rgba(30, 30, 30, .14);
+        }
+
+        .landing-page-motion .landing-workspace-tile {
+          transition: transform .25s ease, background-color .25s ease, border-color .25s ease;
+        }
+
+        .landing-page-motion .landing-workspace-tile:hover {
+          transform: translateY(-4px);
+          background-color: rgba(255, 255, 255, .14);
+          border-color: rgba(255, 255, 255, .22);
+        }
+
+        .landing-page-motion .midc-btn-primary,
+        .landing-page-motion .midc-btn-outline {
+          transition: transform .25s ease, box-shadow .25s ease, background-color .25s ease;
+        }
+
+        .landing-page-motion .midc-btn-primary:hover,
+        .landing-page-motion .midc-btn-outline:hover {
+          transform: translateY(-2px);
+        }
+
+        .landing-page-motion .midc-btn-primary:hover {
+          box-shadow: 0 12px 26px rgba(62, 92, 84, .18);
+        }
+
+        .landing-page-motion a:focus-visible,
+        .landing-page-motion button:focus-visible {
+          outline: 2px solid #C9A66B;
+          outline-offset: 3px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .landing-page-motion *,
+          .landing-page-motion *::before,
+          .landing-page-motion *::after {
+            transition-duration: .01ms !important;
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
+          }
         }
       `}</style>
 
-      {/* Industrial Blueprint Grid & Soft Ambient Lighting */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b18_1px,transparent_1px),linear-gradient(to_bottom,#1e293b18_1px,transparent_1px)] bg-[size:3rem_3rem]" />
-        <div className="absolute -top-40 left-1/4 w-[700px] h-[700px] bg-orange-600/10 rounded-full blur-[190px]" />
-        <div className="absolute top-1/3 -right-40 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-[190px]" />
-        <div className="absolute -bottom-40 left-1/3 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[190px]" />
-      </div>
+      {/* ================= HEADER ================= */}
 
-      {/* ================= NAVBAR (STICKY GLASS) ================= */}
-      <header className="sticky top-0 z-50 bg-[#050811]/90 backdrop-blur-xl border-b border-slate-800/90 px-6 sm:px-12 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          
-          {/* Logo Branding */}
-          <div className="flex items-center gap-3 cursor-pointer group">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center border border-slate-700 group-hover:border-orange-500/60 transition duration-300 relative shadow-inner">
-              <HardHat className="w-5 h-5 text-orange-500 group-hover:scale-105 transition duration-300" />
-              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500"></span>
-              </span>
+      <header className="midc-public-header sticky top-0 z-50">
+        <div className="midc-container h-[72px] flex items-center justify-between">
+
+          <Link
+            to="/"
+            className="flex items-center gap-3"
+          >
+            <div className="midc-brand-mark">
+              <ShieldCheck className="w-5 h-5" />
             </div>
+
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-semibold text-white tracking-tight text-base">
-                  Industrial Worker Safety
-                </h1>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/30 text-[10px] font-mono font-semibold">
-                  <Activity className="w-3 h-3 animate-pulse" /> INDUSTRIAL SAFETY MANAGEMENT PLATFORM
-                </span>
+              <div className="font-extrabold text-[#1E1E1E] leading-tight">
+                MIDC Safety
               </div>
-              <p className="text-[11px] text-slate-400 font-normal hidden sm:block">
-                Worker Safety & Compensation Management System
-              </p>
-            </div>
-          </div>
 
-          {/* Nav Actions */}
-          <div className="flex items-center gap-3">
-            <div className="hidden lg:flex items-center gap-2 pr-4 border-r border-slate-800 text-xs text-slate-400 font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>SAFETY SYSTEM: ACTIVE</span>
+              <div className="text-[11px] text-[#6C757D]">
+                Industrial worker protection
+              </div>
             </div>
+          </Link>
 
-            <Link to="/login">
-              <button className="px-4 py-2 text-xs font-medium rounded-lg text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-orange-500/60 hover:-translate-y-0.5 transition-all duration-200 shadow-sm">
-                Sign In
-              </button>
+          <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-[#6C757D]">
+            <a
+              href="#platform"
+              className="hover:text-[#3E5C54] transition"
+            >
+              Platform
+            </a>
+
+            <a
+              href="#workflow"
+              className="hover:text-[#3E5C54] transition"
+            >
+              How it works
+            </a>
+
+            <a
+              href="#roles"
+              className="hover:text-[#3E5C54] transition"
+            >
+              For teams
+            </a>
+          </nav>
+
+          <div className="hidden md:flex items-center gap-2">
+            <Link
+              to="/login"
+              className="px-4 py-2.5 rounded-xl text-sm font-bold text-[#1E1E1E] hover:bg-[#F4F4F4] transition"
+            >
+              Sign in
             </Link>
 
-            <Link to="/register">
-              <button className="px-4 py-2 text-xs font-semibold rounded-lg text-white bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 border border-orange-400/40 shadow-lg shadow-orange-600/25 hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all duration-200">
-                Register Worker
-              </button>
+            <Link
+              to="/register"
+              className="midc-btn-primary px-4 py-2.5 text-sm"
+            >
+              Get started
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            className="md:hidden p-2 rounded-xl hover:bg-[#F4F4F4]"
+            aria-label="Toggle menu"
+          >
+            {menuOpen ? <X /> : <Menu />}
+          </button>
         </div>
+
+        {menuOpen && (
+          <div className="md:hidden px-5 pb-4 border-t border-[#E0E0E0] bg-[#FFFFFF] flex flex-col gap-1 pt-3">
+
+            <a
+              href="#platform"
+              onClick={() => setMenuOpen(false)}
+              className="p-3 rounded-xl hover:bg-[#F4F4F4]"
+            >
+              Platform
+            </a>
+
+            <a
+              href="#workflow"
+              onClick={() => setMenuOpen(false)}
+              className="p-3 rounded-xl hover:bg-[#F4F4F4]"
+            >
+              How it works
+            </a>
+
+            <Link
+              to="/login"
+              className="p-3 rounded-xl hover:bg-[#F4F4F4]"
+            >
+              Sign in
+            </Link>
+
+            <Link
+              to="/register"
+              className="p-3 rounded-xl bg-[#3E5C54] text-white text-center"
+            >
+              Get started
+            </Link>
+
+          </div>
+        )}
       </header>
 
-      {/* ================= HERO SECTION ================= */}
-      <section className="relative z-10 py-12 sm:py-20 px-6 sm:px-12 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-          
-          {/* Left Column Text */}
-          <div className="lg:col-span-7 space-y-6">
-            
-            {/* Platform Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-700/80 text-slate-300 text-xs font-mono shadow-md">
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
-              <span className="text-orange-400 font-semibold">INDUSTRIAL SAFETY COMMAND</span>
-              <span className="text-slate-500">|</span>
-              <span className="text-slate-300">WORKER PROTECTION & COMPLIANCE</span>
-            </div>
+      <main>
 
-            {/* Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-white leading-[1.14]">
-              Protecting Workers.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500 font-bold">
-                Digitizing Industrial Safety.
-              </span>
-            </h1>
+        {/* ================= HERO ================= */}
 
-            {/* Concise Subtitle */}
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl font-normal">
-              Digital safety management for factory workers, plant administrators, and government safety officers — integrating accident reporting, compensation claim auditing, and hazard triage.
-            </p>
+        <section className="midc-hero py-5 sm:py-8 lg:py-10">
+          <div className="midc-container">
 
-            {/* Action Buttons */}
-            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-              <Link to="/login" className="group">
-                <button className="w-full sm:w-auto px-7 py-3.5 text-xs sm:text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 hover:from-orange-500 hover:to-amber-500 border border-orange-400/40 shadow-xl shadow-orange-600/30 hover:shadow-orange-500/50 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2">
-                  <span>Access Safety Dashboard</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
-              </Link>
+            <div className="landing-reference-card">
 
-              <Link to="/register">
-                <button className="w-full sm:w-auto px-6 py-3.5 text-xs sm:text-sm font-medium rounded-xl text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-orange-500/60 hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
-                  <span>Register Worker</span>
-                </button>
-              </Link>
-            </div>
+              {/* LEFT VISUAL */}
 
-            {/* Ticker Metrics */}
-            <div className="pt-6 border-t border-slate-800/90 grid grid-cols-3 gap-4 font-mono">
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">ACTIVE WORKERS</span>
-                <span className="text-lg sm:text-xl font-bold text-white mt-0.5 block">{workerCount.toLocaleString()}</span>
-                <span className="text-[10px] text-emerald-400">12 Plants Monitored</span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">SAFETY RATING</span>
-                <span className="text-lg sm:text-xl font-bold text-emerald-400 mt-0.5 block">98.4%</span>
-                <span className="text-[10px] text-slate-400">ISO 45001 Verified</span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">RESPONSE TIME</span>
-                <span className="text-lg sm:text-xl font-bold text-orange-400 mt-0.5 block">&lt; 4.8 Mins</span>
-                <span className="text-[10px] text-slate-400">Hotline 108 Active</span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right Column: Refocused Worker Safety Command Telemetry Card */}
-          <div className="lg:col-span-5 relative">
-            
-            {/* Soft Ambient Glow */}
-            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-orange-600/20 via-slate-800 to-emerald-600/20 blur-xl opacity-70" />
-
-            {/* Dashboard Box */}
-            <div className="relative rounded-2xl bg-[#0A0F1D] border border-slate-800 p-5 shadow-2xl space-y-4 overflow-hidden backdrop-blur-xl">
-              
-              {/* Radar Scanline Overlay */}
-              <div className="absolute left-0 right-0 h-16 bg-gradient-to-b from-transparent via-orange-500/15 to-transparent animate-radar pointer-events-none" />
-
-              {/* Monitor Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-mono font-semibold text-slate-200">WORKER SAFETY TELEMETRY</span>
-                </div>
-                <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  SYSTEM ACTIVE
-                </span>
-              </div>
-
-              {/* Active Incident Warning Alert */}
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 flex items-start gap-3">
-                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <div className="flex-1 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-red-400">INCIDENT LOG #INC-409</span>
-                    <span className="text-[10px] font-mono bg-red-500/20 px-1.5 py-0.5 rounded text-red-300">MODERATE SEVERITY</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 mt-1">Press Machine #4 Pinch Injury &bull; Unit 2</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">First Aid Dispatched &bull; Logged 6 mins ago</p>
-                </div>
-              </div>
-
-              {/* 4 Focused Indicators Grid */}
-              <div className="grid grid-cols-2 gap-3 text-xs font-sans">
-                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
-                  <span className="text-slate-400 text-[11px]">Worker Safety Score</span>
-                  <p className="text-xl font-bold text-emerald-400 mt-0.5">98.4%</p>
-                  <span className="text-[10px] text-slate-500">Zero Critical Violations</span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
-                  <span className="text-slate-400 text-[11px]">Emergency Support</span>
-                  <p className="text-xl font-bold text-orange-400 mt-0.5">Active</p>
-                  <span className="text-[10px] text-slate-500">Trauma Network Connected</span>
-                </div>
-              </div>
-
-              {/* Compensation Claim Telemetry Row */}
-              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2.5">
-                  <FileCheck2 className="w-4 h-4 text-amber-400" />
-                  <div>
-                    <p className="font-semibold text-slate-200 text-[11px]">Claim #CLM-9042 Payout</p>
-                    <p className="text-[10px] text-slate-400">₹50,000 Approved by Govt Officer</p>
-                  </div>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  AUDITED
-                </span>
-              </div>
-
-              {/* Emergency Hotline Status */}
-              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 text-slate-300">
-                  <Siren className="w-4 h-4 text-orange-500 animate-pulse" />
-                  <span className="font-medium text-[11px]">Trauma Hotline 108 Support</span>
-                </div>
-                <span className="text-emerald-400 font-bold text-[11px]">CONNECTED 24/7</span>
-              </div>
-
-            </div>
-
-            {/* Floating Alert Widget */}
-            <div className="absolute -bottom-5 -left-5 hidden sm:flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl animate-float-panel max-w-xs z-20">
-              <div className="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-4 h-4 text-orange-400" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-white">Worker Protection Active</p>
-                <p className="text-[10px] text-slate-400">Statutory Compliance Verified</p>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================= SECTION 5: WORKER PROTECTION CAPABILITIES SECTION ================= */}
-      <section className="relative z-10 py-16 px-6 sm:px-12 bg-slate-900/40 border-y border-slate-800">
-        <div className="max-w-7xl mx-auto space-y-10">
-          
-          <div className="text-center max-w-2xl mx-auto space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[11px] font-mono mb-1">
-              <Shield className="w-3.5 h-3.5" />
-              <span>CORE PLATFORM CAPABILITIES</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
-              Integrated Worker Protection System
-            </h2>
-            <p className="text-slate-400 text-xs sm:text-sm font-normal">
-              Digital safety tools connecting workers, plant managers, state inspectors, and emergency hospitals.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {capabilities.map((cap, idx) => {
-              const Icon = cap.icon || ShieldAlert;
-              return (
-                <div
-                  key={idx}
-                  className={`group rounded-2xl bg-[#0A0F1D] border border-slate-800/80 p-5 flex flex-col justify-between ${cap.hoverGlow} hover:-translate-y-1 transition-all duration-200 shadow-xl`}
-                >
-                  <div className="space-y-3.5">
-                    <div className="flex items-center justify-between">
-                      <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${cap.color} group-hover:scale-105 transition-transform duration-200`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-xs sm:text-sm font-semibold text-white mb-1 group-hover:text-orange-400 transition-colors">
-                        {cap.title}
-                      </h3>
-                      <p className="text-[11px] text-slate-400 font-normal leading-relaxed">
-                        {cap.desc}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-slate-800/80">
-                    <Link to="/login" className="inline-flex items-center text-[11px] font-medium text-orange-500 group-hover:text-orange-400 transition">
-                      <span>Open Module</span>
-                      <ChevronRight className="w-3 h-3 ml-0.5 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================= SECTION 4: INDUSTRIAL SAFETY MONITORING GRID ================= */}
-      <section className="relative z-10 py-16 px-6 sm:px-12 bg-[#050811]">
-        <div className="max-w-7xl mx-auto space-y-10">
-          
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
-            <div>
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[11px] font-mono mb-2">
-                <Radio className="w-3.5 h-3.5 animate-pulse" />
-                <span>FACTORY SAFETY ZONES</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
-                Industrial Safety Monitoring Grid
-              </h2>
-            </div>
-            
-            <p className="text-slate-400 text-xs sm:text-sm font-normal max-w-md">
-              Real-time safety monitoring across factory plant zones, incident status, and compliance reports.
-            </p>
-          </div>
-
-          {/* Safety Zones Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {safetyZones.map((sz, idx) => (
               <div
-                key={idx}
-                className="rounded-2xl bg-[#0A0F1D] border border-slate-800/90 p-5 space-y-4 shadow-xl hover:border-slate-700 transition duration-200"
+                className="landing-map-art"
+                data-reveal="left"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold text-orange-400 px-2 py-0.5 rounded bg-orange-500/10 border border-orange-500/20">
-                    {sz.id}
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    {sz.status}
-                  </span>
-                </div>
+                <div className="landing-map-grid" />
 
-                <div>
-                  <h3 className="text-sm font-semibold text-white">{sz.name}</h3>
-                  <p className="text-xs text-slate-400 mt-1">{sz.incidents}</p>
-                </div>
+                <div className="landing-map-shape shape-one" />
+                <div className="landing-map-shape shape-two" />
+                <div className="landing-map-shape shape-three" />
 
-                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                  <div>
-                    <span className="text-slate-400 text-[10px] block">ACTIVE WORKERS</span>
-                    <span className="font-bold text-white">{sz.workers}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-slate-400 text-[10px] block">SAFETY RATING</span>
-                    <span className="font-bold text-emerald-400">{sz.score}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Live Incident Event Feed Stream */}
-          <div className="p-4 rounded-2xl bg-[#0A0F1D] border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-xs shadow-inner">
-            <div className="flex items-center gap-3">
-              <span className="px-2.5 py-1 rounded bg-slate-900 text-orange-400 border border-slate-700 text-[10px] font-bold shrink-0">
-                LIVE LOG FEED
-              </span>
-              <div className="flex items-center gap-2 overflow-hidden">
-                <span className="text-slate-500">[{recentLogs[activeLogIndex].time}]</span>
-                <span className="text-slate-200 font-sans truncate max-w-xl">{recentLogs[activeLogIndex].msg}</span>
-              </div>
-            </div>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold bg-slate-900 border border-slate-800 shrink-0 ${recentLogs[activeLogIndex].color}`}>
-              {recentLogs[activeLogIndex].status}
-            </span>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================= OPERATIONAL SAFETY PIPELINE ================= */}
-      <section className="relative z-10 py-16 px-6 sm:px-12 bg-slate-900/30 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto space-y-10">
-          
-          <div className="text-center max-w-2xl mx-auto space-y-1.5">
-            <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
-              Operational Incident Workflow
-            </h2>
-            <p className="text-slate-400 text-xs sm:text-sm font-normal">
-              Standardized process timeline from shopfloor incident report to compensation settlement.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 relative">
-            
-            {/* Desktop Progress Track Line */}
-            <div className="hidden lg:block absolute top-1/2 left-10 right-10 h-0.5 bg-gradient-to-r from-orange-500/25 via-slate-800 to-emerald-500/25 -translate-y-5 z-0" />
-
-            {pipelineSteps.map((ps, i) => {
-              const Icon = ps.icon || Siren;
-              return (
-                <div key={i} className="group relative z-10 rounded-2xl bg-[#0A0F1D] border border-slate-800 p-4 space-y-3 hover:border-slate-700 hover:-translate-y-0.5 transition-all duration-200 shadow-xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold font-mono text-orange-500 group-hover:scale-105 transition-transform">
-                      {ps.step}
-                    </span>
-                    <span className="text-[9px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                      {ps.status}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xs sm:text-sm font-semibold text-white">
-                    {ps.title}
-                  </h3>
-
-                  <p className="text-[11px] text-slate-400 font-normal leading-relaxed">
-                    {ps.desc}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================= ROLE ACCESS CONTROL PORTALS ================= */}
-      <section className="relative z-10 py-16 px-6 sm:px-12 bg-[#050811] border-t border-slate-800">
-        <div className="max-w-7xl mx-auto space-y-10">
-          
-          <div className="text-center max-w-2xl mx-auto space-y-1.5">
-            <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
-              Role Access Portals
-            </h2>
-            <p className="text-slate-400 text-xs sm:text-sm font-normal">
-              Role-adaptive authorization for workers, factory administrators, government safety officers, and super admins.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {roles.map((r, idx) => {
-              const Icon = r.icon || HardHat;
-              return (
                 <div
-                  key={idx}
-                  className={`group rounded-2xl border p-5 bg-[#0A0F1D] ${r.color || 'border-slate-800'} hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between space-y-5 shadow-xl`}
+                  className="landing-pin pin-one"
+                  data-reveal-child
+                  style={{ '--delay': '180ms' }}
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-white group-hover:scale-105 transition-transform duration-200">
-                        <Icon className={`w-4 h-4 ${r.iconColor || 'text-white'}`} />
-                      </div>
-                      <span className={`text-[9px] font-mono font-semibold px-2 py-0.5 rounded border ${r.badgeBg || 'bg-slate-900 text-slate-300'}`}>
-                        {r.badge}
-                      </span>
-                    </div>
+                  <ShieldCheck />
+                </div>
 
-                    <h3 className="text-sm font-semibold text-white">
-                      {r.role}
-                    </h3>
+                <div
+                  className="landing-pin pin-two"
+                  data-reveal-child
+                  style={{ '--delay': '320ms' }}
+                >
+                  <AlertTriangle />
+                </div>
 
-                    <p className="text-xs text-slate-400 font-normal leading-relaxed">
-                      {r.desc}
-                    </p>
+                <div
+                  className="landing-pin pin-three"
+                  data-reveal-child
+                  style={{ '--delay': '460ms' }}
+                >
+                  <Hospital />
+                </div>
+
+                <div
+                  className="landing-map-caption"
+                  data-reveal-child
+                  style={{ '--delay': '560ms' }}
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#3E5C54]" />
+                  Safety workspace
+                </div>
+
+                <div
+                  className="landing-float-card"
+                  data-reveal-child
+                  style={{ '--delay': '680ms' }}
+                >
+                  <div className="w-9 h-9 rounded-xl bg-[#F3E7D6] text-[#C9A66B] flex items-center justify-center">
+                    <ClipboardCheck className="w-5 h-5" />
                   </div>
 
-                  <Link to="/login" className="w-full">
-                    <button className="w-full px-3.5 py-2 text-xs font-medium rounded-lg text-white bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-orange-500/60 transition duration-200">
-                      Login to Portal
-                    </button>
+                  <div>
+                    <b>Safety records</b>
+                    <span>Connected and organized</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT CONTENT */}
+
+              <div
+                className="landing-reference-copy"
+                data-reveal="right"
+              >
+                <div
+                  className="midc-section-label"
+                  data-reveal-child
+                  style={{ '--delay': '100ms' }}
+                >
+                  <span className="midc-dot bg-[#C9A66B]" />
+                  Industrial safety platform
+                </div>
+
+                <h1
+                  className="landing-reference-title"
+                  data-reveal-child
+                  style={{ '--delay': '180ms' }}
+                >
+                  Safer workplaces.
+                  <br />
+                  <span>Clearer action.</span>
+                </h1>
+
+                <p
+                  className="midc-lead max-w-lg"
+                  data-reveal-child
+                  style={{ '--delay': '280ms' }}
+                >
+                  Bring worker records, accident reports, safety complaints,
+                  compensation claims and emergency support into one calm,
+                  connected workspace.
+                </p>
+
+                <div
+                  className="landing-search-panel"
+                  data-reveal-child
+                  style={{ '--delay': '390ms' }}
+                >
+                  <div className="landing-search-field">
+                    <MapPin className="w-4 h-4 text-[#C9A66B]" />
+                    <span>Workplace safety</span>
+                    <small>
+                      Worker records & incident support
+                    </small>
+                  </div>
+
+                  <div className="landing-search-field">
+                    <FileText className="w-4 h-4 text-[#3E5C54]" />
+                    <span>Safety workflow</span>
+                    <small>
+                      Claims, complaints & follow-up
+                    </small>
+                  </div>
+
+                  <Link
+                    to="/login"
+                    className="landing-search-button"
+                  >
+                    <Search className="w-5 h-5" />
                   </Link>
                 </div>
-              );
-            })}
-          </div>
 
-        </div>
-      </section>
+                <div
+                  className="mt-6 flex flex-wrap gap-3"
+                  data-reveal-child
+                  style={{ '--delay': '500ms' }}
+                >
+                  <Link
+                    to="/login"
+                    className="midc-btn-primary"
+                  >
+                    Open safety workspace
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
 
-      {/* ================= FOOTER ================= */}
-      <footer className="relative z-10 bg-[#050811] border-t border-slate-800 text-slate-500 py-8 px-6 sm:px-12 text-center text-xs font-normal">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-orange-500 font-semibold">
-              <HardHat className="w-3.5 h-3.5" />
+                  <Link
+                    to="/register"
+                    className="midc-btn-outline"
+                  >
+                    Create an account
+                  </Link>
+                </div>
+
+              </div>
             </div>
-            <span className="text-slate-200 font-semibold text-xs">Industrial Worker Safety System</span>
           </div>
+        </section>
 
-          <p className="text-slate-400">
-            Industrial Worker Safety & Compensation Management Platform &copy; {new Date().getFullYear()}
-          </p>
+        {/* ================= PLATFORM ================= */}
 
-          <div className="flex items-center gap-4 text-slate-400 font-medium">
-            <Link to="/login" className="hover:text-orange-500 transition">Sign In</Link>
-            <span>&bull;</span>
-            <Link to="/register" className="hover:text-orange-500 transition">Register Worker</Link>
+        <section
+          id="platform"
+          className="midc-section bg-white"
+        >
+          <div className="midc-container py-14 lg:py-18">
+
+            <div
+              className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-8"
+              data-reveal="up"
+            >
+              <div>
+                <div className="midc-section-label">
+                  One connected workspace
+                </div>
+
+                <h2 className="midc-heading mt-2">
+                  Everything safety teams touch.
+                </h2>
+              </div>
+
+              <p className="text-sm leading-6 text-[#6C757D] max-w-md">
+                A practical interface for the records and actions already
+                supported by the MIDC application.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+
+              {SYSTEM_CAPABILITIES.map(
+                ({ title, desc, icon: Icon, tone }, index) => (
+                  <article
+                    key={title}
+                    className="midc-feature-card"
+                    data-reveal-child
+                    style={{
+                      '--delay': `${index * 110}ms`
+                    }}
+                  >
+                    <div
+                      className={`midc-feature-icon ${toneClasses[tone]}`}
+                    >
+                      <Icon />
+                    </div>
+
+                    <h3>{title}</h3>
+
+                    <p>{desc}</p>
+
+                    <div className="mt-5 text-[11px] font-bold text-[#6C757D] flex items-center gap-1">
+                      Explore workflow
+                      <ArrowRight className="w-3 h-3" />
+                    </div>
+                  </article>
+                )
+              )}
+
+            </div>
           </div>
+        </section>
+
+        {/* ================= WORKFLOW ================= */}
+
+        <section
+          id="workflow"
+          className="midc-section bg-[#F4F4F4]"
+        >
+          <div className="midc-container py-14 lg:py-18">
+
+            <div className="grid lg:grid-cols-[.9fr_1.1fr] gap-10 items-center">
+
+              <div data-reveal="left">
+
+                <div className="midc-section-label">
+                  Designed around action
+                </div>
+
+                <h2 className="midc-heading mt-2">
+                  From report to response,
+                  without the clutter.
+                </h2>
+
+                <p className="midc-lead mt-4">
+                  Keep the next important action visible while the supporting
+                  records stay close at hand.
+                </p>
+
+                <div className="mt-7 space-y-2.5">
+
+                  {[
+                    'Report an incident or hazard',
+                    'Document the response and evidence',
+                    'Connect the worker with support',
+                    'Review claims and compliance'
+                  ].map((step, i) => (
+                    <div
+                      key={step}
+                      className="midc-workflow-row"
+                      data-reveal-child
+                      style={{
+                        '--delay': `${i * 120}ms`
+                      }}
+                    >
+                      <span
+                        className={`midc-step-dot step-${i}`}
+                      />
+
+                      <span>{step}</span>
+
+                      <CheckCircle2 className="ml-auto w-5 h-5 text-[#3E5C54]" />
+                    </div>
+                  ))}
+
+                </div>
+              </div>
+
+              <div
+                className="landing-workspace-card"
+                data-reveal="right"
+              >
+
+                <div className="flex items-center justify-between">
+
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[.18em] text-[#B9C9C3] font-bold">
+                      Safety workspace
+                    </div>
+
+                    <h3 className="text-2xl font-extrabold text-white mt-2">
+                      One view. Multiple responsibilities.
+                    </h3>
+                  </div>
+
+                  <div className="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center">
+                    <ShieldCheck className="w-5 h-5 text-[#D6E2DD]" />
+                  </div>
+
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-3 mt-7">
+
+                  <div
+                    className="landing-workspace-tile"
+                    data-reveal-child
+                    style={{ '--delay': '150ms' }}
+                  >
+                    <Users />
+                    <b>Worker records</b>
+                    <span>
+                      Profiles, assignments and safety information.
+                    </span>
+                  </div>
+
+                  <div
+                    className="landing-workspace-tile"
+                    data-reveal-child
+                    style={{ '--delay': '260ms' }}
+                  >
+                    <AlertTriangle />
+                    <b>Incident follow-up</b>
+                    <span>
+                      Reports, status and investigation details.
+                    </span>
+                  </div>
+
+                  <div
+                    className="landing-workspace-tile"
+                    data-reveal-child
+                    style={{ '--delay': '370ms' }}
+                  >
+                    <FileCheck2 />
+                    <b>Compensation</b>
+                    <span>
+                      Claims and review steps in one place.
+                    </span>
+                  </div>
+
+                  <div
+                    className="landing-workspace-tile"
+                    data-reveal-child
+                    style={{ '--delay': '480ms' }}
+                  >
+                    <Hospital />
+                    <b>Emergency support</b>
+                    <span>
+                      Hospital and trauma services when needed.
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* ================= ROLES ================= */}
+
+        <section
+          id="roles"
+          className="midc-section bg-white"
+        >
+          <div className="midc-container py-14 lg:py-18">
+
+            <div data-reveal="up">
+
+              <div className="midc-section-label">
+                Built for the people involved
+              </div>
+
+              <h2 className="midc-heading mt-2">
+                A shared system, tailored by responsibility.
+              </h2>
+
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 mt-8">
+
+              {ROLES.map(
+                ({ title, desc, icon: Icon, tone }, index) => (
+                  <article
+                    key={title}
+                    className="midc-role-card"
+                    data-reveal-child
+                    style={{
+                      '--delay': `${index * 140}ms`
+                    }}
+                  >
+                    <div
+                      className={`midc-feature-icon ${toneClasses[tone]}`}
+                    >
+                      <Icon />
+                    </div>
+
+                    <h3>{title}</h3>
+
+                    <p>{desc}</p>
+                  </article>
+                )
+              )}
+
+            </div>
+
+            <div
+              className="midc-final-cta mt-10"
+              data-reveal="up"
+            >
+              <div>
+                <div className="midc-section-label text-[#C9A66B]">
+                  Ready to work safely
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-extrabold mt-2 text-[#1E1E1E]">
+                  Bring the safety workflow together.
+                </h2>
+              </div>
+
+              <div className="flex gap-2 shrink-0">
+                <Link
+                  to="/login"
+                  className="midc-btn-primary"
+                >
+                  Sign in
+                </Link>
+
+                <Link
+                  to="/register"
+                  className="midc-btn-outline"
+                >
+                  Register
+                </Link>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+      <footer className="border-t border-[#E0E0E0] bg-[#FFFFFF]">
+        <div className="midc-container py-7 flex flex-col sm:flex-row justify-between gap-3 text-xs text-[#6C757D]">
+
+          <span>
+            MIDC Safety · Worker protection & compensation management
+          </span>
+
+          <span className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4" />
+            Safety support workspace
+          </span>
 
         </div>
       </footer>

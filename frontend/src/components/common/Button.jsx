@@ -13,27 +13,41 @@ const Button = ({
   onClick,
   ...props
 }) => {
- const baseStyle = 'font-medium rounded-lg transition-all duration-150 inline-flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-60 disabled:cursor-not-allowed';
+  const base =
+    'font-semibold rounded-[14px] transition-all duration-200 inline-flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#CE93D8]/25 disabled:opacity-60 disabled:cursor-not-allowed';
 
   const variants = {
-    primary: 'bg-orange-600 hover:bg-orange-700 text-white shadow-sm',
-    secondary: 'bg-slate-50 hover:bg-slate-100 text-slate-700',
-    outline: 'border border-orange-200 hover:bg-orange-50 text-orange-600 bg-white',
-    danger: 'bg-red-600 hover:bg-red-700 text-white shadow-sm',
-    success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm',
-    ghost: 'hover:bg-slate-100 text-slate-600'
+    primary:
+      'bg-[#D97745] hover:bg-[#B85D35] text-white shadow-[0_8px_20px_rgba(217,119,69,.16)] hover:-translate-y-px',
+
+    secondary:
+      'bg-[#E3F1EA] hover:bg-[#D5E8DD] text-[#7B4B82]',
+
+    outline:
+      'border border-[#D8D0DB] hover:bg-[#F1DDF3] hover:border-[#CE93D8] text-[#6F4A75] bg-white',
+
+    danger:
+      'bg-[#D9534F] hover:bg-[#C74743] text-white shadow-sm',
+
+    success:
+      'bg-[#2E9B68] hover:bg-[#268458] text-white shadow-sm',
+
+    ghost:
+      'hover:bg-[#F1DDF3] text-[#6F4A75]'
   };
 
   const sizes = {
-    sm: 'px-2.5 py-1.5 text-xs',
-    md: 'px-4 py-2 text-sm',
+    sm: 'px-3 py-2 text-xs',
+    md: 'px-4 py-2.5 text-sm',
     lg: 'px-5 py-3 text-base'
   };
 
   return (
     <button
       type={type}
-      className={`${baseStyle} ${variants[variant] || variants.primary} ${sizes[size] || sizes.md} ${className}`}
+      className={`${base} ${variants[variant] || variants.primary} ${
+        sizes[size] || sizes.md
+      } ${className}`}
       disabled={disabled || loading}
       onClick={onClick}
       {...props}
@@ -43,6 +57,7 @@ const Button = ({
       ) : Icon ? (
         <Icon className="w-4 h-4 shrink-0" />
       ) : null}
+
       {children}
     </button>
   );

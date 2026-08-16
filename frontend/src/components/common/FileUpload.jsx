@@ -40,18 +40,18 @@ const FileUpload = ({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+        <label className="block text-xs font-semibold text-sand-700 uppercase tracking-wider mb-1.5">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
 
       <div
         onClick={() => fileInputRef.current?.click()}
-        className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all bg-white"
+        className="border-2 border-dashed border-sand-300 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-brand-500 hover:bg-brand-50/30 transition-all bg-white"
       >
-        <UploadCloud className="w-8 h-8 text-blue-600 mb-2" />
-        <p className="text-sm font-medium text-slate-700">Click to upload files</p>
-        <p className="text-xs text-slate-500 mt-1">{helperText || `Supports JPG, PNG, PDF up to ${maxSizeMB}MB`}</p>
+        <UploadCloud className="w-8 h-8 text-brand-600 mb-2" />
+        <p className="text-sm font-medium text-sand-700">Click to upload files</p>
+        <p className="text-xs text-sand-500 mt-1">{helperText || `Supports JPG, PNG, PDF up to ${maxSizeMB}MB`}</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -67,15 +67,15 @@ const FileUpload = ({
       {selectedFiles.length > 0 && (
         <div className="mt-3 space-y-2">
           {selectedFiles.map((file, idx) => (
-            <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs">
+            <div key={idx} className="flex items-center justify-between p-2.5 bg-sand-50 border border-sand-200 rounded-xl text-xs">
               <div className="flex items-center gap-2 overflow-hidden">
                 {file.type.startsWith('image/') ? (
-                  <ImageIcon className="w-4 h-4 text-blue-600 shrink-0" />
+                  <ImageIcon className="w-4 h-4 text-brand-600 shrink-0" />
                 ) : (
-                  <FileText className="w-4 h-4 text-slate-600 shrink-0" />
+                  <FileText className="w-4 h-4 text-sand-600 shrink-0" />
                 )}
-                <span className="font-medium text-slate-700 truncate">{file.name}</span>
-                <span className="text-slate-400 shrink-0">({(file.size / 1024).toFixed(1)} KB)</span>
+                <span className="font-medium text-sand-700 truncate">{file.name}</span>
+                <span className="text-sand-400 shrink-0">({(file.size / 1024).toFixed(1)} KB)</span>
               </div>
               <button
                 type="button"
@@ -83,7 +83,7 @@ const FileUpload = ({
                   e.stopPropagation();
                   clearSelection();
                 }}
-                className="text-slate-400 hover:text-red-600 p-1"
+                className="text-sand-400 hover:text-red-600 p-1"
               >
                 <X className="w-4 h-4" />
               </button>
