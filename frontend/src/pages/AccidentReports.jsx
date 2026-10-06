@@ -4,25 +4,19 @@ import { useToast } from '../context/ToastContext';
 import accidentService from '../services/accidentService';
 import workerService from '../services/workerService';
 import {
-  AlertTriangle,
   Plus,
-  Search,
   Eye,
-  Edit,
+  Pencil,
   Trash2,
   Upload,
-  Calendar,
-  Clock,
-  Building,
-  ShieldAlert,
   CheckCircle,
-  FileImage
+  FileText,
 } from 'lucide-react';
-import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Table from '../components/common/Table';
 import Input from '../components/common/Input';
 import Select from '../components/common/Select';
+import SearchFilterSelect from '../components/common/SearchFilterSelect';
 import Textarea from '../components/common/Textarea';
 import StatusBadge from '../components/common/StatusBadge';
 import SearchBar from '../components/common/SearchBar';
@@ -30,6 +24,7 @@ import Pagination from '../components/common/Pagination';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import FileUpload from '../components/common/FileUpload';
+import accidentHeroWide from '../assets/accident-reports-hero-wide.png';
 
 const AccidentReports = () => {
   const { user, isAdminOrOfficer, isSuperAdmin, isFactoryAdmin } = useAuth();
@@ -306,358 +301,361 @@ const AccidentReports = () => {
   };
 
   const columns = [
-      {
-    header: 'Incident Title',
-    render: (row) => (
-      <p className="font-semibold text-[#1E1E1E] text-sm">
-        {row.title}
-      </p>
-    )
-  },
     {
-      header: 'Factory & Dept',
-      render: (row) => (
-        <span className="text-sm font-medium text-[#3E5C54]">
-          {row.factory} ({row.department})
-        </span>
-      )
+      header: 'Accident Title',
+      render: (row) => <p className="text-sm font-semibold text-[#1E1E1E]">{row.title}</p>
     },
     {
-  header: 'Date & Time',
-  render: (row) => {
-    const formatTime = (time) => {
-      if (!time) return '-';
-
-      // Already contains AM/PM
-      if (/AM|PM/i.test(time)) {
-        return time;
-      }
-
-      // Convert HH:mm → hh:mm AM/PM
-      const [hours, minutes] = time.split(':').map(Number);
-
-      if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-        return time;
-      }
-
-      const period = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = hours % 12 || 12;
-
-      return `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
-    };
-
-    return (
-      <div className="text-sm text-[#6C757D]">
-        <p>{new Date(row.date).toLocaleDateString()}</p>
-        <p className="text-[#6C757D]">{formatTime(row.time)}</p>
-      </div>
-    );
-  }
-},
-    
+      header: 'Factory / Location',
+      render: (row) => <span className="text-sm text-[#333]">{row.factory || '—'}</span>
+    },
+    {
+      header: 'Injury Type',
+      render: (row) => <span className="text-sm text-[#333]">{row.injuryType || '—'}</span>
+    },
+    {
+      header: 'Severity',
+      render: (row) => <StatusBadge status={row.severity} variant="dot" />
+    },
     {
       header: 'Status',
-      render: (row) => <StatusBadge status={row.status} />
+      render: (row) => <StatusBadge status={row.status} variant="dot" />
     },
-
     {
-  header: 'Report Source',
-  render: (row) => (
-    <span className="text-sm font-medium text-[#3E5C54]">
-      {row.reportSource || 'Worker Report'}
-    </span>
-  )
-},
+      header: 'Reported Date',
+      render: (row) => <span className="whitespace-nowrap text-sm text-[#444]">{row.date ? new Date(row.date).toLocaleDateString() : '—'}</span>
+    },
     {
       header: 'Actions',
       className: 'text-right',
       cellClassName: 'text-right',
       render: (row) => (
-        <div className="flex items-center justify-end gap-1.5">
-
-  {/* View */}
-  <button
-    onClick={() => openViewModal(row)}
-    className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#EEF2F0] hover:text-[#3E5C54] transition-colors"
-    title="View Details"
-  >
-    <Eye className="w-4 h-4" />
-  </button>
-
-
-  {/* Upload Evidence */}
-  {(user?.role === "Worker" || isFactoryAdmin || isSuperAdmin) && (
-    <button
-      onClick={() => openImageModal(row)}
-      className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#EEF2F0] hover:text-[#3E5C54] transition-colors"
-      title="Upload Evidence"
-    >
-      <Upload className="w-4 h-4" />
-    </button>
-  )}
-
-
-  {/* Update Status */}
-  {isAdminOrOfficer && (
-    <button
-      onClick={() => openStatusModal(row)}
-      className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#EEF2F0] hover:text-[#3E5C54] transition-colors"
-      title="Update Status"
-    >
-      <CheckCircle className="w-4 h-4" />
-    </button>
-  )}
-
-
-  {/* Delete */}
-  {isSuperAdmin && (
-    <button
-      onClick={() => openDeleteDialog(row)}
-      className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#FDEEEF] hover:text-[#E63946] transition-colors"
-      title="Delete Report"
-    >
-      <Trash2 className="w-4 h-4" />
-    </button>
-  )}
-
-</div>
+        <div className="flex items-center justify-end gap-1">
+          <button type="button" onClick={() => openViewModal(row)} className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]" title="View Details" aria-label="View details">
+            <Eye className="h-4 w-4" />
+          </button>
+          {(user?.role === 'Worker' || isFactoryAdmin || isSuperAdmin) && (
+            <button type="button" onClick={() => openImageModal(row)} className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]" title="Upload Evidence" aria-label="Upload evidence">
+              <Upload className="h-4 w-4" />
+            </button>
+          )}
+          {isSuperAdmin && (
+            <button type="button" onClick={() => openEditModal(row)} className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]" title="Edit Report" aria-label="Edit report">
+              <Pencil className="h-4 w-4" />
+            </button>
+          )}
+          {isAdminOrOfficer && (
+            <button type="button" onClick={() => openStatusModal(row)} className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]" title="Update Status" aria-label="Update status">
+              <CheckCircle className="h-4 w-4" />
+            </button>
+          )}
+          {isSuperAdmin && (
+            <button type="button" onClick={() => openDeleteDialog(row)} className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]" title="Delete Report" aria-label="Delete report">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       )
     }
   ];
 
   return (
     <>
-      
-<style>{`
-  .accidents-page-enter {
-    animation: accidentsPageEnter 0.5s ease-out both;
-  }
+      <style>{`
+        .accident-create-dialog {
+          border-color: #e1e4e8 !important;
+          background: #fff !important;
+          box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+          display: flex !important;
+          flex-direction: column !important;
+          height: min(70vh, calc(100dvh - 32px));
+          min-height: 0 !important;
+        }
+        .fixed.inset-0.z-50:has(.accident-create-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .32) !important;
+          backdrop-filter: none !important;
+        }
+        .accident-create-dialog > div:first-child {
+          border-bottom-color: #e1e4e8 !important;
+          background: #fff !important;
+          flex: 0 0 auto;
+        }
+        .accident-create-dialog > div:nth-child(2) {
+          flex: 1 1 auto;
+          min-height: 0;
+          max-height: none !important;
+          overflow-y: auto !important;
+        }
+        .accident-create-dialog > div:last-child {
+          flex: 0 0 auto;
+          border-top: 1px solid #e1e4e8 !important;
+          background: #fff !important;
+          padding-bottom: 16px !important;
+        }
+        .accident-create-dialog > div:first-child h3 {
+          color: #111 !important;
+          font-weight: 600;
+        }
+        .accident-create-dialog > div:first-child button {
+          color: #62666b !important;
+        }
+        .accident-create-dialog > div:first-child button:hover {
+          background: #f3f4f5 !important;
+          color: #111 !important;
+        }
+        .accident-create-dialog label {
+          color: #292929 !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          text-transform: none !important;
+          letter-spacing: normal !important;
+        }
+        .accident-create-dialog label span {
+          color: #E87532 !important;
+        }
+        .accident-create-dialog input,
+        .accident-create-dialog select,
+        .accident-create-dialog textarea {
+          border: 1px solid #dedede !important;
+          border-radius: 8px !important;
+          background-color: #fff !important;
+          color: #111 !important;
+          font-size: 14px !important;
+          box-shadow: none !important;
+        }
+        .accident-create-dialog input[type="date"]::-webkit-calendar-picker-indicator,
+        .accident-create-dialog input[type="time"]::-webkit-calendar-picker-indicator {
+          opacity: 0;
+        }
+        .accident-create-dialog select {
+          padding-right: 36px !important;
+          appearance: none;
+          -webkit-appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2359626d' stroke-width='1.8'%3E%3Cpath d='m5 7 5 5 5-5'/%3E%3C/svg%3E") !important;
+          background-position: right 12px center !important;
+          background-repeat: no-repeat !important;
+          background-size: 16px !important;
+        }
+        .accident-create-dialog select::-ms-expand {
+          display: none;
+        }
+        .accident-create-dialog input::placeholder,
+        .accident-create-dialog textarea::placeholder {
+          color: #858b92 !important;
+          opacity: 1;
+        }
+        .accident-create-dialog input:focus,
+        .accident-create-dialog select:focus,
+        .accident-create-dialog textarea:focus {
+          border-color: #d1a184 !important;
+          box-shadow: 0 0 0 2px rgba(232, 117, 50, .12) !important;
+          outline: none;
+        }
+        .accident-create-dialog form > div:has(> p:first-child) {
+          border: 0 !important;
+          border-top: 1px solid #e5e5e5 !important;
+          border-radius: 0 !important;
+          background: #fff !important;
+          padding: 14px 0 0 !important;
+        }
+        .accident-create-dialog form > div > p:first-child {
+          color: #292929 !important;
+          font-size: 13px !important;
+        }
+        .accident-create-dialog > div:last-child button {
+          min-height: 40px;
+          border-radius: 8px !important;
+          font-weight: 500;
+        }
+        .accidents-hero-art {
+          right: -6px;
+          background-size: auto calc(100% + 2px);
+          background-position: right center;
+          background-repeat: no-repeat;
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .2) 38%, #000 76%, #000 100%);
+          mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, .2) 38%, #000 76%, #000 100%);
+        }
+        .accidents-page .accidents-create-cta {
+          background-color: #111111 !important;
+          color: #ffffff !important;
+          box-shadow: none !important;
+        }
+        .accidents-page .accidents-create-cta:hover:not(:disabled) {
+          background-color: #2b2b2b !important;
+        }
+        .accidents-page button.midc-primary-cta {
+          background-color: #111111 !important;
+          color: #ffffff !important;
+          box-shadow: none !important;
+        }
+        .accidents-page button.midc-primary-cta:hover:not(:disabled) {
+          background-color: #2b2b2b !important;
+        }
+        .accidents-filter .accidents-search-field input {
+          height: 48px;
+          min-height: 48px;
+          border-color: #e1e4e8 !important;
+          border-radius: 8px !important;
+          background-color: #fff !important;
+          color: #111 !important;
+          font-size: 14px !important;
+          box-shadow: none;
+          transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+        }
+        .accidents-filter .accidents-search-field input {
+          padding-left: 40px !important;
+          padding-right: 36px !important;
+          color: #111 !important;
+        }
+        .accidents-filter .accidents-search-field input::placeholder {
+          color: #747b84 !important;
+          opacity: 1;
+        }
+        .accidents-filter .accidents-search-field > div {
+          color: #6b7280 !important;
+        }
+        .accidents-filter .accidents-search-field input:hover {
+          border-color: #cfd3d8 !important;
+          background: #fefefe !important;
+        }
+        .accidents-filter .accidents-search-field input:focus {
+          border-color: #b8b8b8 !important;
+          box-shadow: 0 0 0 2px rgba(232, 117, 50, .14) !important;
+          outline: none;
+        }
+        .accidents-table .industrial-card {
+          border: 1px solid #e5e5e5 !important;
+          border-radius: 10px !important;
+          background: #fff !important;
+          box-shadow: none !important;
+        }
+        .accidents-pagination > div {
+          border-color: #e5e5e5 !important;
+          border-radius: 10px !important;
+          box-shadow: none !important;
+        }
+        .accidents-pagination button {
+          border-color: #e5e5e5 !important;
+          border-radius: 8px !important;
+          color: #333 !important;
+        }
+      `}</style>
 
-  .accidents-breadcrumb {
-    animation: accidentsFadeUp 0.45s ease-out both;
-  }
-
-  .accidents-header {
-    animation: accidentsHeaderEnter 0.58s cubic-bezier(.22,1,.36,1) 0.04s both;
-  }
-
-  .accidents-filter {
-    animation: accidentsFadeUp 0.55s ease-out 0.1s both;
-  }
-
-  .accidents-table {
-    animation: accidentsFadeUp 0.6s ease-out 0.16s both;
-    transition: box-shadow 220ms ease, transform 220ms ease;
-  }
-
-  .accidents-table:hover {
-    box-shadow: 0 14px 34px rgba(62, 92, 84, 0.07);
-  }
-
-  .accidents-page-enter button,
-  .accidents-page-enter input,
-  .accidents-page-enter select,
-  .accidents-page-enter textarea {
-    transition:
-      background-color 180ms ease,
-      border-color 180ms ease,
-      box-shadow 180ms ease,
-      transform 180ms ease;
-  }
-
-  .accidents-page-enter button:hover:not(:disabled) {
-    transform: translateY(-1px);
-  }
-
-  .accidents-page-enter button:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  .accidents-page-enter tbody tr {
-    transition: background-color 180ms ease, box-shadow 180ms ease;
-  }
-
-  .accidents-page-enter tbody tr:hover {
-    background-color: #f8faf9;
-  }
-
-  .accidents-page-enter [role="dialog"] {
-    animation: accidentsModalEnter 220ms cubic-bezier(.22,1,.36,1) both;
-  }
-
-  @keyframes accidentsPageEnter {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes accidentsFadeUp {
-    from {
-      opacity: 0;
-      transform: translateY(7px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes accidentsHeaderEnter {
-    from {
-      opacity: 0;
-      transform: translateY(-8px) scale(.99);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  @keyframes accidentsModalEnter {
-    from {
-      opacity: 0;
-      transform: translateY(8px) scale(.985);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .accidents-page-enter,
-    .accidents-breadcrumb,
-    .accidents-header,
-    .accidents-filter,
-    .accidents-table,
-    .accidents-page-enter [role="dialog"] {
-      animation: none !important;
-    }
-
-    .accidents-page-enter button,
-    .accidents-page-enter input,
-    .accidents-page-enter select,
-    .accidents-page-enter textarea,
-    .accidents-table,
-    .accidents-page-enter tbody tr {
-      transition: none !important;
-    }
-
-    .accidents-page-enter button:hover:not(:disabled) {
-      transform: none !important;
-    }
-  }
-`}</style>
-
-      <div className="space-y-6 accidents-page-enter">
-      {/* Refined Breadcrumb */}
-      <div className="accidents-breadcrumb flex items-center gap-2 text-sm">
-        <span className="text-[#6C757D]">Dashboard</span>
-        <span className="text-[#E0E0E0]">/</span>
-        <span className="font-medium text-[#3E5C54]">Accidents</span>
-      </div>
-
-      {/* Header */}
-      <div className="accidents-header flex flex-col lg:flex-row lg:items-end justify-between gap-5">
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-[#EEF2F0] border border-[#B9C9C3] text-[#3E5C54] flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-5 h-5" />
+      <div className="accidents-page space-y-6">
+        <section className="accidents-hero relative isolate -mx-4 -mt-4 min-h-[278px] w-[calc(100%+2rem)] overflow-hidden bg-[#F7F8F8] sm:-mx-6 sm:-mt-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:-mt-8 lg:w-[calc(100%+4rem)]" aria-labelledby="accident-reports-title">
+          <div className="accidents-hero-copy relative z-10 flex min-h-[278px] items-start px-4 pt-7 sm:items-center sm:py-7 sm:px-6 lg:px-8">
+            <div className="w-full max-w-[740px] lg:w-[52%]">
+              <h1 id="accident-reports-title" className="!mb-0 !text-[30px] !font-semibold !leading-tight !tracking-[-.035em] !text-[#111] sm:!text-[42px] lg:!text-[44px]">
+                Accident Reports
+              </h1>
+              <p className="mt-2 max-w-[470px] text-[16px] leading-[1.5] text-[#6B7280] sm:text-[17px]">
+                Log, track, investigate and resolve industrial accidents.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <h1 className="text-xl xs:text-[28px] font-medium text-[#1E1E1E] " style={{ letterSpacing: '0em' }}>
-              Accident Reports
-            </h1>
-            <p className="text-sm text-[#6C757D] mt-1 max-w-xl">
-              Log, track, investigate and resolve industrial accidents
+          <div
+            aria-hidden="true"
+            className="accidents-hero-art absolute inset-0 z-0 hidden xl:block"
+            style={{ backgroundImage: `url(${accidentHeroWide})` }}
+          />
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 z-0 xl:hidden">
+            <img src={accidentHeroWide} alt="" className="block h-auto w-full object-contain object-center" />
+          </div>
+        </section>
+
+        <section className="accidents-filter search-filter-controls grid grid-cols-1 items-center gap-3 bg-transparent p-0 lg:grid-cols-[minmax(0,1fr)_190px_190px_auto]" aria-label="Search and filter accident reports">
+          <SearchBar
+            className="accidents-search-field"
+            value={searchQuery}
+            onChange={(val) => {
+              setSearchQuery(val);
+              setCurrentPage(1);
+            }}
+            onClear={() => setSearchQuery('')}
+            placeholder="Search by accident title, factory, or department..."
+          />
+
+          <SearchFilterSelect
+            value={severityFilter}
+            onValueChange={(value) => {
+              setSeverityFilter(value);
+              setCurrentPage(1);
+            }}
+            options={severityOptions}
+            label="All Severities"
+            iconType="severity"
+          />
+
+          <SearchFilterSelect
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value);
+              setCurrentPage(1);
+            }}
+            options={statusOptions}
+            label="All Statuses"
+            iconType="status"
+          />
+          <button type="button" onClick={openCreateModal} className="midc-primary-cta accidents-create-cta inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-sm font-medium text-white transition-colors">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Create Accident Report
+          </button>
+        </section>
+
+        {loading || reports.length > 0 ? (
+          <div className="accidents-table overflow-hidden rounded-lg">
+            <Table columns={columns} data={reports} loading={loading} className="platform-data-table" />
+          </div>
+        ) : (
+          <section className="flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-[#e5e5e5] bg-white px-5 py-6 text-center" aria-live="polite">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f2f2f2] text-[#59616a]">
+              <FileText className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <h2 className="mt-3 text-[16px] font-semibold text-[#111]">No Accident Reports Found</h2>
+            <p className="mt-1 max-w-md text-[13px] leading-5 text-[#6B7280]">
+              There are no industrial accident reports registered matching your search.
             </p>
-          </div>
+          </section>
+        )}
+
+        <div className="accidents-pagination">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
         </div>
-
-        <Button variant="primary" icon={Plus} onClick={openCreateModal}>
-          File Accident Report
-        </Button>
-      </div>
-
-      {/* Search & Severity Filters */}
-      <div className="accidents-filter"><Card bodyClassName="p-4 sm:p-4.5">
-        <div className="flex flex-col md:flex-row md:items-center gap-3">
-          <div className="flex items-center gap-2 shrink-0">
-            <Search className="w-4 h-4 text-[#6C757D]" />
-            <span className="text-sm font-medium text-[#3E5C54]">Find an accident</span>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <SearchBar
-              value={searchQuery}
-              onChange={(val) => {
-                setSearchQuery(val);
-                setCurrentPage(1);
-              }}
-              onClear={() => setSearchQuery('')}
-              placeholder="Search by accident title, factory, or department..."
-            />
-          </div>
-
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <Select
-              value={severityFilter}
-              onChange={(e) => {
-                setSeverityFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              options={severityOptions}
-              placeholder="All Severities"
-              className="w-full md:w-44"
-            />
-
-            <Select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              options={statusOptions}
-              placeholder="All Statuses"
-              className="w-full md:w-44"
-            />
-          </div>
-        </div>
-      </Card></div>
-
-      {/* Reports Table */}
-      <div className="accidents-table overflow-hidden rounded-2xl">
-      <Table
-        columns={columns}
-        data={reports}
-        loading={loading}
-        emptyTitle="No Accident Reports Found"
-        emptyDescription="There are no industrial accident reports registered matching your search."
-        onEmptyAction={openCreateModal}
-        emptyActionText="Create Accident Report"
-      />
-      </div>
-
-      {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        onPageChange={(page) => setCurrentPage(page)}
-      />
 
       {/* Modal: Create Accident Report */}
       <Modal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         title="Log New Workplace Accident Report"
+        dialogClassName="accident-create-dialog"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
+              onClick={() => setCreateModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="accident-create-form"
+              variant="primary"
+              loading={submitting}
+              className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
+            >
+              Submit Report
+            </Button>
+          </>
+        }
       >
-        <form onSubmit={handleCreateReport} className="space-y-4">
+        <form id="accident-create-form" onSubmit={handleCreateReport} className="space-y-4">
           <Input label="Accident Title" name="title" value={formData.title} onChange={handleInputChange} placeholder="e.g. Mechanical Press Pinch Injury" required />
           <Textarea label="Accident Description" name="description" value={formData.description} onChange={handleInputChange} placeholder="Provide detailed explanation of the incident..." required />
 
@@ -672,19 +670,27 @@ const AccidentReports = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select label="Incident Severity" name="severity" value={formData.severity} onChange={handleInputChange} options={severityOptions} required />
-            <Select
+            <SearchFilterSelect
+              label="Incident Severity"
+              formField
+              name="severity"
+              value={formData.severity}
+              onValueChange={(value) => handleInputChange({ target: { name: 'severity', value } })}
+              options={severityOptions}
+              required
+              allowClear={false}
+            />
+            <Input
               label="Involved Worker (Optional)"
               name="worker"
               value={formData.worker}
               onChange={handleInputChange}
-              options={workersList.map((w) => ({ value: w._id, label: `${w.name} (${w.employeeId})` }))}
               placeholder="Select worker if applicable"
             />
           </div>
 
-          <div className="p-3 bg-[#FFF8E8] rounded-xl border border-[#E0E0E0] space-y-3">
-            <p className="text-xs font-semibold text-[#3E5C54]">Witness Details</p>
+          <div className="space-y-3 border-t border-[#e5e5e5] pt-4">
+            <p className="text-xs font-semibold text-[#111]">Witness Details</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Input label="Witness Name" name="witnessDetails.name" value={formData.witnessDetails?.name} onChange={handleInputChange} />
               <Input label="Witness Phone" name="witnessDetails.phone" value={formData.witnessDetails?.phone} onChange={handleInputChange} />
@@ -692,10 +698,6 @@ const AccidentReports = () => {
             <Textarea label="Witness Statement" name="witnessDetails.statement" value={formData.witnessDetails?.statement} onChange={handleInputChange} rows={2} />
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="secondary" onClick={() => setCreateModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={submitting}>Submit Report</Button>
-          </div>
         </form>
       </Modal>
 
@@ -717,8 +719,8 @@ const AccidentReports = () => {
           <Select label="Incident Severity" name="severity" value={formData.severity} onChange={handleInputChange} options={severityOptions} required />
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="secondary" onClick={() => setEditModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={submitting}>Update Report</Button>
+            <Button variant="secondary" className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]" onClick={() => setEditModalOpen(false)}>Cancel</Button>
+            <Button type="submit" variant="primary" loading={submitting} className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]">Update Report</Button>
           </div>
         </form>
       </Modal>
@@ -746,7 +748,7 @@ const AccidentReports = () => {
 
             <div>
               <p className="text-xs font-semibold text-[#6C757D] uppercase tracking-wider mb-1">Description</p>
-              <p className="text-sm text-[#3E5C54] bg-white p-3 rounded-xl border border-[#E0E0E0] leading-relaxed">
+              <p className="text-sm text-[#111] bg-white p-3 rounded-xl border border-[#E0E0E0] leading-relaxed">
                 {selectedReport.description}
               </p>
             </div>
@@ -814,7 +816,7 @@ const AccidentReports = () => {
 )}
 
             <div className="flex justify-end">
-              <Button variant="secondary" onClick={() => setViewModalOpen(false)}>Close</Button>
+              <Button variant="secondary" className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]" onClick={() => setViewModalOpen(false)}>Close</Button>
             </div>
           </div>
         )}
@@ -835,8 +837,8 @@ const AccidentReports = () => {
             required
           />
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setStatusModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={submitting}>Update Status</Button>
+            <Button variant="secondary" className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]" onClick={() => setStatusModalOpen(false)}>Cancel</Button>
+            <Button type="submit" variant="primary" loading={submitting} className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]">Update Status</Button>
           </div>
         </form>
       </Modal>
@@ -855,8 +857,8 @@ const AccidentReports = () => {
             accept="image/*"
           />
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={() => setImageModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={submitting}>Upload Attachments</Button>
+            <Button variant="secondary" className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]" onClick={() => setImageModalOpen(false)}>Cancel</Button>
+            <Button type="submit" variant="primary" loading={submitting} className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]">Upload Attachments</Button>
           </div>
         </form>
       </Modal>

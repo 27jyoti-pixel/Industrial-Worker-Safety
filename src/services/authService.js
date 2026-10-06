@@ -2,6 +2,27 @@ const crypto = require('crypto');
 const User = require('../models/userModel');
 const ApiError = require('../utils/ApiError');
 const { generateToken } = require('../utils/jwtUtils');
+const { PROFILE_AVATAR_IDS } = require('../constants');
+
+const OPTIONAL_PROFILE_FIELDS = [
+  'alternatePhone',
+  'bloodGroup',
+  'dateOfBirth',
+  'residentialAddress',
+  'city',
+  'state',
+  'emergencyContactName',
+  'emergencyContactRelationship',
+  'emergencyContactNumber',
+  'department',
+  'designation',
+  'shift',
+  'joiningDate',
+  'workLocation',
+  'supervisor',
+  'employmentType',
+  'employeeStatus'
+];
 
 class AuthService {
   /**
@@ -10,7 +31,11 @@ class AuthService {
    * @returns {Object} User details and JWT token
    */
   async registerUser(userData) {
-    const { name, email, password, role, phone, factoryName, employeeId } = userData;
+    const { name, email, password, role, phone, factoryName, employeeId, avatarId } = userData;
+
+    if (avatarId != null && !PROFILE_AVATAR_IDS.includes(avatarId)) {
+      throw new ApiError(400, 'Please choose a valid profile avatar');
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
@@ -26,7 +51,8 @@ class AuthService {
       role,
       phone,
       factoryName,
-      employeeId
+      employeeId,
+      avatarId: avatarId ?? null
     });
 
     // Generate token
@@ -165,6 +191,12 @@ class AuthService {
  */
 async updateUserProfile(userId, updateData) {
 
+  if (Object.prototype.hasOwnProperty.call(updateData, 'avatarId') &&
+      updateData.avatarId != null &&
+      !PROFILE_AVATAR_IDS.includes(updateData.avatarId)) {
+    throw new ApiError(400, 'Please choose a valid profile avatar');
+  }
+
   const user = await User.findById(userId);
 
   if (!user) {
@@ -188,6 +220,17 @@ async updateUserProfile(userId, updateData) {
   if (updateData.employeeId) {
     user.employeeId = updateData.employeeId;
   }
+
+  if (Object.prototype.hasOwnProperty.call(updateData, 'avatarId')) {
+    user.avatarId = updateData.avatarId ?? null;
+  }
+
+  OPTIONAL_PROFILE_FIELDS.forEach((field) => {
+    if (Object.prototype.hasOwnProperty.call(updateData, field)) {
+      const value = updateData[field];
+      user[field] = value === '' || value === null ? undefined : value;
+    }
+  });
 
 
   await user.save();

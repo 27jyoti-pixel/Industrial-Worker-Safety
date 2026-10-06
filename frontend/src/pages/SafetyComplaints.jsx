@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import SearchFilterSelect from '../components/common/SearchFilterSelect';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import complaintService from '../services/complaintService';
+import complaintsHero from '../assets/wide_panoramic_industrial_scene_at_sunset_shallow.png';
 
 import {
-  AlertOctagon,
   Plus,
   Eye,
   Edit,
   Trash2,
   Upload,
   CheckCircle,
-  Home
+  FileText
 } from 'lucide-react';
 
-import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Table from '../components/common/Table';
 import Input from '../components/common/Input';
@@ -368,7 +367,7 @@ const SafetyComplaints = () => {
       header: 'Complaint',
       render: (row) => (
         <div className="py-0.5">
-          <p className="text-sm font-medium text-[#1E1E1E]">
+          <p className="text-[15px] font-medium text-[#1E1E1E]">
             {row.title}
           </p>
         </div>
@@ -378,26 +377,18 @@ const SafetyComplaints = () => {
     {
       header: 'Hazard Type',
       render: (row) => (
-        <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[#EEF2F0] border border-[#B9C9C3] text-[#3E5C54] text-xs font-medium whitespace-nowrap">
+        <span className="text-[15px] font-medium text-[#1E1E1E]">
           {row.complaintType}
         </span>
       )
     },
 
     {
-      header: 'Factory / Location',
+      header: 'Factory',
       render: (row) => (
         <div className="min-w-[200px]">
-          <p className="text-sm font-medium text-[#1E1E1E]">
+          <p className="text-[15px] font-medium text-[#1E1E1E]">
             {row.factoryName}
-          </p>
-
-          <p className="text-xs text-[#6C757D] mt-1">
-            {row.department}
-
-            {row.locationDetails
-              ? ` · ${row.locationDetails}`
-              : ''}
           </p>
         </div>
       )
@@ -406,14 +397,14 @@ const SafetyComplaints = () => {
     {
       header: 'Severity',
       render: (row) => (
-        <StatusBadge status={row.severity} />
+        <StatusBadge status={row.severity} variant="dot" className="!text-[15px] !font-medium" />
       )
     },
 
     {
       header: 'Status',
       render: (row) => (
-        <StatusBadge status={row.status} />
+        <StatusBadge status={row.status} variant="dot" className="!text-[15px] !font-medium" />
       )
     },
 
@@ -428,7 +419,7 @@ const SafetyComplaints = () => {
           {/* View */}
           <button
             onClick={() => openViewModal(row)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6C757D] hover:bg-[#EEF2F0] hover:text-[#3E5C54] transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]"
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -438,7 +429,7 @@ const SafetyComplaints = () => {
           {isOwner(row) && (
             <button
               onClick={() => openImageModal(row)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6C757D] hover:bg-[#EEF2F0] hover:text-[#3E5C54] transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]"
               title="Upload Photo Evidence"
             >
               <Upload className="w-4 h-4" />
@@ -449,7 +440,7 @@ const SafetyComplaints = () => {
           {isOwner(row) && (
             <button
               onClick={() => openEditModal(row)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6C757D] hover:bg-[#FFF8E8] hover:text-[#C9A66B] transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]"
               title="Edit Complaint"
             >
               <Edit className="w-4 h-4" />
@@ -460,7 +451,7 @@ const SafetyComplaints = () => {
           {isAdminOrOfficer && (
             <button
               onClick={() => openStatusModal(row)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6C757D] hover:bg-[#EEF2F0] hover:text-[#3E5C54] transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]"
               title="Update Status / Resolution"
             >
               <CheckCircle className="w-4 h-4" />
@@ -471,7 +462,7 @@ const SafetyComplaints = () => {
           {isOwner(row) && (
             <button
               onClick={() => openDeleteDialog(row)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6C757D] hover:bg-[#FDEEEF] hover:text-[#E63946] transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]"
               title="Delete Complaint"
             >
               <Trash2 className="w-4 h-4" />
@@ -486,143 +477,270 @@ const SafetyComplaints = () => {
   return (
     <>
       <style>{`
-        .complaints-page-enter { animation: complaintsPageEnter 520ms cubic-bezier(.22,1,.36,1) both; }
-        .complaints-breadcrumb { animation: complaintsFadeUp 420ms ease-out 40ms both; }
-        .complaints-header { animation: complaintsFadeUp 520ms cubic-bezier(.22,1,.36,1) 90ms both; }
-        .complaints-filter { animation: complaintsFadeUp 520ms cubic-bezier(.22,1,.36,1) 150ms both; }
-        .complaints-table { animation: complaintsFadeUp 560ms cubic-bezier(.22,1,.36,1) 210ms both; }
-        .complaints-header:hover { transform: translateY(-1px); }
-        .complaints-table tbody tr { transition: background-color 180ms ease, transform 180ms ease; }
-        .complaints-table tbody tr:hover { background-color: rgba(62, 92, 84, 0.035); }
-        @keyframes complaintsPageEnter { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes complaintsFadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        @media (prefers-reduced-motion: reduce) { .complaints-page-enter, .complaints-breadcrumb, .complaints-header, .complaints-filter, .complaints-table { animation: none !important; } }
+        .complaint-create-dialog {
+          border-color: #e1e4e8 !important;
+          background: #fff !important;
+          box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+        .fixed.inset-0.z-50:has(.complaint-create-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .32) !important;
+          backdrop-filter: none !important;
+        }
+        .complaint-create-dialog > div:first-child {
+          border-bottom-color: #e1e4e8 !important;
+          background: #fff !important;
+          flex: 0 0 auto;
+        }
+        .complaint-create-dialog > div:nth-child(2) {
+          flex: 1 1 auto;
+          min-height: 0;
+          max-height: none !important;
+          overflow-y: auto !important;
+        }
+        .complaint-create-dialog > div:last-child {
+          flex: 0 0 auto;
+          border-top: 1px solid #e1e4e8 !important;
+          background: #fff !important;
+          padding-bottom: 16px !important;
+        }
+        .complaint-create-dialog > div:first-child h3 {
+          color: #111 !important;
+          font-weight: 600;
+        }
+        .complaint-create-dialog > div:first-child button {
+          color: #62666b !important;
+        }
+        .complaint-create-dialog > div:first-child button:hover {
+          background: #f3f4f5 !important;
+          color: #111 !important;
+        }
+        .complaint-create-dialog label {
+          margin-bottom: 6px !important;
+          color: #292929 !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          text-transform: none !important;
+          letter-spacing: normal !important;
+        }
+        .complaint-create-dialog label span {
+          color: #E87532 !important;
+        }
+        .complaint-create-dialog input,
+        .complaint-create-dialog select {
+          height: 46px !important;
+          min-height: 46px !important;
+          padding: 0 14px !important;
+          border: 1px solid #dedede !important;
+          border-radius: 8px !important;
+          background-color: #fff !important;
+          color: #111 !important;
+          font-size: 14px !important;
+          box-shadow: none !important;
+        }
+        .complaint-create-dialog input[type="date"]::-webkit-calendar-picker-indicator,
+        .complaint-create-dialog input[type="time"]::-webkit-calendar-picker-indicator {
+          opacity: 0;
+        }
+        .complaint-create-dialog select {
+          padding-right: 36px !important;
+          appearance: none;
+          -webkit-appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2359626d' stroke-width='1.8'%3E%3Cpath d='m5 7 5 5 5-5'/%3E%3C/svg%3E") !important;
+          background-position: right 12px center !important;
+          background-repeat: no-repeat !important;
+          background-size: 16px !important;
+        }
+        .complaint-create-dialog select::-ms-expand {
+          display: none;
+        }
+        .complaint-create-dialog textarea {
+          min-height: 120px !important;
+          padding: 11px 14px !important;
+          border: 1px solid #dedede !important;
+          border-radius: 8px !important;
+          background: #fff !important;
+          color: #111 !important;
+          font-size: 14px !important;
+          line-height: 1.5;
+          box-shadow: none !important;
+        }
+        .complaint-create-dialog input::placeholder,
+        .complaint-create-dialog textarea::placeholder {
+          color: #858b92 !important;
+          opacity: 1;
+        }
+        .complaint-create-dialog input:focus,
+        .complaint-create-dialog select:focus,
+        .complaint-create-dialog textarea:focus {
+          border-color: #d1a184 !important;
+          box-shadow: 0 0 0 2px rgba(232, 117, 50, .12) !important;
+          outline: none;
+        }
+        .complaint-create-dialog > div:last-child button {
+          min-height: 40px;
+          border-radius: 8px !important;
+          font-size: 13px;
+          font-weight: 500;
+        }
+        .complaint-create-dialog button:focus-visible {
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(232, 117, 50, .14) !important;
+        }
+        #complaints-page .complaints-hero-art {
+          background-size: cover;
+          background-position: right center;
+          background-repeat: no-repeat;
+        }
+        #complaints-page .complaints-filter input,
+        #complaints-page .complaints-filter select {
+          height: 48px;
+          min-height: 48px;
+          border-color: #e1e4e8 !important;
+          border-radius: 8px !important;
+          background-color: #fff !important;
+          color: #111 !important;
+          font-size: 16px !important;
+          font-weight: 500 !important;
+        }
+        #complaints-page .complaints-filter .search-filter-field input,
+        #complaints-page .complaints-filter .search-filter-field input::placeholder {
+          font-weight: 400 !important;
+        }
+        #complaints-page .complaints-filter select {
+          padding-left: 14px !important;
+          padding-right: 36px !important;
+          appearance: none;
+          -webkit-appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2359626d' stroke-width='1.8'%3E%3Cpath d='m5 7 5 5 5-5'/%3E%3C/svg%3E") !important;
+          background-position: right 12px center !important;
+          background-repeat: no-repeat !important;
+          background-size: 16px !important;
+        }
+        #complaints-page .complaints-filter select option { background: #fff; color: #222; }
+        #complaints-page .complaints-filter select option:checked { background: #f3f4f5; color: #111; }
+        #complaints-page .complaints-filter input:focus,
+        #complaints-page .complaints-filter select:focus {
+          border-color: #9ca3af !important;
+          box-shadow: 0 0 0 2px rgba(107, 114, 128, .1) !important;
+          outline: none;
+        }
+        #complaints-page .complaints-table .industrial-card {
+          border: 1px solid #e5e5e5 !important;
+          border-radius: 10px !important;
+          background: #fff !important;
+          box-shadow: none !important;
+        }
+        #complaints-page .complaints-table th {
+          color: #62666b !important;
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          letter-spacing: .08em !important;
+        }
+        #complaints-page .complaints-table td {
+          font-size: 15px;
+        }
+        #complaints-page .complaints-table > .flex.flex-col.items-center {
+          min-height: 220px;
+          border: 1px solid #e5e5e5;
+          border-radius: 10px;
+          background: #fff;
+          padding: 32px 20px;
+        }
+        #complaints-page .complaints-table > .flex.flex-col.items-center > div:first-child {
+          width: 44px;
+          height: 44px;
+          margin-bottom: 12px;
+          border-radius: 9999px;
+          background: #f2f2f2;
+          color: #59616a;
+        }
+        #complaints-page .complaints-table > .flex.flex-col.items-center > div:first-child svg {
+          width: 20px;
+          height: 20px;
+        }
+        #complaints-page button.midc-primary-cta {
+          min-height: 40px;
+          border-radius: 7px !important;
+          background-color: #111111 !important;
+          box-shadow: none !important;
+          transform: none !important;
+          color: #fff !important;
+          font-size: 15px !important;
+          font-weight: 600 !important;
+        }
+        #complaints-page button.midc-primary-cta:hover:not(:disabled) {
+          background-color: #2b2b2b !important;
+        }
       `}</style>
 
-      <div className="space-y-4 complaints-page-enter">
-
-        {/* --------------------------------------------------
-            BREADCRUMB
-        -------------------------------------------------- */}
-
-        <div className="flex items-center gap-2 text-sm complaints-breadcrumb">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1.5 text-[#6C757D] hover:text-[#3E5C54] transition-colors"
-          >
-            {/* <Home className="w-4 h-4" /> */}
-            <span>Dashboard</span>
-          </Link>
-
-          <span className="text-[#E0E0E0] text-lg">
-            /
-          </span>
-
-          <span className="text-[#3E5C54] font-medium">
-            Safety Complaints
-          </span>
-        </div>
-
-        {/* --------------------------------------------------
-            PAGE HEADER
-        -------------------------------------------------- */}
-
-        <div className="bg-white rounded-[24px] border border-[#E0E0E0] px-5 sm:px-6 py-4 shadow-sm transition-all duration-300 ease-out hover:shadow-md complaints-header">
-
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-
-            <div className="flex items-center gap-4 min-w-0">
-
-              <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#EEF2F0] border border-[#B9C9C3] flex items-center justify-center text-[#3E5C54]">
-                <AlertOctagon className="w-6 h-6" />
-              </div>
-
-              <div className="min-w-0">
-
-                <h1
-                  className="text-xl sm:text-[32px] font-medium text-[#1E1E1E] leading-tight"
-                  style={{ letterSpacing: '0em' }}
-                >
-                  Safety Hazards & Complaints
-                </h1>
-
-                <div className="w-14 h-1 bg-[#3E5C54] rounded-full mt-2" />
-
-                <p className="text-sm text-[#6C757D] mt-1">
-                  File and audit industrial machinery, chemical, or environmental safety complaints
-                </p>
-
-              </div>
+      <div id="complaints-page" className="complaints-page space-y-6">
+        <section className="complaints-hero relative isolate -mx-4 -mt-4 h-[278px] w-[calc(100%+2rem)] overflow-hidden bg-[#F7F8F8] sm:-mx-6 sm:-mt-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:-mt-8 lg:w-[calc(100%+4rem)]" aria-labelledby="complaints-title">
+          <div className="relative z-10 flex min-h-[278px] items-start px-4 pt-7 sm:items-center sm:py-7 sm:px-6 lg:px-8">
+            <div className="w-full max-w-[740px] lg:w-[52%]">
+              <h1 id="complaints-title" className="!mb-0 !text-[30px] !font-semibold !leading-[1.1] !tracking-[-.035em] !text-[#111] sm:!text-[42px] lg:!text-[44px]">
+                Complaints
+              </h1>
+              <p className="mt-2 max-w-[470px] text-[16px] font-normal leading-[1.5] text-[#6B7280] sm:text-[17px]">
+                File and track industrial safety, environmental, or operational complaints.
+              </p>
             </div>
-
-            <Button
-              variant="primary"
-              icon={Plus}
-              onClick={openCreateModal}
-              className="shrink-0"
-            >
-              File Safety Complaint
-            </Button>
-
           </div>
 
-        </div>
+          <div
+            aria-hidden="true"
+            className="complaints-hero-art absolute inset-0 z-0 hidden xl:block"
+            style={{ backgroundImage: `url(${complaintsHero})` }}
+          />
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 z-0 xl:hidden">
+            <img src={complaintsHero} alt="" className="block h-auto w-full object-contain object-center" />
+          </div>
+        </section>
 
-        {/* --------------------------------------------------
-            SEARCH + FILTER
-        -------------------------------------------------- */}
-
-        <div className="complaints-filter">
-          <Card bodyClassName="p-4 sm:p-5">
-
-            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-
-              <div className="flex-1 min-w-0">
-
-                <SearchBar
-                  value={searchQuery}
-                  onChange={(val) => {
-                    setSearchQuery(val);
-                    setCurrentPage(1);
-                  }}
-                  onClear={() => setSearchQuery('')}
-                  placeholder="Search by complaint title, factory, or department..."
-                />
-
-              </div>
-
-              <Select
-                value={typeFilter}
-                onChange={(e) => {
-                  setTypeFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                options={typeOptions}
-                placeholder="All Complaint Types"
-                className="w-full lg:w-56"
-              />
-
-            </div>
-
-          </Card>
-        </div>
-
-        {/* --------------------------------------------------
-            COMPLAINTS TABLE
-        -------------------------------------------------- */}
-
-        <div className="rounded-[24px] overflow-hidden complaints-table">
-
-          <Table
-            columns={columns}
-            data={complaints}
-            loading={loading}
-            emptyTitle="No Safety Complaints Found"
-            emptyDescription="There are no safety hazard complaints matching your criteria."
-            onEmptyAction={openCreateModal}
-            emptyActionText="File Safety Complaint"
+        <section className="complaints-filter search-filter-controls grid grid-cols-1 items-center gap-3 bg-transparent p-0 lg:grid-cols-[minmax(0,1fr)_210px_auto]" aria-label="Search and filter safety complaints">
+          <SearchBar
+            className="search-filter-field"
+            value={searchQuery}
+            onChange={(val) => {
+              setSearchQuery(val);
+              setCurrentPage(1);
+            }}
+            onClear={() => setSearchQuery('')}
+            placeholder="Search by complaint title, factory, or department..."
           />
 
+          <SearchFilterSelect
+            value={typeFilter}
+            onValueChange={(value) => {
+              setTypeFilter(value);
+              setCurrentPage(1);
+            }}
+            options={typeOptions}
+            label="All Complaint Types"
+            iconType="complaint"
+          />
+
+          <button type="button" onClick={openCreateModal} className="midc-primary-cta inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-[15px] font-semibold text-white transition-colors">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            File Safety Complaint
+          </button>
+        </section>
+
+        <div className="complaints-table overflow-hidden rounded-lg">
+          {loading || complaints.length > 0 ? (
+            <Table columns={columns} data={complaints} loading={loading} className="platform-data-table" />
+          ) : (
+            <section className="flex min-h-[220px] flex-col items-center justify-center rounded-lg border border-[#e5e5e5] bg-white px-5 py-8 text-center" aria-live="polite">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f2f2f2] text-[#59616a]">
+                <FileText className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <h2 className="mt-3 text-[16px] font-semibold text-[#111]">No Safety Complaints Found</h2>
+              <p className="mt-1 max-w-md text-[13px] leading-5 text-[#6B7280]">
+                There are no safety hazard complaints matching your criteria.
+              </p>
+            </section>
+          )}
         </div>
 
         {/* --------------------------------------------------
@@ -644,13 +762,34 @@ const SafetyComplaints = () => {
   isOpen={createModalOpen}
   onClose={() => setCreateModalOpen(false)}
   title="File Industrial Safety Hazard Complaint"
-  dialogClassName="h-[70vh]"
+  dialogClassName="h-[70vh] complaint-create-dialog"
+  footer={
+    <>
+      <Button
+        variant="secondary"
+        className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
+        onClick={() => setCreateModalOpen(false)}
+      >
+        Cancel
+      </Button>
+      <Button
+        type="submit"
+        form="complaint-create-form"
+        variant="primary"
+        loading={submitting}
+        className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
+      >
+        Submit Complaint
+      </Button>
+    </>
+  }
 >
 
           {/* ONLY CHANGE: scrollable container for this form */}
-          <div className="h-[85vh] overflow-y-auto pr-2">
+          <div className="h-auto overflow-visible pr-2">
 
             <form
+              id="complaint-create-form"
               onSubmit={handleCreateComplaint}
               className="space-y-4"
             >
@@ -666,22 +805,26 @@ const SafetyComplaints = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                <Select
+                <SearchFilterSelect
                   label="Hazard Type"
+                  formField
                   name="complaintType"
                   value={formData.complaintType}
-                  onChange={handleInputChange}
+                  onValueChange={(value) => handleInputChange({ target: { name: 'complaintType', value } })}
                   options={typeOptions}
                   required
+                  allowClear={false}
                 />
 
-                <Select
+                <SearchFilterSelect
                   label="Severity Level"
+                  formField
                   name="severity"
                   value={formData.severity}
-                  onChange={handleInputChange}
+                  onValueChange={(value) => handleInputChange({ target: { name: 'severity', value } })}
                   options={severityOptions}
                   required
+                  allowClear={false}
                 />
 
               </div>
@@ -722,25 +865,6 @@ const SafetyComplaints = () => {
                 placeholder="Describe the hazard and potential risk to workers..."
                 required
               />
-
-              <div className="flex justify-end gap-3 pt-2">
-
-                <Button
-                  variant="secondary"
-                  onClick={() => setCreateModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  loading={submitting}
-                >
-                  Submit Complaint
-                </Button>
-
-              </div>
 
             </form>
 
@@ -804,6 +928,7 @@ const SafetyComplaints = () => {
 
               <Button
                 variant="secondary"
+                className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
                 onClick={() => setEditModalOpen(false)}
               >
                 Cancel
@@ -813,6 +938,7 @@ const SafetyComplaints = () => {
                 type="submit"
                 variant="primary"
                 loading={submitting}
+                className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
               >
                 Update Complaint
               </Button>
@@ -841,7 +967,7 @@ const SafetyComplaints = () => {
 
                 <div>
 
-                  <span className="inline-flex font-mono text-xs font-semibold text-[#3E5C54] bg-[#EEF2F0] px-2.5 py-1 rounded-md">
+                  <span className="inline-flex font-mono text-xs font-semibold text-[#111] bg-[#f5f5f5] px-2.5 py-1 rounded-md">
                     {selectedComplaint.complaintNumber}
                   </span>
 
@@ -913,11 +1039,11 @@ const SafetyComplaints = () => {
 
                 <div>
 
-                  <p className="text-xs font-semibold text-[#2A9D8F] uppercase tracking-wider mb-2">
+                  <p className="text-xs font-semibold text-[#111] uppercase tracking-wider mb-2">
                     Resolution Details
                   </p>
 
-                  <p className="text-sm leading-6 text-[#1E1E1E] bg-[#F1FAF8] p-4 rounded-xl border border-[#B9DED7]">
+                  <p className="text-sm leading-6 text-[#1E1E1E] bg-[#fafafa] p-4 rounded-xl border border-[#e1e4e8]">
                     {selectedComplaint.resolutionDetails}
                   </p>
 
@@ -979,6 +1105,7 @@ const SafetyComplaints = () => {
 
                 <Button
                   variant="secondary"
+                  className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
                   onClick={() => setViewModalOpen(false)}
                 >
                   Close
@@ -1037,6 +1164,7 @@ const SafetyComplaints = () => {
 
               <Button
                 variant="secondary"
+                className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
                 onClick={() => setStatusModalOpen(false)}
               >
                 Cancel
@@ -1046,6 +1174,7 @@ const SafetyComplaints = () => {
                 type="submit"
                 variant="primary"
                 loading={submitting}
+                className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
               >
                 Update Complaint Status
               </Button>
@@ -1084,6 +1213,7 @@ const SafetyComplaints = () => {
 
               <Button
                 variant="secondary"
+                className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
                 onClick={() => setImageModalOpen(false)}
               >
                 Cancel
@@ -1093,6 +1223,7 @@ const SafetyComplaints = () => {
                 type="submit"
                 variant="primary"
                 loading={submitting}
+                className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
               >
                 Upload Images
               </Button>

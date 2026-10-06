@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import SearchFilterSelect from '../components/common/SearchFilterSelect';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import claimService from '../services/claimService';
 import accidentService from '../services/accidentService';
 import workerService from '../services/workerService';
+import claimsHero from '../assets/compensation-claims-hero.png';
 
 import {
-  FileCheck2,
   Plus,
   Eye,
   Edit,
   Trash2,
   Upload,
-  CheckCircle
+  CheckCircle,
+  FileText
 } from 'lucide-react';
 
-import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Table from '../components/common/Table';
 import Input from '../components/common/Input';
@@ -387,7 +388,7 @@ const CompensationClaims = () => {
       header: 'Claim Number',
 
       render: (row) => (
-        <span className="font-mono text-xs font-semibold text-[#3E5C54] bg-[#EEF2F0] px-2.5 py-1 rounded-md border border-[#E0E0E0]">
+        <span className="font-mono text-xs font-semibold text-[#111] bg-[#f5f5f5] px-2.5 py-1 rounded-md border border-[#E0E0E0]">
           {row.claimNumber || 'CLM-PENDING'}
         </span>
       )
@@ -410,7 +411,7 @@ const CompensationClaims = () => {
         <span
           className={`font-medium text-sm ${
             row.approvedAmount > 0
-              ? 'text-[#2A9D8F]'
+              ? 'text-[#111]'
               : 'text-[#6C757D]'
           }`}
         >
@@ -433,7 +434,7 @@ const CompensationClaims = () => {
       header: 'Status',
 
       render: (row) => (
-        <StatusBadge status={row.status} />
+        <StatusBadge status={row.status} variant="dot" />
       )
     },
 
@@ -448,7 +449,7 @@ const CompensationClaims = () => {
           {/* View */}
           <button
             onClick={() => openViewModal(row)}
-            className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#F4F4F4] hover:text-[#3E5C54] transition-colors"
+            className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]"
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -460,7 +461,7 @@ const CompensationClaims = () => {
             <>
               <button
                 onClick={() => openDocModal(row)}
-                className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#F4F4F4] hover:text-[#3E5C54] transition-colors"
+                className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]"
                 title="Upload Documents"
               >
                 <Upload className="w-4 h-4" />
@@ -468,7 +469,7 @@ const CompensationClaims = () => {
 
               <button
                 onClick={() => openEditModal(row)}
-                className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#F4F4F4] hover:text-[#C9A66B] transition-colors"
+                className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]"
                 title="Edit Claim"
               >
                 <Edit className="w-4 h-4" />
@@ -481,7 +482,7 @@ const CompensationClaims = () => {
           {isAdminOrOfficer && (
             <button
               onClick={() => openStatusModal(row)}
-              className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#EEF2F0] hover:text-[#3E5C54] transition-colors"
+              className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]"
               title="Approve / Review Status"
             >
               <CheckCircle className="w-4 h-4" />
@@ -493,7 +494,7 @@ const CompensationClaims = () => {
           {!isAdminOrOfficer && (
             <button
               onClick={() => openDeleteDialog(row)}
-              className="p-1.5 rounded-xl text-[#6C757D] hover:bg-[#FDEEEF] hover:text-[#E63946] transition-colors"
+              className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]"
               title="Delete Claim"
             >
               <Trash2 className="w-4 h-4" />
@@ -510,6 +511,125 @@ const CompensationClaims = () => {
     <>
       
 <style>{`
+  .claims-create-dialog {
+    border-color: #e1e4e8 !important;
+    background: #fff !important;
+    box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+  }
+  .fixed.inset-0.z-50:has(.claims-create-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+    background: rgba(17, 17, 17, .32) !important;
+    backdrop-filter: none !important;
+  }
+  .claims-create-dialog > div:first-child {
+    border-bottom-color: #e1e4e8 !important;
+    background: #fff !important;
+  }
+  .claims-create-dialog > div:first-child h3 {
+    color: #111 !important;
+    font-weight: 600;
+  }
+  .claims-create-dialog > div:first-child button {
+    color: #62666b !important;
+  }
+  .claims-create-dialog > div:first-child button:hover {
+    background: #f3f4f5 !important;
+    color: #111 !important;
+  }
+  .claims-create-dialog label {
+    margin-bottom: 6px !important;
+    color: #292929 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+  }
+  .claims-create-dialog label span {
+    color: #E87532 !important;
+  }
+  .claims-create-dialog input,
+  .claims-create-dialog select {
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 0 14px !important;
+    border: 1px solid #dedede !important;
+    border-radius: 8px !important;
+    background-color: #fff !important;
+    color: #111 !important;
+    font-size: 14px !important;
+    box-shadow: none !important;
+  }
+  .claims-create-dialog select {
+    padding-right: 36px !important;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2359626d' stroke-width='1.8'%3E%3Cpath d='m5 7 5 5 5-5'/%3E%3C/svg%3E") !important;
+    background-position: right 12px center !important;
+    background-repeat: no-repeat !important;
+    background-size: 16px !important;
+  }
+  .claims-create-dialog select::-ms-expand {
+    display: none;
+  }
+  .claims-create-dialog textarea {
+    min-height: 104px !important;
+    padding: 11px 14px !important;
+    border: 1px solid #dedede !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 14px !important;
+    line-height: 1.5;
+    box-shadow: none !important;
+  }
+  .claims-create-dialog input[type="date"]::-webkit-calendar-picker-indicator,
+  .claims-create-dialog input[type="time"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+  }
+  .claims-create-dialog input::placeholder,
+  .claims-create-dialog textarea::placeholder {
+    color: #858b92 !important;
+    opacity: 1;
+  }
+  .claims-create-dialog input:focus,
+  .claims-create-dialog select:focus,
+  .claims-create-dialog textarea:focus {
+    border-color: #d1a184 !important;
+    box-shadow: 0 0 0 2px rgba(232, 117, 50, .12) !important;
+    outline: none;
+  }
+  .claims-create-dialog form > div:last-child button {
+    min-height: 40px;
+    border-radius: 8px !important;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  #compensation-claims-page .claims-hero-art {
+    right: -6px;
+    background-size: cover;
+    background-position: right center;
+    background-repeat: no-repeat;
+  }
+
+  #compensation-claims-page .claims-submit-cta {
+    background-color: #111111 !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  #compensation-claims-page .claims-submit-cta:hover:not(:disabled) {
+    background-color: #2b2b2b !important;
+  }
+
+  #compensation-claims-page button.midc-primary-cta {
+    background-color: #111111 !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  #compensation-claims-page button.midc-primary-cta:hover:not(:disabled) {
+    background-color: #2b2b2b !important;
+  }
+
   .claims-page-enter {
     animation: claimsPageEnter 0.5s ease-out both;
   }
@@ -524,11 +644,81 @@ const CompensationClaims = () => {
 
   .claims-table-wrap {
     animation: claimsContentEnter 0.6s ease-out 0.14s both;
-    transition: box-shadow 220ms ease, transform 220ms ease;
+    transition: none;
   }
 
-  .claims-table-wrap:hover {
-    box-shadow: 0 14px 34px rgba(62, 92, 84, 0.06);
+  #compensation-claims-page .claims-search-card:has(.claims-status-menu) {
+    position: relative;
+    z-index: 20;
+    overflow: visible;
+  }
+
+  #compensation-claims-page .claims-table-wrap {
+    position: relative;
+    z-index: 0;
+  }
+
+  #compensation-claims-page .claims-search-card input,
+  #compensation-claims-page .claims-search-card select {
+    height: 48px;
+    min-height: 48px;
+    border-radius: 8px !important;
+    border-color: #e1e4e8 !important;
+    background-color: #fff !important;
+    box-shadow: none !important;
+    color: #111 !important;
+    font-size: 14px !important;
+  }
+
+  #compensation-claims-page .claims-search-card input:focus,
+  #compensation-claims-page .claims-search-card select:focus {
+    border-color: #9ca3af !important;
+    box-shadow: 0 0 0 2px rgba(107, 114, 128, .1) !important;
+  }
+
+  #compensation-claims-page .claims-search-card .search-filter-trigger:hover {
+    border-color: #cfd3d8 !important;
+    background-color: #fefefe !important;
+  }
+
+  #compensation-claims-page .claims-search-card .search-filter-trigger:focus-visible {
+    border-color: #b8b8b8 !important;
+    box-shadow: 0 0 0 2px rgba(232, 117, 50, .14) !important;
+    outline: none;
+  }
+
+  #compensation-claims-page .claims-search-card select {
+    padding-left: 2.5rem !important;
+    padding-right: 36px !important;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2359626d' stroke-width='1.8'%3E%3Cpath d='m5 7 5 5 5-5'/%3E%3C/svg%3E") !important;
+    background-position: right 12px center !important;
+    background-repeat: no-repeat !important;
+    background-size: 16px !important;
+  }
+  #compensation-claims-page .claims-search-card select option { background: #fff; color: #222; }
+  #compensation-claims-page .claims-search-card select option:checked { background: #f3f4f5; color: #111; }
+
+  #compensation-claims-page .claims-empty-state {
+    min-height: 160px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    padding: 24px 20px;
+  }
+
+  #compensation-claims-page .claims-empty-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 9999px;
+    background: #f0f1f2;
+    color: #59636f;
+  }
+
+  #compensation-claims-page .claims-empty-state .midc-primary-cta {
+    border-radius: 8px !important;
+    box-shadow: none !important;
   }
 
   .claims-page-enter button,
@@ -542,20 +732,12 @@ const CompensationClaims = () => {
       transform 180ms ease;
   }
 
-  .claims-page-enter button:hover:not(:disabled) {
+  .claims-page-enter button:hover:not(:disabled):not(.midc-primary-cta) {
     transform: translateY(-1px);
   }
 
   .claims-page-enter button:active:not(:disabled) {
     transform: translateY(0);
-  }
-
-  .claims-page-enter tbody tr {
-    transition: background-color 180ms ease, box-shadow 180ms ease;
-  }
-
-  .claims-page-enter tbody tr:hover {
-    background-color: #f8faf9;
   }
 
   .claims-page-enter [role="dialog"] {
@@ -624,129 +806,88 @@ const CompensationClaims = () => {
       transition: none !important;
     }
 
-    .claims-page-enter button:hover:not(:disabled) {
+    .claims-page-enter button:hover:not(:disabled):not(.midc-primary-cta) {
       transform: none !important;
     }
   }
 `}</style>
 
-      <div className="space-y-7 claims-page-enter">
+      <div id="compensation-claims-page" className="claims-page space-y-6 claims-page-enter">
 
-      {/* =====================================================
-          BREADCRUMB
-          ===================================================== */}
-
-      <div className="flex items-center gap-3 text-sm">
-        <span className="text-[#6C757D]">
-          Dashboard
-        </span>
-
-        <span className="text-[#E0E0E0] text-lg">
-          /
-        </span>
-
-        <span className="text-[#3E5C54] font-medium">
-          Claims
-        </span>
-      </div>
-
-
-      {/* =====================================================
-          PAGE HEADER
-          ===================================================== */}
-
-      <div className="claims-page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 sm:px-6 sm:py-4 bg-white border border-[#E0E0E0] rounded-[20px] shadow-[0_8px_24px_rgba(62,92,84,.035)] transition-all duration-300 ease-out hover:shadow-[0_12px_28px_rgba(62,92,84,.055)]">
-
-        <div className="flex items-center gap-3.5 min-w-0">
-
-          {/* Page icon */}
-          <div className="w-12 h-12 rounded-[15px] border border-[#B9C9C3] bg-[#EEF2F0] flex items-center justify-center shrink-0 transition-transform duration-300">
-            <FileCheck2 className="w-6 h-6 text-[#3E5C54]" />
-          </div>
-
-          {/* Title */}
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-[26px] font-semibold text-[#1E1E1E] tracking-tight leading-tight">
+      {/* Compensation hero */}
+      <section className="claims-page-header claims-hero relative isolate -mx-4 -mt-4 min-h-[278px] w-[calc(100%+2rem)] overflow-hidden bg-[#F7F8F8] sm:-mx-6 sm:-mt-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:-mt-8 lg:w-[calc(100%+4rem)]" aria-labelledby="claims-page-title">
+        <div className="relative z-10 flex min-h-[278px] items-start px-4 pt-7 sm:items-center sm:py-7 sm:px-6 lg:px-8">
+          <div className="w-full max-w-[740px] lg:w-[52%]">
+            <h1 id="claims-page-title" className="!mb-0 !text-[30px] !font-semibold !leading-tight !tracking-[-.035em] !text-[#111] sm:!text-[42px] lg:!text-[44px]">
               Compensation Claims
             </h1>
-            <div className="w-14 h-1 bg-[#3E5C54] rounded-full mt-2" />
-
-            <p className="text-sm text-[#6C757D] mt-1">
-              Track worker compensation requests and approval progress
+            <p className="mt-2 max-w-[470px] text-[16px] leading-[1.5] text-[#6B7280] sm:text-[17px]">
+              Track worker compensation requests and approval progress.
             </p>
           </div>
-
         </div>
 
-        {/* Create claim button — permission condition intentionally unchanged */}
-        {!isAdminOrOfficer && (
-          <Button
-            variant="primary"
-            icon={Plus}
-            onClick={openCreateModal}
-            className="shrink-0"
-          >
-            File Compensation Claim
-          </Button>
-        )}
-
-      </div>
+        <div aria-hidden="true" className="claims-hero-art absolute inset-0 z-0 hidden xl:block" style={{ backgroundImage: `url(${claimsHero})` }} />
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 z-0 xl:hidden">
+          <img src={claimsHero} alt="" className="block h-auto w-full object-contain object-center" />
+        </div>
+      </section>
 
 
       {/* =====================================================
           SEARCH & FILTER
           ===================================================== */}
 
-      <div className="claims-search-card"><Card bodyClassName="p-4">
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+      <section className="claims-search-card search-filter-controls grid grid-cols-1 items-center gap-3 bg-transparent p-0 lg:grid-cols-[minmax(0,1fr)_190px_auto]" aria-label="Search and filter compensation claims">
+        <SearchBar
+          className="search-filter-field"
+          value={searchQuery}
+          onChange={(val) => {
+            setSearchQuery(val);
+            setCurrentPage(1);
+          }}
+          onClear={() => setSearchQuery('')}
+          placeholder="Search by claim number, worker, or description..."
+        />
 
-          <SearchBar
-            value={searchQuery}
-            onChange={(val) => {
-              setSearchQuery(val);
-              setCurrentPage(1);
-            }}
-            onClear={() => setSearchQuery('')}
-            placeholder="Search by claim number, worker, or description..."
-          />
-
-          <Select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            options={claimStatusOptions}
-            placeholder="Filter by Status"
-            className="w-full sm:w-48"
-          />
-
-        </div>
-      </Card></div>
+        <SearchFilterSelect
+          value={statusFilter}
+          onValueChange={(value) => {
+            setStatusFilter(value);
+            setCurrentPage(1);
+          }}
+          options={claimStatusOptions}
+          label="All Statuses"
+          iconType="status"
+          menuClassName="claims-status-menu"
+        />
+        {!isAdminOrOfficer && (
+          <button type="button" onClick={openCreateModal} className="midc-primary-cta claims-submit-cta inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-sm font-medium text-white transition-colors">
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Submit Claim
+          </button>
+        )}
+      </section>
 
 
       {/* =====================================================
           CLAIMS TABLE
           ===================================================== */}
 
-      <div className="claims-table-wrap overflow-hidden rounded-2xl">
-      <Table
-        columns={columns}
-        data={claims}
-        loading={loading}
-        emptyTitle="No Compensation Claims Found"
-        emptyDescription="There are no compensation claim records matching your query."
-        onEmptyAction={
-          !isAdminOrOfficer
-            ? openCreateModal
-            : undefined
-        }
-        emptyActionText={
-          !isAdminOrOfficer
-            ? 'Submit Claim'
-            : undefined
-        }
-      />
+      <div className="claims-table-wrap overflow-hidden rounded-lg">
+      {loading || claims.length > 0 ? (
+        <Table columns={columns} data={claims} loading={loading} className="platform-data-table" />
+      ) : (
+        <section className="claims-empty-state flex flex-col items-center justify-center text-center" aria-live="polite">
+          <span className="claims-empty-icon flex items-center justify-center rounded-full">
+            <FileText className="h-6 w-6" aria-hidden="true" />
+          </span>
+          <h2 className="mt-3 text-[16px] font-semibold text-[#111]">No Compensation Claims Found</h2>
+          <p className="mt-1 max-w-md text-[13px] leading-5 text-[#6B7280]">
+            There are no compensation claim records matching your query.
+          </p>
+        </section>
+      )}
       </div>
 
 
@@ -754,12 +895,14 @@ const CompensationClaims = () => {
           PAGINATION
           ===================================================== */}
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        onPageChange={(page) => setCurrentPage(page)}
-      />
+      {totalItems > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
+      )}
 
 
       {/* =====================================================
@@ -770,6 +913,7 @@ const CompensationClaims = () => {
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         title="Submit Compensation Claim"
+        dialogClassName="claims-create-dialog"
       >
 
         <form
@@ -811,26 +955,29 @@ const CompensationClaims = () => {
               placeholder="e.g. Partial Limb Fracture"
             />
 
-            <Select
+            <SearchFilterSelect
               label="Associated Worker"
+              formField
               name="worker"
               value={formData.worker}
-              onChange={handleInputChange}
+              onValueChange={(value) => handleInputChange({ target: { name: 'worker', value } })}
               options={workersList.map((w) => ({
                 value: w._id,
                 label: `${w.name} (${w.employeeId})`
               }))}
               placeholder="Select worker profile"
+              allowClear
             />
 
           </div>
 
 
-          <Select
+          <SearchFilterSelect
             label="Linked Accident Incident (Optional)"
+            formField
             name="accidentReport"
             value={formData.accidentReport}
-            onChange={handleInputChange}
+            onValueChange={(value) => handleInputChange({ target: { name: 'accidentReport', value } })}
             options={accidentsList.map((a) => ({
               value: a._id,
               label: `${a.title} (${new Date(
@@ -838,6 +985,7 @@ const CompensationClaims = () => {
               ).toLocaleDateString()})`
             }))}
             placeholder="Select accident report"
+            allowClear
           />
 
 
@@ -855,6 +1003,7 @@ const CompensationClaims = () => {
 
             <Button
               variant="secondary"
+              className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
               onClick={() =>
                 setCreateModalOpen(false)
               }
@@ -866,6 +1015,7 @@ const CompensationClaims = () => {
               type="submit"
               variant="primary"
               loading={submitting}
+              className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
             >
               Submit Claim
             </Button>
@@ -935,6 +1085,7 @@ const CompensationClaims = () => {
 
             <Button
               variant="secondary"
+              className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
               onClick={() =>
                 setEditModalOpen(false)
               }
@@ -946,6 +1097,7 @@ const CompensationClaims = () => {
               type="submit"
               variant="primary"
               loading={submitting}
+              className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
             >
               Update Claim
             </Button>
@@ -974,7 +1126,7 @@ const CompensationClaims = () => {
 
               <div>
 
-                <span className="font-mono text-xs font-semibold text-[#3E5C54] bg-[#EEF2F0] px-2 py-0.5 rounded">
+                <span className="font-mono text-xs font-semibold text-[#111] bg-[#f5f5f5] px-2 py-0.5 rounded">
                   {selectedClaim.claimNumber}
                 </span>
 
@@ -1018,7 +1170,7 @@ const CompensationClaims = () => {
                   Medical Expenses
                 </span>
 
-                <p className="text-base font-semibold text-[#3E5C54] mt-0.5">
+                <p className="text-base font-semibold text-[#111] mt-0.5">
                   ₹
                   {(
                     selectedClaim.medicalExpenses || 0
@@ -1028,13 +1180,13 @@ const CompensationClaims = () => {
               </div>
 
 
-              <div className="p-3 bg-[#EEF7F5] border border-[#B9DCD6] rounded-xl">
+              <div className="p-3 bg-[#fafafa] border border-[#e1e4e8] rounded-xl">
 
-                <span className="text-[11px] text-[#2A9D8F] font-medium">
+                <span className="text-[11px] text-[#6C757D] font-medium">
                   Approved Amount
                 </span>
 
-                <p className="text-base font-semibold text-[#2A9D8F] mt-0.5">
+                <p className="text-base font-semibold text-[#111] mt-0.5">
                   ₹
                   {(
                     selectedClaim.approvedAmount || 0
@@ -1052,7 +1204,7 @@ const CompensationClaims = () => {
                 Claim Description
               </p>
 
-              <p className="text-sm text-[#3E5C54] bg-white p-3 rounded-xl border border-[#E0E0E0]">
+              <p className="text-sm text-[#111] bg-white p-3 rounded-xl border border-[#E0E0E0]">
                 {selectedClaim.description}
               </p>
 
@@ -1066,7 +1218,7 @@ const CompensationClaims = () => {
                   Officer Remarks
                 </p>
 
-                <p className="text-sm text-[#3E5C54] bg-[#FFF8E8]/50 p-3 rounded-xl border border-[#E9C46A]">
+                <p className="text-sm text-[#111] bg-[#FFF8E8]/50 p-3 rounded-xl border border-[#E9C46A]">
                   {selectedClaim.remarks}
                 </p>
 
@@ -1078,6 +1230,7 @@ const CompensationClaims = () => {
 
               <Button
                 variant="secondary"
+                className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
                 onClick={() =>
                   setViewModalOpen(false)
                 }
@@ -1153,6 +1306,7 @@ const CompensationClaims = () => {
 
             <Button
               variant="secondary"
+              className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
               onClick={() =>
                 setStatusModalOpen(false)
               }
@@ -1164,6 +1318,7 @@ const CompensationClaims = () => {
               type="submit"
               variant="primary"
               loading={submitting}
+              className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
             >
               Save Review Decision
             </Button>
@@ -1204,6 +1359,7 @@ const CompensationClaims = () => {
 
             <Button
               variant="secondary"
+              className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
               onClick={() =>
                 setDocModalOpen(false)
               }
@@ -1215,6 +1371,7 @@ const CompensationClaims = () => {
               type="submit"
               variant="primary"
               loading={submitting}
+              className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
             >
               Upload Documents
             </Button>

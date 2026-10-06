@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck,
@@ -11,42 +11,37 @@ import {
   ShieldAlert,
   Building2,
   Menu,
-  X,
-  ClipboardCheck,
-  MapPin,
-  CheckCircle2,
-  FileText,
-  Search
+  X
 } from 'lucide-react';
 
 const SYSTEM_CAPABILITIES = [
   {
     title: 'Worker Safety Profiles',
-    desc: 'Keep worker identity, assignment and safety information organized.',
+    desc: 'Worker identity and assignments.',
     icon: Users,
     tone: 'green'
   },
   {
     title: 'Incident Reporting',
-    desc: 'Capture workplace accidents and keep follow-up visible.',
+    desc: 'Incidents and follow-up.',
     icon: AlertTriangle,
     tone: 'coral'
   },
   {
     title: 'Compensation Claims',
-    desc: 'Move claims from submission through review in one workflow.',
+    desc: 'Claim review and progress.',
     icon: FileCheck2,
     tone: 'lavender'
   },
   {
     title: 'Safety Complaints',
-    desc: 'Record hazards, inspections and corrective action.',
+    desc: 'Hazards and corrective action.',
     icon: ShieldAlert,
     tone: 'amber'
   },
   {
     title: 'Emergency Support',
-    desc: 'Find hospital and trauma support when an incident requires care.',
+    desc: 'Nearby hospital support.',
     icon: Hospital,
     tone: 'green'
   }
@@ -73,63 +68,12 @@ const ROLES = [
   }
 ];
 
-const toneClasses = {
-  green:
-    'bg-[#EEF2F0] text-[#3E5C54] border-[#D6E2DD]',
-  coral:
-    'bg-[#F3E7D6] text-[#C9A66B] border-[#E8D6B8]',
-  amber:
-    'bg-[#FAF3DE] text-[#9A7A28] border-[#E9C46A]',
-  lavender:
-    'bg-[#EAF3FB] text-[#2196F3] border-[#C9E1F5]'
-};
-
 const LandingPage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const pageRef = useRef(null);
-
-  useEffect(() => {
-    const page = pageRef.current;
-
-    if (!page) return;
-
-    const animatedElements = page.querySelectorAll(
-      '[data-reveal], [data-reveal-child]'
-    );
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-          } else {
-            entry.target.classList.remove('is-visible');
-          }
-        });
-      },
-      {
-        threshold: 0.12,
-        rootMargin: '-40px 0px -60px 0px'
-      }
-    );
-
-    animatedElements.forEach((element) => {
-      observer.observe(element);
-    });
-
-    return () => {
-      animatedElements.forEach((element) => {
-        observer.unobserve(element);
-      });
-
-      observer.disconnect();
-    };
-  }, []);
 
   return (
     <div
-      ref={pageRef}
-      className="midc-public-page overflow-x-hidden" landing-page-motion
+      className="midc-public-page overflow-x-hidden"
     >
       <style>{`
         .landing-page-motion .midc-public-header {
@@ -254,6 +198,201 @@ const LandingPage = () => {
           outline-offset: 3px;
         }
 
+        .midc-public-page .midc-container {
+          width: min(92vw, 1420px);
+          max-width: none;
+        }
+
+        .midc-public-page { background: #fff !important; color: #111 !important; }
+        .midc-public-page .midc-public-header {
+          background: #fff !important; border-bottom: 1px solid #e5e5e5 !important; backdrop-filter: none;
+        }
+        .midc-public-header .midc-container {
+          display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 78px;
+        }
+        .midc-public-header .midc-container > a { justify-self: start; color: #111; }
+        .midc-public-header .landing-nav-actions { justify-self: end; }
+        .midc-public-header nav { color: #171717; font-size: .9375rem; font-weight: 500; }
+        .midc-public-header .midc-brand-mark + div > div:first-child { font-size: 1.1875rem; font-weight: 700; letter-spacing: -.035em; }
+        .midc-public-header .midc-brand-mark + div > div:last-child { font-size: .8125rem; font-weight: 400; line-height: 1.4; }
+        .midc-public-page .midc-brand-mark {
+          width: 47px; height: 50px; border-radius: 10px; background: #111 !important; color: #fff !important;
+          box-shadow: none !important; animation: none !important;
+        }
+        .midc-public-page .midc-btn-primary {
+          min-height: 42px; padding: .625rem 1rem; border: 1px solid #111; border-radius: 9px;
+          font-family: inherit; font-size: .875rem; font-weight: 700; line-height: 1.15;
+          background: #111 !important; color: #fff !important; box-shadow: none !important;
+        }
+        .midc-public-page .midc-btn-primary:hover { background: #2a2a2a !important; box-shadow: none !important; }
+        .midc-public-page .midc-btn-outline {
+          min-height: 42px; padding: .625rem 1rem; border-radius: 9px; border-color: #d8d8d8 !important;
+          font-family: inherit; font-size: .875rem; font-weight: 600; line-height: 1.15;
+          color: #111 !important; background: #fff !important;
+        }
+        .midc-public-page .landing-mobile-start { background: #111 !important; color: #fff !important; }
+        .landing-nav-actions { gap: .5rem; }
+        .landing-nav-actions > a:first-child {
+          display: inline-flex; align-items: center; justify-content: center; height: 42px; padding: 0 .75rem;
+          font-size: .875rem; font-weight: 500; line-height: 1.15;
+        }
+        .landing-nav-actions .midc-btn-primary { height: 42px; min-height: 42px; padding: 0 1rem; }
+        .landing-mobile-start { font-size: .875rem; font-weight: 700; line-height: 1.15; }
+        .midc-public-page .midc-hero { overflow: visible; background: #fff !important; }
+        .midc-public-page .midc-hero::before { display: none; }
+
+        @media (min-width: 768px) {
+          .midc-public-page .midc-hero {
+            display: flex;
+            align-items: center;
+            min-height: calc(100vh - 78px - 152px - 32px);
+            min-height: calc(100svh - 78px - 152px - 32px);
+          }
+        }
+
+        .landing-centered-hero { padding: 76px 16px 42px; text-align: center; }
+        .landing-centered-hero .midc-section-label {
+          justify-content: center; color: #565656; letter-spacing: 0; font-size: .95rem; font-weight: 500; text-transform: none;
+        }
+        .landing-centered-hero .midc-dot { background: #f2672e; }
+        .landing-centered-title {
+          max-width: 920px; margin: 30px auto 24px; color: #111; font-size: clamp(3rem, 4vw, 3.375rem);
+          font-weight: 700; letter-spacing: -.055em; line-height: 1.1;
+        }
+        .landing-centered-title span { color: inherit; }
+        .landing-centered-copy { max-width: 760px; margin: 0 auto; color: #686868; font-size: 1rem; font-weight: 400; line-height: 1.65; }
+
+        .midc-public-page .midc-section { border-top-color: #e5e5e5 !important; background: #fff !important; }
+        .midc-public-page .midc-heading {
+          color: #111; font-size: clamp(1.75rem, 2.3vw, 2rem); font-weight: 700;
+          line-height: 1.16; letter-spacing: -.035em;
+        }
+        .midc-public-page .midc-role-card h3,
+        .midc-public-page .midc-feature-card h3 { color: #111; font-size: 1rem; font-weight: 600; line-height: 1.35; }
+        .midc-public-page .midc-section-label { color: #666; font-size: .72rem; font-weight: 600; letter-spacing: .08em; }
+        .midc-public-page .midc-lead { font-size: 1rem; font-weight: 400; line-height: 1.65; }
+        .midc-public-page .midc-feature-card,
+        .midc-public-page .midc-role-card {
+          border-color: #e5e5e5; border-radius: 0; background: #fff; box-shadow: none;
+        }
+        .midc-public-page .midc-feature-icon { border: 0; border-radius: 0; background: transparent; color: #f2672e; }
+        .midc-public-page .midc-final-cta { border-color: #e5e5e5; border-radius: 0; background: #fff; }
+        .midc-public-page .midc-final-cta .midc-section-label { color: #f2672e; }
+        .midc-public-page footer { border-color: #e5e5e5; background: #fff; }
+
+        .capability-strip {
+          display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid #e5e5e5;
+          border-bottom: 1px solid #e5e5e5;
+        }
+        .capability-item { min-width: 0; padding: 18px 20px; border-left: 1px solid #e5e5e5; }
+        .capability-item:first-child { border-left: 0; }
+        .capability-meta { display: flex; align-items: center; gap: 22px; color: #777; font-size: .75rem; font-weight: 500; line-height: 1.3; }
+        .capability-meta svg { width: 21px; height: 21px; color: #f2672e; }
+        .capability-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-height: 2.7em; margin-top: 14px; }
+        .capability-title-row h3 { margin: 0; color: #111; font-size: 1rem; font-weight: 600; line-height: 1.35; }
+        .capability-title-row svg { width: 16px; height: 16px; margin-top: .1rem; color: #888; flex: none; }
+        .capability-item p { min-height: 2.4em; margin-top: 6px; color: #686868; font-size: .8125rem; font-weight: 400; line-height: 1.55; }
+        .midc-public-page .midc-role-card { padding: 16px; }
+        .midc-public-page .midc-role-card h3 { min-height: 2.7em; margin-top: 12px; }
+        .midc-public-page .midc-role-card p { font-size: .8125rem; font-weight: 400; line-height: 1.6; }
+        .midc-public-page .midc-final-cta h2 { font-size: clamp(1.5rem, 2vw, 2rem); font-weight: 700; line-height: 1.2; letter-spacing: -.025em; }
+        .midc-public-page .midc-final-cta { margin-top: 40px; padding: 16px 20px; }
+        .midc-public-page #workflow > .midc-container { padding-block: 56px 60px; }
+        .midc-public-page #roles > .midc-container { padding-block: 60px 48px; }
+        .midc-public-page .workflow-intro h2 { margin-top: 8px; }
+        .midc-public-page .workflow-intro p { margin-top: 14px; }
+
+        .midc-public-header .midc-container > a {
+          align-items: center;
+          gap: .75rem;
+        }
+
+        .midc-public-header .midc-brand-mark {
+          flex: none;
+        }
+
+        .midc-public-header .midc-brand-mark + div {
+          line-height: 1.25;
+        }
+
+        .workflow-sequence {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          margin-top: 24px;
+        }
+
+        .workflow-step {
+          position: relative;
+          min-width: 0;
+          padding: 14px 1.5rem;
+          border-left: 1px solid #e5e5e5;
+        }
+
+        .workflow-step:first-child {
+          padding-left: 0;
+          border-left: 0;
+        }
+
+        .workflow-step-number {
+          display: block;
+          margin-bottom: .55rem;
+          color: #f2672e;
+          font-size: .75rem;
+          font-weight: 700;
+        }
+
+        .workflow-step h3 {
+          margin: 0;
+          color: #1E1E1E;
+          font-size: 1rem;
+          font-weight: 600;
+          line-height: 1.35;
+        }
+
+        .workflow-step p {
+          margin: .4rem 0 0;
+          color: #6C757D;
+          font-size: .875rem;
+          line-height: 1.5;
+        }
+
+        .workflow-step-arrow {
+          position: absolute;
+          top: .9rem;
+          right: .35rem;
+          width: 1rem;
+          height: 1rem;
+        }
+
+        @media (max-width: 767px) {
+          .midc-public-header .midc-container { grid-template-columns: 1fr auto; height: 68px; }
+          .midc-public-header nav,
+          .midc-public-header .landing-nav-actions { display: none; }
+          .landing-centered-hero { padding: 58px 8px 32px; }
+          .landing-centered-title { font-size: clamp(2.25rem, 7vw, 3rem); }
+          .landing-centered-copy { font-size: 1rem; line-height: 1.6; }
+          .capability-strip { grid-template-columns: 1fr 1fr; }
+          .capability-item { padding: 16px 14px; border-bottom: 1px solid #e5e5e5; }
+          .midc-public-page #workflow > .midc-container { padding-block: 42px; }
+          .midc-public-page #roles > .midc-container { padding-block: 42px 36px; }
+          .midc-public-page .midc-final-cta { margin-top: 36px; }
+
+          .workflow-sequence {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+
+          .workflow-step,
+          .workflow-step:first-child {
+            padding: 8px 0 8px 1rem;
+            border-left: 1px solid #e5e5e5;
+          }
+
+          .workflow-step-arrow {
+            display: none;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .landing-page-motion *,
           .landing-page-motion *::before,
@@ -289,30 +428,30 @@ const LandingPage = () => {
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-[#6C757D]">
+          <nav className="hidden md:flex items-center gap-9 text-sm font-semibold text-[#6C757D]">
             <a
               href="#platform"
-              className="hover:text-[#3E5C54] transition"
+              className="hover:text-[#F2672E] transition"
             >
               Platform
             </a>
 
             <a
               href="#workflow"
-              className="hover:text-[#3E5C54] transition"
+              className="hover:text-[#F2672E] transition"
             >
               How it works
             </a>
 
             <a
               href="#roles"
-              className="hover:text-[#3E5C54] transition"
+              className="hover:text-[#F2672E] transition"
             >
               For teams
             </a>
           </nav>
 
-          <div className="hidden md:flex items-center gap-2">
+          <div className="landing-nav-actions hidden md:flex items-center gap-2">
             <Link
               to="/login"
               className="px-4 py-2.5 rounded-xl text-sm font-bold text-[#1E1E1E] hover:bg-[#F4F4F4] transition"
@@ -366,7 +505,7 @@ const LandingPage = () => {
 
             <Link
               to="/register"
-              className="p-3 rounded-xl bg-[#3E5C54] text-white text-center"
+              className="landing-mobile-start p-3 rounded-xl text-center"
             >
               Get started
             </Link>
@@ -379,158 +518,19 @@ const LandingPage = () => {
 
         {/* ================= HERO ================= */}
 
-        <section className="midc-hero py-5 sm:py-8 lg:py-10">
+        <section className="midc-hero">
           <div className="midc-container">
-
-            <div className="landing-reference-card">
-
-              {/* LEFT VISUAL */}
-
-              <div
-                className="landing-map-art"
-                data-reveal="left"
-              >
-                <div className="landing-map-grid" />
-
-                <div className="landing-map-shape shape-one" />
-                <div className="landing-map-shape shape-two" />
-                <div className="landing-map-shape shape-three" />
-
-                <div
-                  className="landing-pin pin-one"
-                  data-reveal-child
-                  style={{ '--delay': '180ms' }}
-                >
-                  <ShieldCheck />
-                </div>
-
-                <div
-                  className="landing-pin pin-two"
-                  data-reveal-child
-                  style={{ '--delay': '320ms' }}
-                >
-                  <AlertTriangle />
-                </div>
-
-                <div
-                  className="landing-pin pin-three"
-                  data-reveal-child
-                  style={{ '--delay': '460ms' }}
-                >
-                  <Hospital />
-                </div>
-
-                <div
-                  className="landing-map-caption"
-                  data-reveal-child
-                  style={{ '--delay': '560ms' }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-[#3E5C54]" />
-                  Safety workspace
-                </div>
-
-                <div
-                  className="landing-float-card"
-                  data-reveal-child
-                  style={{ '--delay': '680ms' }}
-                >
-                  <div className="w-9 h-9 rounded-xl bg-[#F3E7D6] text-[#C9A66B] flex items-center justify-center">
-                    <ClipboardCheck className="w-5 h-5" />
-                  </div>
-
-                  <div>
-                    <b>Safety records</b>
-                    <span>Connected and organized</span>
-                  </div>
-                </div>
+            <div className="landing-centered-hero">
+              <div className="midc-section-label">
+                <span className="midc-dot" />
+                MIDC Safety · Worker protection
               </div>
-
-              {/* RIGHT CONTENT */}
-
-              <div
-                className="landing-reference-copy"
-                data-reveal="right"
-              >
-                <div
-                  className="midc-section-label"
-                  data-reveal-child
-                  style={{ '--delay': '100ms' }}
-                >
-                  <span className="midc-dot bg-[#C9A66B]" />
-                  Industrial safety platform
-                </div>
-
-                <h1
-                  className="landing-reference-title"
-                  data-reveal-child
-                  style={{ '--delay': '180ms' }}
-                >
-                  Safer workplaces.
-                  <br />
-                  <span>Clearer action.</span>
-                </h1>
-
-                <p
-                  className="midc-lead max-w-lg"
-                  data-reveal-child
-                  style={{ '--delay': '280ms' }}
-                >
-                  Bring worker records, accident reports, safety complaints,
-                  compensation claims and emergency support into one calm,
-                  connected workspace.
-                </p>
-
-                <div
-                  className="landing-search-panel"
-                  data-reveal-child
-                  style={{ '--delay': '390ms' }}
-                >
-                  <div className="landing-search-field">
-                    <MapPin className="w-4 h-4 text-[#C9A66B]" />
-                    <span>Workplace safety</span>
-                    <small>
-                      Worker records & incident support
-                    </small>
-                  </div>
-
-                  <div className="landing-search-field">
-                    <FileText className="w-4 h-4 text-[#3E5C54]" />
-                    <span>Safety workflow</span>
-                    <small>
-                      Claims, complaints & follow-up
-                    </small>
-                  </div>
-
-                  <Link
-                    to="/login"
-                    className="landing-search-button"
-                  >
-                    <Search className="w-5 h-5" />
-                  </Link>
-                </div>
-
-                <div
-                  className="mt-6 flex flex-wrap gap-3"
-                  data-reveal-child
-                  style={{ '--delay': '500ms' }}
-                >
-                  <Link
-                    to="/login"
-                    className="midc-btn-primary"
-                  >
-                    Open safety workspace
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-
-                  <Link
-                    to="/register"
-                    className="midc-btn-outline"
-                  >
-                    Create an account
-                  </Link>
-                </div>
-
-              </div>
+              <h1 className="landing-centered-title">
+                A clearer way to<br />manage workplace<br /><span>safety.</span>
+              </h1>
+              <p className="landing-centered-copy">
+                Bring worker records, incident response, safety concerns and compensation<br className="hidden sm:block" /> workflows together in one dependable workspace.
+              </p>
             </div>
           </div>
         </section>
@@ -541,54 +541,24 @@ const LandingPage = () => {
           id="platform"
           className="midc-section bg-white"
         >
-          <div className="midc-container py-14 lg:py-18">
-
-            <div
-              className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-8"
-              data-reveal="up"
-            >
-              <div>
-                <div className="midc-section-label">
-                  One connected workspace
-                </div>
-
-                <h2 className="midc-heading mt-2">
-                  Everything safety teams touch.
-                </h2>
-              </div>
-
-              <p className="text-sm leading-6 text-[#6C757D] max-w-md">
-                A practical interface for the records and actions already
-                supported by the MIDC application.
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="midc-container">
+            <div className="capability-strip">
 
               {SYSTEM_CAPABILITIES.map(
-                ({ title, desc, icon: Icon, tone }, index) => (
+                ({ title, desc, icon: Icon }, index) => (
                   <article
                     key={title}
-                    className="midc-feature-card"
-                    data-reveal-child
-                    style={{
-                      '--delay': `${index * 110}ms`
-                    }}
+                    className="capability-item"
                   >
-                    <div
-                      className={`midc-feature-icon ${toneClasses[tone]}`}
-                    >
-                      <Icon />
+                    <div className="capability-meta">
+                      <span>0{index + 1}</span>
+                      <Icon aria-hidden="true" />
                     </div>
-
-                    <h3>{title}</h3>
-
+                    <div className="capability-title-row">
+                      <h3>{title}</h3>
+                      <ArrowRight aria-hidden="true" />
+                    </div>
                     <p>{desc}</p>
-
-                    <div className="mt-5 text-[11px] font-bold text-[#6C757D] flex items-center gap-1">
-                      Explore workflow
-                      <ArrowRight className="w-3 h-3" />
-                    </div>
                   </article>
                 )
               )}
@@ -598,140 +568,30 @@ const LandingPage = () => {
         </section>
 
         {/* ================= WORKFLOW ================= */}
-
-        <section
-          id="workflow"
-          className="midc-section bg-[#F4F4F4]"
-        >
+        <section id="workflow" className="midc-section bg-[#F4F4F4]">
           <div className="midc-container py-14 lg:py-18">
-
-            <div className="grid lg:grid-cols-[.9fr_1.1fr] gap-10 items-center">
-
-              <div data-reveal="left">
-
-                <div className="midc-section-label">
-                  Designed around action
-                </div>
-
-                <h2 className="midc-heading mt-2">
-                  From report to response,
-                  without the clutter.
-                </h2>
-
-                <p className="midc-lead mt-4">
-                  Keep the next important action visible while the supporting
-                  records stay close at hand.
-                </p>
-
-                <div className="mt-7 space-y-2.5">
-
-                  {[
-                    'Report an incident or hazard',
-                    'Document the response and evidence',
-                    'Connect the worker with support',
-                    'Review claims and compliance'
-                  ].map((step, i) => (
-                    <div
-                      key={step}
-                      className="midc-workflow-row"
-                      data-reveal-child
-                      style={{
-                        '--delay': `${i * 120}ms`
-                      }}
-                    >
-                      <span
-                        className={`midc-step-dot step-${i}`}
-                      />
-
-                      <span>{step}</span>
-
-                      <CheckCircle2 className="ml-auto w-5 h-5 text-[#3E5C54]" />
-                    </div>
-                  ))}
-
-                </div>
-              </div>
-
-              <div
-                className="landing-workspace-card"
-                data-reveal="right"
-              >
-
-                <div className="flex items-center justify-between">
-
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[.18em] text-[#B9C9C3] font-bold">
-                      Safety workspace
-                    </div>
-
-                    <h3 className="text-2xl font-extrabold text-white mt-2">
-                      One view. Multiple responsibilities.
-                    </h3>
-                  </div>
-
-                  <div className="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center">
-                    <ShieldCheck className="w-5 h-5 text-[#D6E2DD]" />
-                  </div>
-
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-3 mt-7">
-
-                  <div
-                    className="landing-workspace-tile"
-                    data-reveal-child
-                    style={{ '--delay': '150ms' }}
-                  >
-                    <Users />
-                    <b>Worker records</b>
-                    <span>
-                      Profiles, assignments and safety information.
-                    </span>
-                  </div>
-
-                  <div
-                    className="landing-workspace-tile"
-                    data-reveal-child
-                    style={{ '--delay': '260ms' }}
-                  >
-                    <AlertTriangle />
-                    <b>Incident follow-up</b>
-                    <span>
-                      Reports, status and investigation details.
-                    </span>
-                  </div>
-
-                  <div
-                    className="landing-workspace-tile"
-                    data-reveal-child
-                    style={{ '--delay': '370ms' }}
-                  >
-                    <FileCheck2 />
-                    <b>Compensation</b>
-                    <span>
-                      Claims and review steps in one place.
-                    </span>
-                  </div>
-
-                  <div
-                    className="landing-workspace-tile"
-                    data-reveal-child
-                    style={{ '--delay': '480ms' }}
-                  >
-                    <Hospital />
-                    <b>Emergency support</b>
-                    <span>
-                      Hospital and trauma services when needed.
-                    </span>
-                  </div>
-
-                </div>
-              </div>
-
+            <div className="workflow-intro">
+              <div className="midc-section-label">Designed around action</div>
+              <h2 className="midc-heading mt-2">From report to response, without the clutter.</h2>
+              <p className="midc-lead mt-4">Keep the next important action visible while the supporting records stay close at hand.</p>
+            </div>
+            <div className="workflow-sequence" aria-label="Safety workflow steps">
+              {[
+                { title: 'Report', description: 'Capture an incident or hazard.' },
+                { title: 'Document', description: 'Keep evidence and response details together.' },
+                { title: 'Review', description: 'Track claims, investigation and follow-up.' },
+                { title: 'Support', description: 'Connect the worker with the right support.' }
+              ].map((step, index) => (
+                <article className="workflow-step" key={step.title}>
+                  <span className="workflow-step-number">0{index + 1}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                  {index < 3 && <ArrowRight className="workflow-step-arrow" aria-hidden="true" />}
+                </article>
+              ))}
             </div>
           </div>
         </section>
-
         {/* ================= ROLES ================= */}
 
         <section
@@ -740,7 +600,7 @@ const LandingPage = () => {
         >
           <div className="midc-container py-14 lg:py-18">
 
-            <div data-reveal="up">
+            <div>
 
               <div className="midc-section-label">
                 Built for the people involved
@@ -755,18 +615,12 @@ const LandingPage = () => {
             <div className="grid md:grid-cols-3 gap-4 mt-8">
 
               {ROLES.map(
-                ({ title, desc, icon: Icon, tone }, index) => (
+                ({ title, desc, icon: Icon }) => (
                   <article
                     key={title}
                     className="midc-role-card"
-                    data-reveal-child
-                    style={{
-                      '--delay': `${index * 140}ms`
-                    }}
                   >
-                    <div
-                      className={`midc-feature-icon ${toneClasses[tone]}`}
-                    >
+                    <div className="midc-feature-icon">
                       <Icon />
                     </div>
 
@@ -781,7 +635,6 @@ const LandingPage = () => {
 
             <div
               className="midc-final-cta mt-10"
-              data-reveal="up"
             >
               <div>
                 <div className="midc-section-label text-[#C9A66B]">
@@ -793,21 +646,6 @@ const LandingPage = () => {
                 </h2>
               </div>
 
-              <div className="flex gap-2 shrink-0">
-                <Link
-                  to="/login"
-                  className="midc-btn-primary"
-                >
-                  Sign in
-                </Link>
-
-                <Link
-                  to="/register"
-                  className="midc-btn-outline"
-                >
-                  Register
-                </Link>
-              </div>
             </div>
 
           </div>
@@ -816,7 +654,7 @@ const LandingPage = () => {
       </main>
 
       <footer className="border-t border-[#E0E0E0] bg-[#FFFFFF]">
-        <div className="midc-container py-7 flex flex-col sm:flex-row justify-between gap-3 text-xs text-[#6C757D]">
+        <div className="midc-container py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#6C757D]">
 
           <span>
             MIDC Safety · Worker protection & compensation management

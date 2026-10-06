@@ -1,30 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import authService from '../services/authService';
+import profileCover from '../assets/profile-cover-zoomed-out.png';
 
 import {
   User,
   Mail,
   Building,
   KeyRound,
-  BadgeCheck,
   Lock,
   Phone,
-  CheckCircle2,
-  Pencil,
-  ShieldCheck,
+  IdCard,
   BriefcaseBusiness,
-  Home
+  BadgeCheck,
+  Clock3,
+  CalendarDays,
+  MapPin,
+  UserRound,
+  UsersRound,
+  Droplet,
+  Check,
+  Pencil,
+  X
 } from 'lucide-react';
 
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
-import Breadcrumb from '../components/common/Breadcrumb';
+import ProfileAvatar from '../components/profile/ProfileAvatar';
+import { AVATAR_GROUPS, PROFILE_AVATARS, resolveProfileAvatarId } from '../components/profile/profileAvatarOptions';
+
+const toDateInputValue = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10);
+};
+
+const formatProfileDate = (value) => {
+  if (!value) return 'Not provided';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? 'Not provided'
+    : date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const profileDisplayValue = (value) => (
+  value === undefined || value === null || String(value).trim() === '' ? 'Not provided' : value
+);
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, updateProfile: persistProfileUpdate } = useAuth();
   const { showSuccess, showError } = useToast();
 
   const [passwordEmail, setPasswordEmail] = useState(user?.email || '');
@@ -35,24 +61,71 @@ const Profile = () => {
 
   const [editMode, setEditMode] = useState(false);
   const [activeSection, setActiveSection] = useState('profile');
+  const [activeTab, setActiveTab] = useState('personal');
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const [selectedAvatarId, setSelectedAvatarId] = useState(user?.avatarId || null);
+  const [avatarSaving, setAvatarSaving] = useState(false);
 
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
+    alternatePhone: user?.alternatePhone || '',
+    bloodGroup: user?.bloodGroup || '',
+    dateOfBirth: toDateInputValue(user?.dateOfBirth),
+    residentialAddress: user?.residentialAddress || '',
+    city: user?.city || '',
+    state: user?.state || '',
+    emergencyContactName: user?.emergencyContactName || '',
+    emergencyContactRelationship: user?.emergencyContactRelationship || '',
+    emergencyContactNumber: user?.emergencyContactNumber || '',
     factoryName: user?.factoryName || '',
-    employeeId: user?.employeeId || ''
+    employeeId: user?.employeeId || '',
+    department: user?.department || '',
+    designation: user?.designation || '',
+    shift: user?.shift || '',
+    joiningDate: toDateInputValue(user?.joiningDate),
+    workLocation: user?.workLocation || '',
+    supervisor: user?.supervisor || '',
+    employmentType: user?.employmentType || '',
+    employeeStatus: user?.employeeStatus || ''
   });
 
   useEffect(() => {
     setProfileData({
       name: user?.name || '',
       phone: user?.phone || '',
+      alternatePhone: user?.alternatePhone || '',
+      bloodGroup: user?.bloodGroup || '',
+      dateOfBirth: toDateInputValue(user?.dateOfBirth),
+      residentialAddress: user?.residentialAddress || '',
+      city: user?.city || '',
+      state: user?.state || '',
+      emergencyContactName: user?.emergencyContactName || '',
+      emergencyContactRelationship: user?.emergencyContactRelationship || '',
+      emergencyContactNumber: user?.emergencyContactNumber || '',
       factoryName: user?.factoryName || '',
-      employeeId: user?.employeeId || ''
+      employeeId: user?.employeeId || '',
+      department: user?.department || '',
+      designation: user?.designation || '',
+      shift: user?.shift || '',
+      joiningDate: toDateInputValue(user?.joiningDate),
+      workLocation: user?.workLocation || '',
+      supervisor: user?.supervisor || '',
+      employmentType: user?.employmentType || '',
+      employeeStatus: user?.employeeStatus || ''
     });
 
     setPasswordEmail(user?.email || '');
   }, [user]);
+
+  useEffect(() => {
+    if (!avatarPickerOpen) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setAvatarPickerOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [avatarPickerOpen]);
 
   const handleRequestToken = async (e) => {
     e.preventDefault();
@@ -105,7 +178,7 @@ const Profile = () => {
     try {
       setLoading(true);
 
-      await authService.updateProfile(profileData);
+      await persistProfileUpdate(profileData);
 
       showSuccess('Profile updated successfully!');
       setEditMode(false);
@@ -113,6 +186,19 @@ const Profile = () => {
       showError(err.message || 'Failed to update profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveAvatar = async () => {
+    setAvatarSaving(true);
+    try {
+      await persistProfileUpdate({ avatarId: selectedAvatarId });
+      setAvatarPickerOpen(false);
+      showSuccess('Profile avatar updated successfully.');
+    } catch (err) {
+      showError(err.message || 'Failed to update profile avatar.');
+    } finally {
+      setAvatarSaving(false);
     }
   };
 
@@ -124,6 +210,10 @@ const Profile = () => {
     }
   };
 
+  const updateProfileField = (field, value) => {
+    setProfileData((current) => ({ ...current, [field]: value }));
+  };
+
   const initials = user?.name
     ? user.name
         .split(' ')
@@ -133,497 +223,303 @@ const Profile = () => {
         .toUpperCase()
     : 'U';
 
+  const selectedAvatarDisplayId = resolveProfileAvatarId(selectedAvatarId, user?.role);
+  const headerAvatarId = avatarPickerOpen ? selectedAvatarDisplayId : resolveProfileAvatarId(user?.avatarId, user?.role);
+  const headerDesignation = PROFILE_AVATARS.find((avatar) => avatar.id === headerAvatarId)?.displayLabel || user?.role || 'User';
+  const cityState = [user?.city, user?.state].filter((value) => value && String(value).trim()).join(', ');
+
+  const selectProfileTab = (tab) => {
+    setActiveTab(tab);
+    handleSectionChange(tab === 'security' ? 'password' : 'profile');
+  };
+
   return (
     <>
       <style>{`
-        .profile-page-enter {
-          animation: profileFadeIn 420ms ease-out both;
+        .profile-cover-image { object-position: 56% 56%; }
+        .profile-tab { transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease; }
+        .profile-information-row { min-height: 68px; }
+        .profile-information-content { display: block; }
+        #profile-redesign input:focus {
+          border-color: #F2C7B0 !important;
+          box-shadow: none !important;
+          outline: none;
         }
-
-        .profile-shell {
-          animation: profileSlideUp 520ms cubic-bezier(.22,1,.36,1) 40ms both;
+        #profile-redesign button:focus-visible {
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(17, 17, 17, .18);
         }
-
-        .profile-hero-card {
-          background:
-            radial-gradient(circle at 92% 18%, rgba(255,255,255,.12) 0 70px, transparent 71px),
-            radial-gradient(circle at 84% 92%, rgba(255,255,255,.07) 0 110px, transparent 111px),
-            linear-gradient(135deg, #3E5C54 0%, #496A61 100%);
-          transition: box-shadow 220ms ease, transform 220ms ease;
+        #profile-redesign button:hover { transform: none; }
+        @media (max-width: 639px) {
+          .profile-cover-image { object-position: 63% center; }
         }
-
-        .profile-hero-card:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 18px 42px rgba(62,92,84,.16);
-        }
-
-        .profile-avatar {
-          transition: transform 220ms ease, box-shadow 220ms ease;
-        }
-
-        .profile-avatar:hover {
-          transform: translateY(-2px) scale(1.02);
-          box-shadow: 0 10px 24px rgba(62,92,84,.16);
-        }
-
-        .profile-nav-item {
-          transition:
-            background-color 180ms ease,
-            border-color 180ms ease,
-            color 180ms ease,
-            transform 180ms ease;
-        }
-
-        .profile-nav-item:hover {
-          transform: translateX(2px);
-        }
-
-        .profile-detail-item {
-          transition:
-            transform 180ms ease,
-            border-color 180ms ease,
-            box-shadow 180ms ease;
-        }
-
-        .profile-detail-item:hover {
-          transform: translateY(-2px);
-          border-color: #B9C9C3;
-          box-shadow: 0 10px 24px rgba(62,92,84,.07);
-        }
-
-        .profile-security-card {
-          transition: border-color 180ms ease, box-shadow 180ms ease;
-        }
-
-        .profile-security-card:hover {
-          border-color: #B9C9C3;
-          box-shadow: 0 10px 24px rgba(62,92,84,.06);
-        }
-
-        .profile-page-enter button,
-        .profile-page-enter input {
-          transition:
-            background-color 180ms ease,
-            border-color 180ms ease,
-            box-shadow 180ms ease,
-            transform 180ms ease;
-        }
-
-        .profile-page-enter button:hover:not(:disabled) {
-          transform: translateY(-1px);
-        }
-
-        .profile-page-enter button:active:not(:disabled) {
-          transform: translateY(0);
-        }
-
-        @keyframes profileFadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes profileSlideUp {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
         @media (prefers-reduced-motion: reduce) {
-          .profile-page-enter,
-          .profile-shell {
-            animation: none !important;
-          }
-
-          .profile-hero-card,
-          .profile-avatar,
-          .profile-nav-item,
-          .profile-detail-item,
-          .profile-security-card,
-          .profile-page-enter button,
-          .profile-page-enter input {
-            transition: none !important;
-          }
-
-          .profile-hero-card:hover,
-          .profile-avatar:hover,
-          .profile-nav-item:hover,
-          .profile-detail-item:hover,
-          .profile-page-enter button:hover:not(:disabled) {
-            transform: none !important;
-          }
+          .profile-tab, .profile-cover-image { transition: none !important; }
         }
       `}</style>
 
-      <div className="space-y-5 profile-page-enter">
-        {/* BREADCRUMB */}
-        <div className="flex items-center gap-2 text-sm">
-          {/* <Home className="w-4 h-4 text-[#6C757D]" /> */}
+      <div id="profile-redesign" className="profile-redesign w-full">
+        <div className="grid min-w-0 grid-cols-1 overflow-hidden rounded-[12px] border border-[#e5e5e5] bg-white shadow-[0_5px_18px_rgba(17,17,17,.045)] lg:grid-cols-[minmax(0,40fr)_minmax(0,60fr)]">
+          <section className="profile-identity-visual relative min-h-[300px] overflow-hidden bg-[#f3f3f3] sm:min-h-[380px] lg:min-h-[500px]" aria-label="Industrial facility">
+            <img src={profileCover} alt="Industrial facility at sunset" className="profile-cover-image absolute inset-0 block h-full w-full border-0 object-cover outline-none shadow-none" />
+          </section>
 
-          <NavLink
-            to="/dashboard"
-            className="text-[#6C757D] hover:text-[#3E5C54] transition-colors duration-200"
+          <div className="flex min-w-0 flex-col bg-white">
+        <header className="flex min-w-0 items-center gap-3 border-b border-[#e8e8e8] px-4 py-4 sm:gap-4 sm:px-5 sm:py-[18px]">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedAvatarId(user?.avatarId || null);
+              setAvatarPickerOpen(true);
+            }}
+            aria-label="Change profile avatar"
+            title="Change profile avatar"
+            className="group relative h-[62px] w-[62px] shrink-0 rounded-full border border-[#d9d9d9] bg-[#111] text-[20px] font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E87532] sm:h-[68px] sm:w-[68px] sm:text-[22px]"
           >
-            Dashboard
-          </NavLink>
-
-          <span className="text-[#D0D0D0] text-base leading-none">/</span>
-
-          <span className="font-medium text-[#3E5C54]">
-            Profile
-          </span>
-        </div>
-
-        {/* COMPACT PROFILE HERO */}
-        <section className="profile-hero-card relative overflow-hidden rounded-[24px] text-white shadow-[0_12px_30px_rgba(62,92,84,.12)]">
-          <div className="relative px-5 sm:px-7 lg:px-8 py-6">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="flex items-center gap-4 sm:gap-5 min-w-0">
-                <div className="profile-avatar relative w-[72px] h-[72px] sm:w-[82px] sm:h-[82px] rounded-[22px] bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
-                  <span className="text-2xl sm:text-3xl font-semibold">
-                    {initials}
-                  </span>
-                  <span className="absolute -right-1 -bottom-1 w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm">
-                    <CheckCircle2 className="w-4 h-4 text-[#2A9D8F]" />
-                  </span>
-                </div>
-
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-semibold uppercase tracking-[.18em] text-white/65">
-                      Account profile
-                    </span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#E9C46A]" />
-                  </div>
-
-                  <h1 className="text-[27px] sm:text-[34px] font-semibold tracking-[-.03em] leading-tight truncate">
-                    {user?.name || 'User'}
-                  </h1>
-
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-white/75">
-                    <span>{user?.factoryName || 'Industrial Safety'}</span>
-                    <span className="hidden sm:inline text-white/35">•</span>
-                    <span>{user?.role || 'User'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                icon={Pencil}
-                onClick={() => setEditMode(!editMode)}
-                className="!bg-white !border-white !text-[#3E5C54] hover:!bg-[#F4F4F4] shrink-0"
+            <span className="block h-full w-full overflow-hidden rounded-full"><ProfileAvatar avatarId={user?.avatarId} role={user?.role} initials={initials} /></span>
+            <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[#222] text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden="true"><Pencil className="h-2.5 w-2.5" /></span>
+          </button>
+          <div className="min-w-0 flex-1">
+            <h1 className="!mb-0 truncate !text-[38px] !font-semibold !leading-[1.08] !tracking-[-.035em] !text-[#111] sm:!text-[40px]">{user?.name || 'User'}</h1>
+            <p className="mt-1 truncate text-[14px] text-[#62666b] sm:text-[15px]">{headerDesignation} <span className="px-1 text-[#b2b4b7]">|</span> {user?.factoryName || 'Not assigned'}</p>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setEditMode(!editMode)}
+            className="!min-h-9 !shrink-0 !rounded-[7px] !bg-[#111] !px-3 !font-medium !text-white !shadow-none hover:!bg-[#2a2a2a] sm:!px-4"
+          >
+            {editMode ? 'Cancel edit' : 'Edit Profile'}
+          </Button>
+        </header>
+        <nav className="flex min-w-0 overflow-x-auto border-b border-[#e8e8e8] bg-white px-2" aria-label="Profile sections">
+          {[
+            ['personal', 'Personal Info'],
+            ['work', 'Work Details'],
+            ['security', 'Security'],
+          ].map(([tab, label]) => {
+            const selected = activeTab === tab || (tab === 'security' && activeSection === 'password');
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => selectProfileTab(tab)}
+                aria-current={selected ? 'page' : undefined}
+                className={`profile-tab relative min-h-[48px] shrink-0 border-b-2 px-3 text-[14px] font-medium sm:px-5 sm:text-[15px] ${selected ? 'border-[#E87532] text-[#111]' : 'border-transparent text-[#73777c] hover:bg-[#fafafa] hover:text-[#222]'}`}
               >
-                {editMode ? 'Cancel edit' : 'Edit profile'}
-              </Button>
+                {label}
+              </button>
+            );
+          })}
+          <span className="flex min-h-[48px] shrink-0 cursor-not-allowed items-center border-b-2 border-transparent px-3 text-[14px] font-medium text-[#a1a3a6] sm:px-5 sm:text-[15px]" aria-disabled="true" title="Notifications are not available in this profile yet">Notifications</span>
+        </nav>
+
+        <section className="flex min-h-[420px] flex-1 flex-col bg-white px-4 pb-5 pt-5 sm:px-6 sm:pb-6 sm:pt-6" aria-label="Profile details">
+          {activeSection === 'profile' && !editMode && activeTab === 'personal' && (
+            <div className="profile-information-content">
+              <div className="profile-information-grid grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {[
+                  { label: 'Full Name', value: user?.name, Icon: User },
+                  { label: 'Email Address', value: user?.email, Icon: Mail },
+                  { label: 'Phone Number', value: user?.phone, Icon: Phone },
+                  { label: 'Alternate Phone Number', value: user?.alternatePhone, Icon: Phone },
+                  { label: 'Blood Group', value: user?.bloodGroup, Icon: Droplet },
+                  { label: 'Date of Birth', value: formatProfileDate(user?.dateOfBirth), Icon: CalendarDays },
+                  { label: 'Residential Address', value: user?.residentialAddress, Icon: MapPin },
+                  { label: 'City / State', value: cityState, Icon: MapPin },
+                  { label: 'Emergency Contact Name', value: user?.emergencyContactName, Icon: UserRound },
+                  { label: 'Emergency Contact Relationship', value: user?.emergencyContactRelationship, Icon: UsersRound },
+                  { label: 'Emergency Contact Number', value: user?.emergencyContactNumber, Icon: Phone },
+                ].map(({ label, value, Icon }) => (
+                  <div key={label} className="profile-information-row flex min-w-0 items-center gap-3 rounded-[8px] border border-[#ededed] px-3.5 py-3">
+                    <Icon className="h-[17px] w-[17px] shrink-0 text-[#4c5157]" aria-hidden="true" />
+                    <div className="min-w-0">
+                      <p className="text-[13px] text-[#73777c]">{label}</p>
+                      <p className="mt-0.5 break-words text-[15px] font-medium text-[#202226]">{profileDisplayValue(value)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {activeSection === 'profile' && !editMode && activeTab === 'work' && (
+            <div className="profile-information-content">
+              <div className="profile-information-grid grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {[
+                  { label: 'Employee ID', value: user?.employeeId, Icon: IdCard },
+                  { label: 'Role', value: user?.role, Icon: BriefcaseBusiness },
+                  { label: 'Factory Unit', value: user?.factoryName, Icon: Building },
+                  { label: 'Department', value: user?.department, Icon: Building },
+                  { label: 'Designation / Job Title', value: user?.designation, Icon: BriefcaseBusiness },
+                  { label: 'Shift', value: user?.shift, Icon: Clock3 },
+                  { label: 'Joining Date', value: formatProfileDate(user?.joiningDate), Icon: CalendarDays },
+                  { label: 'Work Location', value: user?.workLocation, Icon: MapPin },
+                  { label: 'Supervisor / Reporting Manager', value: user?.supervisor, Icon: UserRound },
+                  { label: 'Employment Type', value: user?.employmentType, Icon: BriefcaseBusiness },
+                  { label: 'Employee Status', value: user?.employeeStatus, Icon: BadgeCheck },
+                ].map(({ label, value, Icon }) => (
+                  <div key={label} className="profile-information-row flex min-w-0 items-center gap-3 rounded-[8px] border border-[#ededed] px-3.5 py-3">
+                    <Icon className="h-[17px] w-[17px] shrink-0 text-[#4c5157]" aria-hidden="true" />
+                    <div className="min-w-0">
+                      <p className="text-[13px] text-[#73777c]">{label}</p>
+                      <p className="mt-0.5 break-words text-[15px] font-medium text-[#202226]">{profileDisplayValue(value)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'profile' && editMode && (
+            <div>
+              <div className="mb-5">
+                <h2 className="text-[17px] font-semibold text-[#17191c]">Edit profile information</h2>
+                <p className="mt-1 text-[13px] text-[#73777c]">Update the information connected to your account.</p>
+              </div>
+              <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <Input label="Full Name" value={profileData.name} onChange={(e) => setProfileData({ ...profileData, name: e.target.value })} />
+                <Input label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} />
+                {[
+                  { field: 'alternatePhone', label: 'Alternate Phone Number' },
+                  { field: 'bloodGroup', label: 'Blood Group' },
+                  { field: 'dateOfBirth', label: 'Date of Birth', type: 'date' },
+                  { field: 'residentialAddress', label: 'Residential Address' },
+                  { field: 'city', label: 'City' },
+                  { field: 'state', label: 'State' },
+                  { field: 'emergencyContactName', label: 'Emergency Contact Name' },
+                  { field: 'emergencyContactRelationship', label: 'Emergency Contact Relationship' },
+                  { field: 'emergencyContactNumber', label: 'Emergency Contact Number' },
+                  { field: 'department', label: 'Department' },
+                  { field: 'designation', label: 'Designation / Job Title' },
+                  { field: 'shift', label: 'Shift' },
+                  { field: 'joiningDate', label: 'Joining Date', type: 'date' },
+                  { field: 'workLocation', label: 'Work Location' },
+                  { field: 'supervisor', label: 'Supervisor / Reporting Manager' },
+                  { field: 'employmentType', label: 'Employment Type' },
+                  { field: 'employeeStatus', label: 'Employee Status' },
+                ].map(({ field, label, type = 'text' }) => (
+                  <Input
+                    key={field}
+                    label={label}
+                    type={type}
+                    value={profileData[field]}
+                    onChange={(e) => updateProfileField(field, e.target.value)}
+                  />
+                ))}
+                {(user?.role === 'Worker' || user?.role === 'Factory Admin') && (
+                  <Input label="Factory Name" value={profileData.factoryName} onChange={(e) => setProfileData({ ...profileData, factoryName: e.target.value })} />
+                )}
+                {user?.role === 'Worker' && <Input label="Employee ID" value={profileData.employeeId} disabled />}
+                <div className="flex justify-end gap-3 pt-3 sm:col-span-2">
+                  <Button type="button" variant="secondary" onClick={() => setEditMode(false)} className="!rounded-[7px] !border !border-[#dedede] !bg-white !text-[#222] !shadow-none hover:!bg-[#f7f7f7]">Cancel</Button>
+                  <Button type="submit" variant="primary" loading={loading} className="!rounded-[7px] !bg-[#111] !text-white !shadow-none hover:!bg-[#2a2a2a]">Save changes</Button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {activeSection === 'password' && (
+            <div>
+              <div className="mb-5">
+                <h2 className="text-[17px] font-semibold text-[#17191c]">Password reset</h2>
+                <p className="mt-1 text-[13px] text-[#73777c]">Securely reset the password connected to your account.</p>
+              </div>
+              {resetStep === 1 ? (
+                <form onSubmit={handleRequestToken} className="max-w-2xl">
+                  <div className="mb-5 rounded-[8px] border border-[#e7e7e7] bg-[#fafafa] p-4">
+                    <div className="flex items-start gap-3">
+                      <KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-[#444]" aria-hidden="true" />
+                      <div>
+                        <h3 className="text-[13px] font-semibold text-[#222]">Request a reset token</h3>
+                        <p className="mt-1 text-[12px] leading-5 text-[#6c7075]">A secure reset token will be sent to your registered account email.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <Input label="Registered Account Email" type="email" value={passwordEmail} onChange={(e) => setPasswordEmail(e.target.value)} icon={Mail} required />
+                  <div className="mt-5">
+                    <Button type="submit" variant="primary" loading={loading} icon={KeyRound} className="!rounded-[7px] !bg-[#111] !text-white !shadow-none hover:!bg-[#2a2a2a]">Request reset token</Button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleResetPassword} className="max-w-2xl space-y-5">
+                  <Input label="Password Reset Token" value={resetToken} onChange={(e) => setResetToken(e.target.value)} placeholder="Paste token received" required />
+                  <Input label="New Password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} icon={Lock} required />
+                  <div className="flex items-center gap-3 pt-2">
+                    <Button type="submit" variant="primary" loading={loading} className="!rounded-[7px] !bg-[#111] !text-white !shadow-none hover:!bg-[#2a2a2a]">Reset password</Button>
+                    <Button type="button" variant="secondary" onClick={() => setResetStep(1)} className="!rounded-[7px] !border !border-[#dedede] !bg-white !text-[#222] !shadow-none hover:!bg-[#f7f7f7]">Back</Button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
         </section>
-
-        {/* MAIN PROFILE WORKSPACE */}
-        <section className="profile-shell overflow-hidden rounded-[24px] border border-[#E0E0E0] bg-white shadow-[0_10px_30px_rgba(24,35,29,.045)]">
-      
-          
-
-          <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)]">
-            {/* LEFT NAVIGATION */}
-            <aside className="border-b lg:border-b-0 lg:border-r border-[#E0E0E0] bg-[#F7F8F6] p-5">
-              <div className="rounded-[18px] border border-[#E0E0E0] bg-white p-4 shadow-[0_5px_16px_rgba(24,35,29,.025)]">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-[15px] bg-[#3E5C54] text-white flex items-center justify-center font-semibold shrink-0">
-                    {initials}
-                  </div>
-
-                  <div className="min-w-0">
-                    <h2 className="text-[15px] font-semibold text-[#1E1E1E] truncate">
-                      {user?.name || 'User'}
-                    </h2>
-                    <p className="text-xs text-[#6C757D] mt-0.5 truncate">
-                      {user?.factoryName || 'Industrial Safety'}
-                    </p>
-                    <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-medium text-[#3E5C54] bg-[#E9C46A] rounded-full px-2 py-1">
-                      <ShieldCheck className="w-3 h-3" />
-                      {user?.role || 'User'}
-                    </span>
-                  </div>
-                </div>
+      </div>
+      </div>
+      {avatarPickerOpen && createPortal((
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/25 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setAvatarPickerOpen(false);
+          }}
+        >
+          <section role="dialog" aria-modal="true" aria-labelledby="avatar-picker-title" className="flex max-h-[90vh] w-full max-w-[940px] flex-col overflow-hidden rounded-[12px] border border-[#e5e5e5] bg-white p-4 shadow-[0_12px_36px_rgba(17,17,17,.16)] sm:p-5">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 id="avatar-picker-title" className="text-[17px] font-semibold text-[#111]">Change profile avatar</h2>
+                <p className="mt-1 text-[13px] text-[#70747a]">Choose an illustrated avatar or use your initials.</p>
               </div>
-
-              <div className="mt-6">
-                <p className="px-2 mb-2 text-[10px] uppercase tracking-[.16em] font-semibold text-[#6C757D]">
-                  Account
-                </p>
-
-                <div className="space-y-1">
-                  <button
-                    type="button"
-                    onClick={() => handleSectionChange('profile')}
-                    className={`profile-nav-item w-full flex items-center gap-2.5 px-3 py-3 rounded-xl text-sm border ${
-                      activeSection === 'profile'
-                        ? 'bg-[#EEF2F0] border-[#B9C9C3] text-[#3E5C54]'
-                        : 'text-[#6C757D] hover:bg-white border-transparent'
-                    }`}
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="font-medium">Profile information</span>
-                    {activeSection === 'profile' && (
-                      <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-[#2A9D8F]" />
-                    )}
-                  </button>
-
-                  <div className="w-full flex items-center gap-2.5 px-3 py-3 rounded-xl text-sm text-[#6C757D]">
-                    <Mail className="w-4 h-4" />
-                    <span>Email</span>
-                    <span className="ml-auto text-[11px]">Verified</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSectionChange('password')}
-                    className={`profile-nav-item w-full flex items-center gap-2.5 px-3 py-3 rounded-xl text-sm border ${
-                      activeSection === 'password'
-                        ? 'bg-[#EEF2F0] border-[#B9C9C3] text-[#3E5C54]'
-                        : 'text-[#6C757D] hover:bg-white border-transparent'
-                    }`}
-                  >
-                    <Lock className="w-4 h-4" />
-                    <span className="font-medium">Password reset</span>
-                    {activeSection === 'password' && (
-                      <CheckCircle2 className="w-3.5 h-3.5 ml-auto text-[#2A9D8F]" />
-                    )}
-                  </button>
-                </div>
+              <button type="button" onClick={() => setAvatarPickerOpen(false)} aria-label="Close avatar picker" className="rounded-md p-1.5 text-[#666] hover:bg-[#f5f5f5] hover:text-[#111]"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="mb-4 shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedAvatarId(null)}
+                aria-label="Use initials"
+                aria-pressed={selectedAvatarId === null}
+                className={`flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors ${selectedAvatarId === null ? 'border-[#E87532] bg-[#fffaf7]' : 'border-[#e7e7e7] hover:bg-[#fafafa]'}`}
+              >
+                <span className={`block h-11 w-11 overflow-hidden rounded-full ${selectedAvatarId === null ? 'ring-2 ring-[#E87532] ring-offset-1' : 'ring-1 ring-[#e1e1e1]'}`}><ProfileAvatar initials={initials} /></span>
+                <span className="text-[12px] font-semibold text-[#222]">Use initials</span>
+                {selectedAvatarId === null && <Check className="ml-1 h-4 w-4 text-[#E87532]" />}
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+              <div className="grid gap-4 md:grid-cols-2">
+                {AVATAR_GROUPS.map((group) => (
+                  <section key={group.id} className="min-w-0 rounded-lg border border-[#ededed] p-2.5">
+                    <h3 className="mb-2 inline-flex rounded-md bg-[#f3f4f4] px-2.5 py-1 text-[12px] font-semibold text-[#303438]">{group.label} <span className="ml-1 font-normal text-[#73777c]">(4 options)</span></h3>
+                    <div className="grid grid-cols-4 gap-1">
+                      {group.avatars.map((avatar) => {
+                        const selected = selectedAvatarDisplayId === avatar.id;
+                        return (
+                          <button
+                            key={avatar.id}
+                            type="button"
+                            onClick={() => setSelectedAvatarId(avatar.id)}
+                            aria-label={avatar.label}
+                            aria-pressed={selected}
+                            className={`relative flex min-w-0 flex-col items-center gap-1 rounded-md border px-1 py-1.5 text-center transition-colors ${selected ? 'border-[#E87532] bg-[#fffaf7]' : 'border-transparent hover:border-[#e3e3e3] hover:bg-[#fafafa]'}`}
+                          >
+                            <span className={`block h-10 w-10 overflow-hidden rounded-full sm:h-12 sm:w-12 ${selected ? 'ring-2 ring-[#E87532] ring-offset-1' : 'ring-1 ring-[#e1e1e1]'}`}><ProfileAvatar avatarId={avatar.id} role={user?.role} /></span>
+                            <span className="w-full truncate text-[9px] font-medium leading-3 text-[#32363a] sm:text-[10px]">{avatar.displayLabel}</span>
+                            <span className="text-[9px] leading-3 text-[#777]">{avatar.gender}</span>
+                            {selected && <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#E87532] text-white"><Check className="h-3 w-3" /></span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
               </div>
-
-              <div className="hidden lg:block mt-6 rounded-[18px] border border-[#E0E0E0] bg-[#EEF2F0] p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-white border border-[#B9C9C3] text-[#3E5C54] flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-[#3E5C54]">
-                      Account protected
-                    </p>
-                    <p className="text-[11px] leading-4 text-[#6C757D] mt-1">
-                      Your profile and security settings are managed from this workspace.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </aside>
-
-            {/* RIGHT CONTENT */}
-            <main className="p-5 sm:p-7 lg:p-8">
-              {activeSection === 'profile' && !editMode && (
-                <div>
-                  <div className="flex items-start justify-between gap-4 mb-6">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-[.16em] font-semibold text-[#6C757D]">
-                        Profile information
-                      </div>
-                      <h2 className="text-[24px] sm:text-[28px] font-semibold text-[#1E1E1E] mt-1 tracking-tight">
-                        Your account details
-                      </h2>
-                      <p className="text-sm text-[#6C757D] mt-1">
-                        Information connected to your industrial safety account.
-                      </p>
-                    </div>
-
-                    <div className="hidden sm:flex w-10 h-10 rounded-xl bg-[#EEF2F0] border border-[#B9C9C3] items-center justify-center text-[#3E5C54]">
-                      <BadgeCheck className="w-5 h-5" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="profile-detail-item rounded-[16px] border border-[#E0E0E0] p-4">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-[#6C757D] uppercase tracking-wide">
-                        <User className="w-4 h-4 text-[#3E5C54]" />
-                        Full name
-                      </div>
-                      <p className="text-base font-semibold text-[#3E5C54] mt-3">
-                        {user?.name}
-                      </p>
-                    </div>
-
-                    <div className="profile-detail-item rounded-[16px] border border-[#E0E0E0] p-4">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-[#6C757D] uppercase tracking-wide">
-                        <Mail className="w-4 h-4 text-[#3E5C54]" />
-                        Email address
-                      </div>
-                      <p className="text-base font-semibold text-[#3E5C54] mt-3 break-all">
-                        {user?.email}
-                      </p>
-                    </div>
-
-                    <div className="profile-detail-item rounded-[16px] border border-[#E0E0E0] p-4">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-[#6C757D] uppercase tracking-wide">
-                        <Building className="w-4 h-4 text-[#3E5C54]" />
-                        Factory unit
-                      </div>
-                      <p className="text-base font-semibold text-[#3E5C54] mt-3">
-                        {user?.factoryName || 'Not assigned'}
-                      </p>
-                    </div>
-
-                    <div className="profile-detail-item rounded-[16px] border border-[#E0E0E0] p-4">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-[#6C757D] uppercase tracking-wide">
-                        <BadgeCheck className="w-4 h-4 text-[#3E5C54]" />
-                        Employee ID
-                      </div>
-                      <p className="text-base font-semibold font-mono text-[#3E5C54] mt-3">
-                        {user?.employeeId || 'Not assigned'}
-                      </p>
-                    </div>
-
-                    <div className="profile-detail-item sm:col-span-2 rounded-[16px] border border-[#E0E0E0] p-4">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-[#6C757D] uppercase tracking-wide">
-                        <Phone className="w-4 h-4 text-[#3E5C54]" />
-                        Phone
-                      </div>
-                      <p className="text-base font-semibold text-[#3E5C54] mt-3">
-                        {user?.phone || 'Not provided'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeSection === 'profile' && editMode && (
-                <div>
-                  <div className="mb-6">
-                    <div className="text-[10px] uppercase tracking-[.16em] font-semibold text-[#6C757D]">
-                      Profile information
-                    </div>
-                    <h2 className="text-[24px] sm:text-[28px] font-semibold text-[#1E1E1E] mt-1 tracking-tight">
-                      Edit your details
-                    </h2>
-                    <p className="text-sm text-[#6C757D] mt-1">
-                      Update the information connected to your account.
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <Input
-                      label="Full Name"
-                      value={profileData.name}
-                      onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                    />
-
-                    <Input
-                      label="Phone"
-                      value={profileData.phone}
-                      onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                    />
-
-                    {(user?.role === 'Worker' || user?.role === 'Factory Admin') && (
-                      <Input
-                        label="Factory Name"
-                        value={profileData.factoryName}
-                        onChange={(e) => setProfileData({ ...profileData, factoryName: e.target.value })}
-                      />
-                    )}
-
-                    {user?.role === 'Worker' && (
-                      <Input label="Employee ID" value={profileData.employeeId} disabled />
-                    )}
-
-                    <div className="sm:col-span-2 flex justify-end gap-3 pt-3">
-                      <Button type="button" variant="secondary" onClick={() => setEditMode(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" variant="primary" loading={loading}>
-                        Save changes
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              {activeSection === 'password' && (
-                <div>
-                  <div className="mb-6">
-                    <div className="text-[10px] uppercase tracking-[.16em] font-semibold text-[#6C757D]">
-                      Account security
-                    </div>
-                    <h2 className="text-[24px] sm:text-[28px] font-semibold text-[#1E1E1E] mt-1 tracking-tight">
-                      Password reset
-                    </h2>
-                    <p className="text-sm text-[#6C757D] mt-1">
-                      Securely reset the password connected to your account.
-                    </p>
-                  </div>
-
-                  {resetStep === 1 ? (
-                    <form onSubmit={handleRequestToken} className="max-w-2xl">
-                      <div className="profile-security-card rounded-[18px] border border-[#E0E0E0] bg-[#F7F8F6] p-5 mb-6">
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-white border border-[#E0E0E0] flex items-center justify-center text-[#3E5C54] shrink-0">
-                            <KeyRound className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-semibold text-[#3E5C54]">
-                              Request a reset token
-                            </h3>
-                            <p className="text-xs text-[#6C757D] mt-1 leading-5">
-                              A secure reset token will be sent to your registered account email.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Input
-                        label="Registered Account Email"
-                        type="email"
-                        value={passwordEmail}
-                        onChange={(e) => setPasswordEmail(e.target.value)}
-                        icon={Mail}
-                        required
-                      />
-
-                      <div className="mt-5">
-                        <Button type="submit" variant="primary" loading={loading} icon={KeyRound}>
-                          Request reset token
-                        </Button>
-                      </div>
-                    </form>
-                  ) : (
-                    <form onSubmit={handleResetPassword} className="max-w-2xl space-y-5">
-                      <Input
-                        label="Password Reset Token"
-                        value={resetToken}
-                        onChange={(e) => setResetToken(e.target.value)}
-                        placeholder="Paste token received"
-                        required
-                      />
-
-                      <Input
-                        label="New Password"
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        icon={Lock}
-                        required
-                      />
-
-                      <div className="flex items-center gap-3 pt-2">
-                        <Button type="submit" variant="primary" loading={loading}>
-                          Reset password
-                        </Button>
-                        <Button type="button" variant="secondary" onClick={() => setResetStep(1)}>
-                          Back
-                        </Button>
-                      </div>
-                    </form>
-                  )}
-                </div>
-              )}
-            </main>
-          </div>
-        </section>
+            </div>
+            <div className="mt-5 flex justify-end gap-2 border-t border-[#ededed] pt-4">
+              <button type="button" onClick={() => setAvatarPickerOpen(false)} disabled={avatarSaving} className="min-h-9 rounded-md border border-[#dedede] bg-white px-3.5 text-[13px] font-medium text-[#333] hover:bg-[#f7f7f7] disabled:opacity-60">Cancel</button>
+              <button type="button" onClick={handleSaveAvatar} disabled={avatarSaving} className="min-h-9 rounded-md bg-[#111] px-4 text-[13px] font-medium text-white hover:bg-[#292929] disabled:cursor-not-allowed disabled:opacity-60">{avatarSaving ? 'Saving…' : 'Save'}</button>
+            </div>
+          </section>
+        </div>
+      ), document.body)}
       </div>
     </>
   );

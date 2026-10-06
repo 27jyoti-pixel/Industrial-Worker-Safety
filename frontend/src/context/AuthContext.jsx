@@ -18,12 +18,10 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const data = await authService.getProfile();
-          if (data && data.user) {
-            setUser(data.user);
-            localStorage.setItem('industrial_user', JSON.stringify(data.user));
-          } else if (data && data.data) {
-            setUser(data.data);
-            localStorage.setItem('industrial_user', JSON.stringify(data.data));
+          const userData = data?.user || data?.data?.user || data?.data || data;
+          if (userData && userData._id) {
+            setUser(userData);
+            localStorage.setItem('industrial_user', JSON.stringify(userData));
           }
         } catch (err) {
           console.error('Failed to restore session:', err);
@@ -51,9 +49,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
   const response = await authService.login({ email, password });
-
-  const authToken = response.data.token;
-  const userData = response.data.user;
+  const payload = response?.data || response;
+  const authToken = payload.token || payload.data?.token;
+  const userData = payload.user || payload.data?.user;
 
   localStorage.setItem('industrial_token', authToken);
   localStorage.setItem('industrial_user', JSON.stringify(userData));
@@ -66,8 +64,9 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     const data = await authService.register(userData);
-    const authToken = data.token;
-    const userResult = data.user || data.data;
+    const payload = data?.data || data;
+    const authToken = payload.token || payload.data?.token;
+    const userResult = payload.user || payload.data?.user;
 
     if (authToken) {
       localStorage.setItem('industrial_token', authToken);
@@ -76,6 +75,19 @@ export const AuthProvider = ({ children }) => {
       setUser(userResult);
     }
     return data;
+  };
+
+  const updateProfile = async (profileData) => {
+    const response = await authService.updateProfile(profileData);
+    const payload = response?.data || response;
+    const updatedUser = payload.user || payload.data?.user || payload.data || payload;
+
+    if (updatedUser && updatedUser._id) {
+      localStorage.setItem('industrial_user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    }
+
+    return updatedUser;
   };
 
   const logout = () => {
@@ -104,6 +116,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         register,
+        updateProfile,
         logout,
         hasRole,
         isWorker,

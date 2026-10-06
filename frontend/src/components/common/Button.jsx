@@ -18,7 +18,7 @@ const Button = ({
 
   const variants = {
     primary:
-      'bg-[#D97745] hover:bg-[#B85D35] text-white shadow-[0_8px_20px_rgba(217,119,69,.16)] hover:-translate-y-px',
+      'midc-primary-cta text-white shadow-[0_8px_20px_rgba(217,119,69,.16)] hover:-translate-y-px',
 
     secondary:
       'bg-[#E3F1EA] hover:bg-[#D5E8DD] text-[#7B4B82]',

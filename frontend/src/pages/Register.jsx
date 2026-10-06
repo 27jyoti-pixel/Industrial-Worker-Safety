@@ -3,65 +3,15 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Input from '../components/common/Input';
-
-import {
-  Shield,
-  ShieldCheck,
-  User,
-  Mail,
-  Lock,
-  Phone,
-  Building,
-  BadgeCheck,
-  HardHat,
-  Building2,
-  Factory,
-  CircleCheck,
-  Cpu,
-  ArrowRight
-} from 'lucide-react';
+import { Shield, ShieldCheck, User, Mail, Lock, Phone, Building, BadgeCheck, HardHat, Building2, Cpu, ArrowRight, Check } from 'lucide-react';
+import ProfileAvatar from '../components/profile/ProfileAvatar';
+import { AVATAR_GROUPS } from '../components/profile/profileAvatarOptions';
 
 const ROLE_OPTIONS = [
-  {
-    value: 'Worker',
-    role: 'Industrial Worker',
-    badge: 'WORKER PORTAL',
-    icon: HardHat,
-    color:
-      'border-[#3E5C54]/40 bg-[#3E5C54]/5 text-[#3E5C54] hover:border-[#3E5C54]',
-    badgeBg:
-      'bg-[#3E5C54]/10 text-[#3E5C54] border-[#3E5C54]/20'
-  },
-  {
-    value: 'Factory Admin',
-    role: 'Factory Administrator',
-    badge: 'PLANT OPERATIONS',
-    icon: Building2,
-    color:
-      'border-[#C9A66B]/40 bg-[#C9A66B]/5 text-[#9A7436] hover:border-[#C9A66B]',
-    badgeBg:
-      'bg-[#C9A66B]/10 text-[#9A7436] border-[#C9A66B]/20'
-  },
-  {
-    value: 'Government Officer',
-    role: 'Government Safety Officer',
-    badge: 'GOVT AUDIT PORTAL',
-    icon: Shield,
-    color:
-      'border-[#2A9D8F]/40 bg-[#2A9D8F]/5 text-[#2A9D8F] hover:border-[#2A9D8F]',
-    badgeBg:
-      'bg-[#2A9D8F]/10 text-[#2A9D8F] border-[#2A9D8F]/20'
-  },
-  {
-    value: 'Super Admin',
-    role: 'Super Administrator',
-    badge: 'SYSTEM GOVERNANCE',
-    icon: Cpu,
-    color:
-      'border-[#E0E0E0] bg-[#1E1E1E]/80 text-[#F4F4F4] hover:border-[#3E5C54]/70',
-    badgeBg:
-      'bg-[#3E5C54] text-[#F4F4F4] border-[#E0E0E0]'
-  }
+  { value: 'Worker', role: 'Industrial Worker', badge: 'WORKER PORTAL', icon: HardHat },
+  { value: 'Factory Admin', role: 'Factory Administrator', badge: 'PLANT OPERATIONS', icon: Building2 },
+  { value: 'Government Officer', role: 'Government Safety Officer', badge: 'GOVT AUDIT PORTAL', icon: Shield },
+  { value: 'Super Admin', role: 'Super Administrator', badge: 'SYSTEM GOVERNANCE', icon: Cpu }
 ];
 
 const Register = () => {
@@ -72,60 +22,36 @@ const Register = () => {
     phone: '',
     role: 'Worker',
     factoryName: '',
-    employeeId: ''
+    employeeId: '',
+    avatarId: null
   });
-
   const [loading, setLoading] = useState(false);
-
   const { register } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
-
-  const selectedRoleOption =
-    ROLE_OPTIONS.find((r) => r.value === formData.role) ||
-    ROLE_OPTIONS[0];
+  const selectedRoleOption = ROLE_OPTIONS.find((r) => r.value === formData.role) || ROLE_OPTIONS[0];
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSelectRole = (roleValue) => {
-    setFormData({
-      ...formData,
-      role: roleValue
-    });
+    setFormData({ ...formData, role: roleValue });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.password
-    ) {
+    if (!formData.name || !formData.email || !formData.password) {
       showError('Please fill out all required fields.');
       return;
     }
-
     setLoading(true);
-
     try {
       await register(formData);
-
-      showSuccess(
-        'Registration successful! Welcome to the platform.'
-      );
-
+      showSuccess('Registration successful! Welcome to the platform.');
       navigate('/dashboard');
     } catch (err) {
-      showError(
-        err.message ||
-          'Registration failed. Please verify your details.'
-      );
+      showError(err.message || 'Registration failed. Please verify your details.');
     } finally {
       setLoading(false);
     }
@@ -134,375 +60,133 @@ const Register = () => {
   const getFieldLabels = () => {
     switch (formData.role) {
       case 'Factory Admin':
-        return {
-          name: 'Administrator Name',
-          email: 'Official Email Address',
-          org: 'Organization / Factory Name',
-          id: 'Admin ID / Code'
-        };
-
+        return { name: 'Administrator Name', email: 'Official Email Address', org: 'Organization / Factory Name', id: 'Admin ID / Code' };
       case 'Government Officer':
-        return {
-          name: 'Officer Name',
-          email: 'Government Email Address',
-          org: 'Department / Agency Name',
-          id: 'Officer Badge / ID'
-        };
-
+        return { name: 'Officer Name', email: 'Government Email Address', org: 'Department / Agency Name', id: 'Officer Badge / ID' };
       case 'Super Admin':
-        return {
-          name: 'System Admin Name',
-          email: 'System Admin Email',
-          org: 'System Unit / Zone',
-          id: 'Admin Access Key'
-        };
-
+        return { name: 'System Admin Name', email: 'System Admin Email', org: 'System Unit / Zone', id: 'Admin Access Key' };
       default:
-        return {
-          name: 'Full Worker Name',
-          email: 'Personal / Work Email',
-          org: 'Factory Name',
-          id: 'Employee ID'
-        };
+        return { name: 'Full Worker Name', email: 'Personal / Work Email', org: 'Factory Name', id: 'Employee ID' };
     }
   };
 
   const labels = getFieldLabels();
 
   return (
-    <div className="register-page-enter public-canvas
-      
+    <div className="midc-auth-page min-h-screen bg-white text-[#111111]">
       <style>{`
-        .register-page-enter {
-          animation: registerPageEnter 0.45s ease-out both;
-        }
-      
-        @keyframes registerPageEnter {
-          from {
-            opacity: 0;
-            transform: translateY(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      
-        @media (prefers-reduced-motion: reduce) {
-          .register-page-enter {
-            animation: none;
-          }
-        }
-      `}</style> min-h-screen flex items-start lg:items-center justify-center p-3 sm:p-4 lg:p-5">
-      <div className="public-window w-full max-w-[1380px] min-h-[680px] grid lg:grid-cols-[0.92fr_1.08fr] overflow-hidden">
-
-        {/* ================= LEFT INDUSTRIAL VISUAL ================= */}
-        <section className="auth-visual hidden lg:flex relative flex-col overflow-hidden">
-
-          {/* soft industrial background */}
-          <div className="absolute inset-0 bg-[#EEF2F0]" />
-          <div className="absolute -top-28 -left-24 w-[420px] h-[420px] rounded-full bg-[#E1ECE8]" />
-          <div className="absolute -bottom-28 -right-24 w-[390px] h-[390px] rounded-full bg-[#F3E7D6]" />
-          <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(#B9C9C3_1px,transparent_1px)] [background-size:18px_18px]" />
-
-          {/* brand */}
-          <Link
-            to="/"
-            className="relative z-20 flex items-center gap-3 w-fit px-7 pt-7"
-          >
-            <div className="w-11 h-11 rounded-2xl bg-[#F4F4F4] text-[#3E5C54] flex items-center justify-center shadow-sm">
-              <HardHat className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-semibold text-[#1E1E1E]">
-                MIDC Safety
-              </div>
-              <div className="text-[10px] text-[#6C757D] mt-0.5">
-                Industrial worker protection
-              </div>
-            </div>
+        .midc-auth-header { background:#fff; border-bottom:1px solid #e5e5e5; }
+        .midc-auth-header .midc-container { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; width:min(92vw,1420px); height:78px; margin-inline:auto; }
+        .midc-auth-header .midc-container > a:first-child { justify-self:start; align-items:center; gap:.75rem; color:#111; }
+        .midc-auth-header .midc-brand-mark { display:flex; flex:none; width:47px; height:50px; align-items:center; justify-content:center; border-radius:10px; background:#111 !important; color:#fff !important; box-shadow:none !important; animation:none !important; }
+        .midc-auth-header .midc-brand-mark + div { line-height:1.25; }
+        .midc-auth-header .midc-brand-mark + div > div:first-child { font-size:1.1875rem; font-weight:700; letter-spacing:-.035em; }
+        .midc-auth-header .midc-brand-mark + div > div:last-child { margin-top:0; font-size:.8125rem; font-weight:400; line-height:1.4; }
+        .midc-auth-header .midc-auth-home { grid-column:3; justify-self:end; padding:.625rem 1rem; border-radius:9px; color:#171717; font-size:.9375rem; font-weight:500; }
+        .midc-auth-header .midc-auth-home:hover { background:#f4f4f4; }
+        .midc-auth-page input { min-height: 48px; border: 1px solid #dedede !important; border-radius: 8px !important; background: #fff !important; color: #111 !important; padding: 12px 14px 12px 42px !important; box-shadow: none !important; }
+        .midc-auth-page input::placeholder { color: #8a8a8a !important; }
+        .midc-auth-page input:focus { border-color: #E87532 !important; box-shadow: 0 0 0 3px rgba(232,117,50,.12) !important; }
+        .midc-auth-page label { color: #252525 !important; font-weight: 500 !important; }
+        @media (max-width: 767px) { .midc-auth-header .midc-container { grid-template-columns:1fr auto; height:68px; } .midc-auth-spacer { display:none; } .midc-auth-header .midc-auth-home { grid-column:2; } }
+        @media (max-width: 400px) { .midc-auth-header .midc-container > a:first-child { gap:.5rem; } .midc-auth-header .midc-brand-mark + div > div:last-child { font-size:.72rem; } .midc-auth-header .midc-auth-home { padding-inline:.4rem; font-size:.8125rem; } }
+        @media (max-width: 640px) { .midc-auth-shell { padding-left: 20px; padding-right: 20px; } }
+      `}</style>
+      <header className="midc-auth-header sticky top-0 z-50">
+        <div className="midc-container">
+          <Link to="/" className="flex">
+            <div className="midc-brand-mark"><ShieldCheck className="h-5 w-5" /></div>
+            <div><div className="font-extrabold leading-tight">MIDC Safety</div><div className="text-[11px] text-[#6C757D]">Industrial worker protection</div></div>
           </Link>
-
-          {/* rotating industrial scene */}
-          <div className="relative z-10 flex-1 flex items-center justify-center px-10 py-8">
-            <div className="relative w-[430px] h-[430px]">
-
-              {/* orbit rings */}
-              <div className="absolute inset-[18px] rounded-full border border-[#C9D8D2]" />
-              <div className="absolute inset-[52px] rounded-full border border-dashed border-[#B9C9C3] animate-[spin_22s_linear_infinite]" />
-              <div className="absolute inset-[92px] rounded-full border border-[#E0E0E0]" />
-
-              {/* rotating industry tiles */}
-              <div className="absolute inset-0 animate-[spin_26s_linear_infinite]">
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-14 h-14 rounded-2xl bg-white border border-[#E0E0E0] shadow-[0_12px_28px_rgba(24,55,40,.10)] flex items-center justify-center text-[#3E5C54]">
-                  <Factory className="w-6 h-6" />
-                </div>
-
-                <div className="absolute bottom-9 left-10 w-14 h-14 rounded-2xl bg-white border border-[#E0E0E0] shadow-[0_12px_28px_rgba(24,55,40,.10)] flex items-center justify-center text-[#C9A66B]">
-                  <HardHat className="w-6 h-6" />
-                </div>
-
-                <div className="absolute bottom-10 right-9 w-14 h-14 rounded-2xl bg-white border border-[#E0E0E0] shadow-[0_12px_28px_rgba(24,55,40,.10)] flex items-center justify-center text-[#8a79b7]">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-              </div>
-
-              {/* counter-rotating inner tiles */}
-              <div className="absolute inset-[54px] animate-[spin_18s_linear_infinite_reverse]">
-                <div className="absolute top-4 right-2 w-10 h-10 rounded-xl bg-[#F3E7D6] border border-white shadow-sm flex items-center justify-center text-[#C9A66B]">
-                  <CircleCheck className="w-5 h-5" />
-                </div>
-
-                <div className="absolute bottom-8 left-2 w-10 h-10 rounded-xl bg-[#EEF2F0] border border-white shadow-sm flex items-center justify-center text-[#3E5C54]">
-                  <Building2 className="w-5 h-5" />
-                </div>
-              </div>
-
-              {/* central card */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[290px] rounded-[30px] bg-white border border-white shadow-[0_24px_60px_rgba(24,55,40,.14)] p-5 rotate-[-3deg]">
-                <div className="h-[210px] rounded-[22px] bg-[#F4F4F4] border border-dashed border-[#D6E2DD] relative overflow-hidden">
-
-                  <div className="absolute -top-14 -right-14 w-32 h-32 rounded-full bg-[#E1ECE8]" />
-                  <div className="absolute -bottom-12 -left-8 w-28 h-28 rounded-full bg-[#F3E7D6]" />
-
-                  {/* factory illustration */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="relative w-32 h-24">
-                      <div className="absolute bottom-2 left-2 w-28 h-16 rounded-lg bg-[#DCE8E2] border border-[#C9D8D2]" />
-                      <div className="absolute bottom-18 left-5 w-12 h-12 bg-[#3E5C54] rounded-t-lg" />
-                      <div className="absolute bottom-18 left-19 w-8 h-16 bg-[#B9C9C3] rounded-t-lg" />
-                      <div className="absolute bottom-2 left-8 w-6 h-8 bg-white rounded-t-md" />
-                      <div className="absolute bottom-11 left-18 w-5 h-5 bg-white rounded-sm" />
-                      <div className="absolute bottom-11 left-27 w-5 h-5 bg-white rounded-sm" />
-                      <div className="absolute bottom-18 left-27 w-5 h-2 bg-[#C9A66B] rounded-full" />
-                    </div>
-                  </div>
-
-                  <div className="absolute left-4 bottom-4 text-[9px] uppercase tracking-[.18em] font-bold text-[#C9A66B]">
-                    Industrial safety
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <div className="text-xl font-semibold text-[#1E1E1E]">
-                    One account. Every responsibility.
-                  </div>
-                  <p className="text-xs text-[#6C757D] mt-1.5 leading-5">
-                    Your role controls the workspace and the information you can manage.
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div className="midc-auth-spacer" />
+          <Link to="/" className="midc-auth-home">Back to home</Link>
+        </div>
+      </header>
+      <main className="midc-auth-shell mx-auto w-full max-w-[1080px] px-6 pb-16 pt-10 sm:px-8 sm:pt-12">
+        <div className="mb-5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[.16em] text-[#666]"><span className="h-2 w-2 rounded-full bg-[#E87532]" />Create your safety workspace</div>
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+          <div><h1 className="text-[38px] font-semibold leading-[1.08] tracking-[-.045em] sm:text-[46px]">Build your safety workspace.</h1><p className="mt-3 max-w-[670px] text-[15px] leading-7 text-[#666]">Select your responsibility and enter the details used by your existing registration workflow.</p></div>
+          <p className="shrink-0 pb-1 text-sm text-[#666]">Already registered? <Link to="/login" className="font-semibold text-[#111] underline decoration-[#E87532] underline-offset-4">Sign in</Link></p>
+        </div>
+        <section className="mt-8" aria-label="Choose responsibility">
+          <div className="mb-3 flex items-center justify-between gap-3"><h2 className="text-sm font-semibold">Choose responsibility</h2><span className="text-xs text-[#777]">Fields adapt automatically</span></div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {ROLE_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const selected = formData.role === opt.value;
+              return <button key={opt.value} type="button" onClick={() => handleSelectRole(opt.value)} aria-pressed={selected} className={`relative flex min-h-[82px] items-center gap-2.5 rounded-lg border px-3 py-3 text-left transition-colors ${selected ? 'border-[#E87532] bg-[#fffaf7]' : 'border-[#dedede] bg-white hover:border-[#aaa]'}`}>
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${selected ? 'bg-[#111] text-white' : 'bg-[#f4f4f4] text-[#444]'}`}><Icon className="h-4 w-4" /></span>
+                <span className="min-w-0"><span className="block text-xs font-semibold leading-4 text-[#171717]">{opt.role}</span><span className="mt-1 block text-[10px] uppercase tracking-[.08em] text-[#777]">{opt.badge.split(' ')[0]}</span></span>
+                {selected && <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#E87532]" />}
+              </button>;
+            })}
           </div>
-
-          {/* bottom workflow note */}
-          <div className="relative z-20 px-7 pb-7">
-            <div className="inline-flex items-center gap-3 rounded-2xl bg-white/90 border border-white shadow-[0_12px_30px_rgba(24,55,40,.08)] px-4 py-3">
-              <div className="w-9 h-9 rounded-xl bg-[#EEF2F0] text-[#3E5C54] flex items-center justify-center">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-semibold text-[#1E1E1E]">
-                  Role-aware registration
-                </div>
-                <div className="text-[10px] text-[#6C757D] mt-0.5">
-                  Fields adapt to your selected responsibility
-                </div>
-              </div>
+        </section>
+        <section className="mt-6" aria-labelledby="profile-avatar-choice-title">
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+            <div>
+              <h2 id="profile-avatar-choice-title" className="text-sm font-semibold">Choose your profile avatar <span className="font-normal text-[#777]">(optional)</span></h2>
+              <p className="mt-1 text-xs text-[#777]">Personalize your profile. You can change this later.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, avatarId: null })}
+              className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${formData.avatarId === null ? 'text-[#111]' : 'text-[#666] hover:bg-[#f5f5f5] hover:text-[#222]'}`}
+              aria-pressed={formData.avatarId === null}
+            >
+              Use initials instead
+            </button>
+          </div>
+          <div className="max-h-[440px] overflow-y-auto pr-1">
+            <div className="grid gap-4 md:grid-cols-2">
+              {AVATAR_GROUPS.map((group) => (
+                <section key={group.id} aria-label={group.label} className="min-w-0 rounded-lg border border-[#e8e8e8] p-2.5">
+                  <h3 className="mb-2 text-xs font-semibold text-[#333]">{group.label}</h3>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {group.avatars.map((avatar) => {
+                      const selected = formData.avatarId === avatar.id;
+                      return (
+                        <button
+                          key={avatar.id}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, avatarId: avatar.id })}
+                          aria-label={avatar.label}
+                          aria-pressed={selected}
+                          className={`relative flex min-w-0 flex-col items-center gap-1 rounded-lg border px-1 py-1.5 transition-colors ${selected ? 'border-[#E87532] bg-[#fffaf7]' : 'border-transparent bg-white hover:border-[#dedede] hover:bg-[#fafafa]'}`}
+                        >
+                          <span className="relative block h-10 w-10 overflow-hidden rounded-full ring-1 ring-[#e1e1e1] sm:h-11 sm:w-11">
+                            <ProfileAvatar avatarId={avatar.id} />
+                            {selected && <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-[#E87532] text-white"><Check className="h-3 w-3" /></span>}
+                          </span>
+                          <span className="w-full truncate text-center text-[10px] leading-3 text-[#595959]">{avatar.displayLabel}</span>
+                          <span className="text-[9px] capitalize leading-3 text-[#888]">{avatar.gender}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
             </div>
           </div>
         </section>
-
-        {/* ================= RIGHT FORM ================= */}
-        <main className="auth-panel flex flex-col">
-          <div className="w-full max-w-[620px] mx-auto px-6 py-6 sm:px-8 lg:px-10">
-
-            {/* TOP NAV */}
-            <div className="flex items-center justify-between mb-5">
-              <Link
-                to="/"
-                className="text-xs font-semibold text-[#6C757D] hover:text-[#3E5C54] transition-colors"
-              >
-                ← Back to home
-              </Link>
-
-              <div className="text-xs text-[#6C757D]">
-                Already registered?{' '}
-                <Link
-                  to="/login"
-                  className="font-semibold text-[#3E5C54] hover:text-[#3E5C54]-dark transition-colors"
-                >
-                  Sign in
-                </Link>
-              </div>
-            </div>
-
-            {/* TITLE */}
-            <div className="mb-4">
-              <div className="midc-section-label">
-                <span className="midc-dot bg-[#C9A66B]" />
-                New safety profile
-              </div>
-
-              <h1 className="mt-2 text-[38px] sm:text-[44px] leading-[.98] font-semibold tracking-[-0.045em] text-[#1E1E1E]">
-                Build your
-                <br />
-                <span className="text-[#C9A66B]">
-                  safety workspace.
-                </span>
-              </h1>
-
-              <p className="text-sm text-[#6C757D] mt-2 max-w-[540px] leading-5">
-                Select your responsibility and enter the details used by your existing registration workflow.
-              </p>
-            </div>
-
-            {/* ROLE SELECTION */}
-            <div className="mb-5">
-              <div className="flex items-center justify-between mb-2.5">
-                <label className="text-sm font-semibold text-[#1E1E1E]">
-                  Choose responsibility
-                </label>
-                <span className="text-[10px] text-[#6C757D]">
-                  Fields adapt automatically
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {ROLE_OPTIONS.map((opt) => {
-                  const Icon = opt.icon;
-                  const selected = formData.role === opt.value;
-
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => handleSelectRole(opt.value)}
-                      className={`auth-role-card ${selected ? 'selected' : ''}`}
-                    >
-                      <div
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${
-                          selected
-                            ? 'bg-[#3E5C54] text-white'
-                            : 'bg-[#3E5C54]-soft text-[#3E5C54]'
-                        }`}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </div>
-
-                      <div className="text-[11px] font-semibold text-[#1E1E1E] leading-tight">
-                        {opt.role}
-                      </div>
-
-                      <div className="text-[8px] text-[#6C757D] mt-1 uppercase tracking-wider">
-                        {opt.badge.split(' ')[0]}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* REGISTRATION FORM */}
-            <form onSubmit={handleSubmit} className="space-y-2.5">
-
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Input
-                  label={labels.name}
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter full name"
-                  required
-                  icon={User}
-                />
-
-                <Input
-                  label={labels.email}
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="you@organization.com"
-                  required
-                  icon={Mail}
-                />
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Input
-                  label="Password"
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Create a password"
-                  required
-                  icon={Lock}
-                />
-
-                <Input
-                  label="Phone number"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="Enter phone number"
-                  icon={Phone}
-                />
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Input
-                  label={labels.org}
-                  name="factoryName"
-                  value={formData.factoryName}
-                  onChange={handleChange}
-                  placeholder="Organization / factory name"
-                  icon={Building}
-                />
-
-                <Input
-                  label={labels.id}
-                  name="employeeId"
-                  value={formData.employeeId}
-                  onChange={handleChange}
-                  placeholder="Employee / officer ID"
-                  icon={BadgeCheck}
-                />
-              </div>
-
-              {/* SUBMIT */}
-              <div className="pt-1 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs text-[#6C757D]">
-                  <Shield className="w-4 h-4 text-[#3E5C54]" />
-                  <span>Selected:</span>
-                  <span className="font-semibold text-[#3E5C54]">
-                    {selectedRoleOption.role}
-                  </span>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full sm:w-auto min-h-[48px] px-6 rounded-2xl bg-[#3E5C54] text-white font-semibold flex items-center justify-center gap-2 hover:bg-[#3E5C54] hover:-translate-y-px transition-all duration-200 disabled:opacity-50"
-                >
-                  {loading ? (
-                    'Creating account...'
-                  ) : (
-                    <>
-                      Create workspace
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+        <form onSubmit={handleSubmit} className="mt-8">
+          <div className="mb-4 flex items-center gap-3"><h2 className="text-xs font-semibold uppercase tracking-[.14em] text-[#555]">Account and organization details</h2><span className="h-px flex-1 bg-[#e8e8e8]" /></div>
+          <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
+            <Input label={labels.name} name="name" value={formData.name} onChange={handleChange} placeholder="Enter full name" required icon={User} />
+            <Input label={labels.email} type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@organization.com" required icon={Mail} />
+            <Input label="Password" type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Create a password" required icon={Lock} />
+            <Input label="Phone number" name="phone" value={formData.phone} onChange={handleChange} placeholder="Enter phone number" icon={Phone} />
+            <Input label={labels.org} name="factoryName" value={formData.factoryName} onChange={handleChange} placeholder="Organization / factory name" icon={Building} />
+            <Input label={labels.id} name="employeeId" value={formData.employeeId} onChange={handleChange} placeholder="Employee / officer ID" icon={BadgeCheck} />
           </div>
-        </main>
-      </div>
+          <div className="mt-6 flex flex-col gap-4 border-t border-[#e8e8e8] pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 text-sm text-[#666]"><Shield className="h-4 w-4 text-[#E87532]" /><span>Selected: <strong className="font-semibold text-[#222]">{selectedRoleOption.role}</strong></span></div>
+            <button type="submit" disabled={loading} className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-lg bg-[#111] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#292929] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">{loading ? 'Creating account...' : <>Create workspace <ArrowRight className="h-4 w-4" /></>}</button>
+          </div>
+        </form>
+      </main>
     </div>
   );
-
 };
 
 export default Register;

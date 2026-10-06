@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { ROLES } = require('../constants');
+const { ROLES, PROFILE_AVATAR_IDS } = require('../constants');
 
 const userSchema = new mongoose.Schema(
   {
@@ -39,6 +39,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    alternatePhone: { type: String, trim: true },
+    bloodGroup: { type: String, trim: true },
+    dateOfBirth: { type: Date },
+    residentialAddress: { type: String, trim: true },
+    city: { type: String, trim: true },
+    state: { type: String, trim: true },
+    emergencyContactName: { type: String, trim: true },
+    emergencyContactRelationship: { type: String, trim: true },
+    emergencyContactNumber: { type: String, trim: true },
     factoryName: {
       type: String,
       trim: true
@@ -46,6 +55,19 @@ const userSchema = new mongoose.Schema(
     employeeId: {
       type: String,
       trim: true
+    },
+    department: { type: String, trim: true },
+    designation: { type: String, trim: true },
+    shift: { type: String, trim: true },
+    joiningDate: { type: Date },
+    workLocation: { type: String, trim: true },
+    supervisor: { type: String, trim: true },
+    employmentType: { type: String, trim: true },
+    employeeStatus: { type: String, trim: true },
+    avatarId: {
+      type: String,
+      enum: PROFILE_AVATAR_IDS,
+      default: null
     },
     isActive: {
       type: Boolean,
