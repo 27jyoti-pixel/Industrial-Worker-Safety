@@ -1511,3 +1511,24 @@ html body :is(.accident-create-dialog, .claims-create-dialog, .complaint-create-
   padding: 0 !important;
   border: 0 !important;
 }
+
+/* Keep existing interaction transitions short and consistent across the platform. */
+:where(a, button, input, textarea, select, [role="button"], [class*="transition"]) {
+  transition-duration: 180ms;
+  transition-timing-function: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -32,6 +32,13 @@ class AuthService {
    */
   async registerUser(userData) {
     const { name, email, password, role, phone, factoryName, employeeId, avatarId } = userData;
+    const optionalProfileData = OPTIONAL_PROFILE_FIELDS.reduce((fields, field) => {
+      if (Object.prototype.hasOwnProperty.call(userData, field)) {
+        const value = userData[field];
+        fields[field] = value === '' || value === null ? undefined : value;
+      }
+      return fields;
+    }, {});
 
     if (avatarId != null && !PROFILE_AVATAR_IDS.includes(avatarId)) {
       throw new ApiError(400, 'Please choose a valid profile avatar');
@@ -52,7 +59,8 @@ class AuthService {
       phone,
       factoryName,
       employeeId,
-      avatarId: avatarId ?? null
+      avatarId: avatarId ?? null,
+      ...optionalProfileData
     });
 
     // Generate token
