@@ -245,6 +245,8 @@ const Profile = () => {
         .profile-section-nav { scrollbar-width: none; }
         .profile-section-nav::-webkit-scrollbar { display: none; }
         #profile-redesign .profile-edit-button:focus-visible { outline: none; box-shadow: none; }
+        .profile-security-content .security-field label { margin-bottom: 4px; color: #536982; font-size: 13px; font-weight: 500; }
+        .profile-security-content .security-field input { border-color: #dfe2e5; border-radius: 7px; padding-top: 8px; padding-bottom: 8px; font-size: 14px; line-height: 20px; }
         .profile-tab-content-area {
           box-sizing: border-box;
           align-items: center;
@@ -254,21 +256,23 @@ const Profile = () => {
           scrollbar-width: none;
           -ms-overflow-style: none;
         }
-        .profile-tab-content-area > div { width: 100%; max-width: 560px; margin-inline: auto; }
+        .profile-tab-content-area > div { width: 100%; max-width: 560px; margin-inline: auto; transform: translateX(12px); }
         .profile-tab-content-area::-webkit-scrollbar { display: none; }
         .profile-personal-row { min-height: 56px; }
         #profile-redesign .profile-hero-avatar { border-radius: 50% !important; }
         #profile-redesign .profile-hero-avatar > img { border-radius: 50% !important; }
         #profile-redesign .profile-designation-value { font-size: clamp(26px, 2vw, 30px) !important; font-weight: 600 !important; }
+        .profile-hero-curtain {
+          -webkit-backdrop-filter: blur(2px);
+          backdrop-filter: blur(2px);
+        }
         .profile-hero-curtain::before {
           content: '';
           position: absolute;
           inset: 0;
           background: rgba(255, 255, 255, .84);
-          -webkit-backdrop-filter: blur(4px);
-          backdrop-filter: blur(4px);
-          -webkit-mask-image: radial-gradient(ellipse 56% 100% at 50% 50%, #000 0%, #000 58%, rgba(0, 0, 0, .9) 72%, transparent 100%);
-          mask-image: radial-gradient(ellipse 56% 100% at 50% 50%, #000 0%, #000 58%, rgba(0, 0, 0, .9) 72%, transparent 100%);
+          -webkit-mask-image: radial-gradient(ellipse 38% 100% at 50% 50%, #000 0%, #000 54%, rgba(0, 0, 0, .88) 80%, transparent 100%);
+          mask-image: radial-gradient(ellipse 38% 100% at 50% 50%, #000 0%, #000 54%, rgba(0, 0, 0, .88) 80%, transparent 100%);
         }
         #profile-redesign input:focus {
           border-color: #F2C7B0 !important;
@@ -297,7 +301,7 @@ const Profile = () => {
         <div className="profile-hero-curtain pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
         <section className="profile-hero-section relative min-h-[490px] bg-transparent sm:min-h-[440px] lg:h-[380px] lg:min-h-[380px]" aria-label="Profile hero">
           <div className="profile-hero-content relative mx-auto grid min-h-[490px] w-full grid-cols-1 items-center gap-3 px-6 py-8 sm:min-h-[440px] sm:px-10 lg:h-[380px] lg:min-h-[380px] lg:-translate-y-[128px] lg:grid-cols-[minmax(0,1fr)_minmax(160px,205px)_minmax(0,1fr)] lg:gap-6 lg:px-[6vw] lg:py-0">
-            <div className="order-2 z-10 mx-auto w-full max-w-[300px] text-left lg:order-1 lg:col-start-1 lg:mx-0 lg:justify-self-end lg:pr-4 lg:translate-x-20">
+            <div className="order-2 z-10 mx-auto w-full max-w-[300px] text-left lg:order-1 lg:col-start-1 lg:mx-0 lg:justify-self-end lg:pr-4 lg:translate-x-[112px]">
               <p className="text-[13px] font-semibold tracking-[.06em] text-[#526274]">DESIGNATION</p>
               <h1 className="profile-designation-value mt-2 text-[26px] font-semibold leading-tight tracking-[-.02em] text-[#111] sm:text-[28px]">{profileDisplayValue(user?.designation || user?.role)}</h1>
               <div className="mt-4 h-[2px] w-[70px] bg-[#E87532]" />
@@ -328,7 +332,7 @@ const Profile = () => {
           {[
             ['personal', 'Personal Info'],
             ['work', 'Work Details'],
-            ['security', 'Security'],
+            ['security', 'Password Reset'],
           ].map(([tab, label]) => {
             const selected = activeTab === tab || (tab === 'security' && activeSection === 'password');
             return (
@@ -356,7 +360,7 @@ const Profile = () => {
 
         <section className="profile-tab-content-area flex flex-none min-h-0 flex-col bg-transparent px-5 pb-4 pt-2 sm:px-8 sm:pb-5 sm:pt-2" aria-label="Profile details">
           {activeSection === 'profile' && !editMode && activeTab === 'personal' && (
-            <div className="profile-information-content profile-personal-content">
+            <div className="profile-information-content profile-personal-content mt-4">
               <div className="profile-information-grid grid grid-cols-1 gap-x-3 gap-y-3 sm:grid-cols-2">
                 {[
                   { label: 'Full Name', value: user?.name, Icon: User },
@@ -384,8 +388,8 @@ const Profile = () => {
           )}
 
           {activeSection === 'profile' && !editMode && activeTab === 'work' && (
-            <div className="profile-information-content pr-2">
-              <div className="profile-information-grid grid grid-cols-1 gap-x-3 gap-y-0 sm:grid-cols-2">
+            <div className="profile-information-content profile-work-content mt-4">
+              <div className="profile-information-grid grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
                 {[
                   { label: 'Employee ID', value: user?.employeeId, Icon: IdCard },
                   { label: 'Role', value: user?.role, Icon: BriefcaseBusiness },
@@ -398,9 +402,9 @@ const Profile = () => {
                   { label: 'Supervisor / Reporting Manager', value: user?.supervisor, Icon: UserRound },
                   { label: 'Employment Type', value: user?.employmentType, Icon: BriefcaseBusiness },
                   { label: 'Employee Status', value: user?.employeeStatus, Icon: BadgeCheck },
-                ].map(({ label, value, Icon }) => (
-                  <div key={label} className="profile-information-row flex min-w-0 items-center gap-3 sm:gap-4">
-                    <span className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full bg-[#edf1f6] text-[#526982]"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                ].map(({ label, value, Icon }, index) => (
+                  <div key={label} className="profile-information-row profile-personal-row flex min-w-0 items-center gap-3 sm:gap-4">
+                    <span className={`flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full ${['bg-[#e8f1ff] text-[#1476e8]', 'bg-[#f0e9ff] text-[#8641dd]', 'bg-[#fff0e5] text-[#ef6709]', 'bg-[#e4f8f0] text-[#18a86b]', 'bg-[#e8f1ff] text-[#1476e8]', 'bg-[#fff0e5] text-[#ef6709]', 'bg-[#f0e9ff] text-[#8641dd]', 'bg-[#e4f8f0] text-[#18a86b]', 'bg-[#e8f1ff] text-[#1476e8]', 'bg-[#fff0e5] text-[#ef6709]', 'bg-[#e4f8f0] text-[#18a86b]'][index]}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
                     <div className="min-w-0">
                       <p className="text-[13px] text-[#536982]">{label}</p>
                       <p className="break-words text-[14px] font-semibold text-[#17191c]">{profileDisplayValue(value)}</p>
@@ -413,11 +417,7 @@ const Profile = () => {
 
           {activeSection === 'profile' && editMode && (
             <div>
-              <div className="mb-5">
-                <h2 className="text-[17px] font-semibold text-[#17191c]">Edit profile information</h2>
-                <p className="mt-1 text-[13px] text-[#73777c]">Update the information connected to your account.</p>
-              </div>
-              <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <form onSubmit={handleUpdateProfile} className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <Input label="Full Name" value={profileData.name} onChange={(e) => setProfileData({ ...profileData, name: e.target.value })} />
                 <Input label="Phone" value={profileData.phone} onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })} />
                 {[
@@ -460,32 +460,35 @@ const Profile = () => {
           )}
 
           {activeSection === 'password' && (
-            <div>
-              <div className="mb-5">
-                <h2 className="text-[17px] font-semibold text-[#17191c]">Password reset</h2>
-                <p className="mt-1 text-[13px] text-[#73777c]">Securely reset the password connected to your account.</p>
-              </div>
+            <div className="profile-security-content mt-6">
               {resetStep === 1 ? (
-                <form onSubmit={handleRequestToken} className="max-w-2xl">
-                  <div className="mb-5 rounded-[8px] border border-[#e7e7e7] bg-[#fafafa] p-4">
-                    <div className="flex items-start gap-3">
-                      <KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-[#444]" aria-hidden="true" />
-                      <div>
-                        <h3 className="text-[13px] font-semibold text-[#222]">Request a reset token</h3>
-                        <p className="mt-1 text-[12px] leading-5 text-[#6c7075]">A secure reset token will be sent to your registered account email.</p>
-                      </div>
+                <form onSubmit={handleRequestToken} className="profile-information-grid grid grid-cols-1 items-start gap-x-12 gap-y-3 sm:grid-cols-2">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f0e9ff] text-[#8641dd]">
+                      <KeyRound className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div className="flex min-w-0 flex-col items-start">
+                      <p className="text-[13px] leading-5 text-[#536982]">A secure reset token will be sent to your registered account email.</p>
                     </div>
                   </div>
-                  <Input label="Registered Account Email" type="email" value={passwordEmail} onChange={(e) => setPasswordEmail(e.target.value)} icon={Mail} required />
-                  <div className="mt-5">
-                    <Button type="submit" variant="primary" loading={loading} icon={KeyRound} className="!rounded-[7px] !bg-[#111] !text-white !shadow-none hover:!bg-[#2a2a2a]">Request reset token</Button>
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#e8f1ff] text-[#1476e8]">
+                      <Mail className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <div className="security-email-value min-w-0">
+                      <label className="mb-1 block text-[13px] font-medium text-[#536982]">Registered Account Email</label>
+                      <p className="break-words text-[14px] font-semibold text-[#17191c]">{profileDisplayValue(passwordEmail)}</p>
+                    </div>
+                  </div>
+                  <div className="col-span-full mt-3 flex justify-center">
+                    <Button type="submit" variant="primary" size="sm" loading={loading} icon={KeyRound} className="relative -left-3 w-fit !rounded-[7px] !bg-[#111] !text-white !shadow-none hover:!bg-[#2a2a2a]">Request reset token</Button>
                   </div>
                 </form>
               ) : (
-                <form onSubmit={handleResetPassword} className="max-w-2xl space-y-5">
-                  <Input label="Password Reset Token" value={resetToken} onChange={(e) => setResetToken(e.target.value)} placeholder="Paste token received" required />
-                  <Input label="New Password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} icon={Lock} required />
-                  <div className="flex items-center gap-3 pt-2">
+                <form onSubmit={handleResetPassword} className="profile-information-grid grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+                  <Input className="security-field" label="Password Reset Token" value={resetToken} onChange={(e) => setResetToken(e.target.value)} placeholder="Paste token received" required />
+                  <Input className="security-field" label="New Password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} icon={Lock} required />
+                  <div className="flex items-center gap-3 sm:col-span-2">
                     <Button type="submit" variant="primary" loading={loading} className="!rounded-[7px] !bg-[#111] !text-white !shadow-none hover:!bg-[#2a2a2a]">Reset password</Button>
                     <Button type="button" variant="secondary" onClick={() => setResetStep(1)} className="!rounded-[7px] !border !border-[#dedede] !bg-white !text-[#222] !shadow-none hover:!bg-[#f7f7f7]">Back</Button>
                   </div>
