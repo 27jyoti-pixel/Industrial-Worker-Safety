@@ -96,9 +96,8 @@ const CompensationClaims = () => {
         setAccidentsList(accRes.accidents || accRes.data || []);
 
         if (user?.role === 'Worker') {
-          const wrkRes = await workerService.getMyWorkerProfile();
-          const workerProfile = wrkRes.data || wrkRes.worker || wrkRes;
-          setWorkersList(workerProfile?._id ? [workerProfile] : []);
+          // Worker ownership is resolved from the authenticated session by the API.
+          setWorkersList([]);
         } else {
           const wrkRes = await workerService.getAllWorkers({ limit: 100 });
           setWorkersList(wrkRes.workers || wrkRes.data || []);
@@ -617,6 +616,178 @@ const CompensationClaims = () => {
     border-radius: 8px !important;
     font-size: 13px;
     font-weight: 500;
+  }
+  .claim-evidence-dialog,
+  .claim-edit-dialog,
+  .claim-delete-dialog {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    max-height: calc(100dvh - 48px) !important;
+    border: 1px solid #e1e4e8 !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+  }
+  .claim-evidence-dialog,
+  .claim-delete-dialog { min-height: 0 !important; }
+  .claim-edit-dialog { min-height: 70vh !important; }
+  .fixed.inset-0.z-50:has(.claim-evidence-dialog) > .fixed.top-0.left-0.w-screen.h-screen,
+  .fixed.inset-0.z-50:has(.claim-edit-dialog) > .fixed.top-0.left-0.w-screen.h-screen,
+  .fixed.inset-0.z-50:has(.claim-delete-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+    background: rgba(17, 17, 17, .38) !important;
+    backdrop-filter: none !important;
+  }
+  .claim-evidence-dialog > div:first-child,
+  .claim-edit-dialog > div:first-child,
+  .claim-delete-dialog > div:first-child {
+    flex: 0 0 auto;
+    border-bottom: 1px solid #e1e4e8 !important;
+    background: #fff !important;
+  }
+  .claim-evidence-dialog > div:first-child h3,
+  .claim-edit-dialog > div:first-child h3,
+  .claim-delete-dialog > div:first-child h3 { color: #111 !important; font-weight: 600 !important; }
+  .claim-evidence-dialog > div:first-child button,
+  .claim-edit-dialog > div:first-child button,
+  .claim-delete-dialog > div:first-child button { color: #62666b !important; }
+  .claim-evidence-dialog > div:first-child button:hover,
+  .claim-edit-dialog > div:first-child button:hover,
+  .claim-delete-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111 !important; }
+  .claim-evidence-dialog > div:nth-child(2) {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: min(65vh, calc(100dvh - 150px)) !important;
+    overflow-y: auto !important;
+    background: #fff !important;
+    padding: 18px 24px !important;
+  }
+  .claim-evidence-dialog form { display: flex; flex-direction: column; gap: 12px; }
+  .claim-evidence-dialog form > :not([hidden]) ~ :not([hidden]) { margin-top: 0 !important; }
+  .claim-evidence-dialog form > div:last-child { display: flex; justify-content: flex-end; gap: 10px; padding-top: 2px; }
+  .claim-evidence-dialog form button,
+  .claim-edit-dialog > div:last-child button,
+  .claim-delete-dialog > div:last-child button {
+    min-height: 40px;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    transform: none !important;
+    font-weight: 500 !important;
+  }
+  .claim-evidence-dialog form button:focus,
+  .claim-edit-dialog button:focus,
+  .claim-delete-dialog button:focus { outline: none !important; box-shadow: none !important; }
+  .claim-evidence-dialog label { color: #292929 !important; font-size: 13px !important; font-weight: 500 !important; text-transform: uppercase !important; }
+  .claim-evidence-dialog .border-dashed {
+    border: 1px dashed #cfd3d8 !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    padding: 22px !important;
+  }
+  .claim-evidence-dialog .border-dashed:hover { border-color: #e87532 !important; background: #fff !important; }
+  .claim-evidence-dialog .border-dashed svg { color: #e87532 !important; }
+  .claim-evidence-dialog .border-dashed .text-sand-700 { color: #111 !important; }
+  .claim-evidence-dialog .border-dashed .text-sand-500 { color: #6b7280 !important; }
+  .claim-evidence-dialog .bg-sand-50 { border-color: #e1e4e8 !important; background: #f8f9fa !important; }
+  .claim-evidence-dialog .text-sand-700 { color: #292929 !important; }
+  .claim-evidence-dialog .text-sand-400 { color: #6b7280 !important; }
+  .claim-edit-dialog > div:nth-child(2) {
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+  .claim-edit-dialog > div:last-child {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    gap: 10px !important;
+    border-top: 1px solid #e1e4e8 !important;
+    background: #fff !important;
+    padding: 12px 24px 16px !important;
+  }
+  .claim-edit-dialog form { display: flex; flex-direction: column; gap: 16px; }
+  .claim-edit-dialog form > :not([hidden]) ~ :not([hidden]) { margin-top: 0 !important; }
+  .claim-edit-dialog label {
+    margin-bottom: 6px !important;
+    color: #292929 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+  }
+  .claim-edit-dialog label span { color: #E87532 !important; }
+  .claim-edit-dialog input,
+  .claim-edit-dialog select,
+  .claim-edit-dialog textarea {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid #dedede !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    color: #111 !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+  }
+  .claim-edit-dialog input,
+  .claim-edit-dialog select { height: 46px !important; min-height: 46px !important; padding: 0 14px !important; }
+  .claim-edit-dialog textarea {
+    height: 120px !important;
+    min-height: 120px !important;
+    padding: 11px 14px !important;
+    line-height: 1.5;
+    resize: none !important;
+  }
+  .claim-edit-dialog input::placeholder,
+  .claim-edit-dialog textarea::placeholder { color: #858b92 !important; opacity: 1; }
+  .claim-edit-dialog input:focus,
+  .claim-edit-dialog select:focus,
+  .claim-edit-dialog textarea:focus {
+    border-color: #d1a184 !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  .claim-edit-dialog > div:last-child button:first-child,
+  .claim-delete-dialog > div:last-child button:first-child {
+    border: 1px solid #d1d5db !important;
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .claim-edit-dialog > div:last-child button:first-child:hover,
+  .claim-delete-dialog > div:last-child button:first-child:hover { background: #f7f7f7 !important; }
+  .claim-edit-dialog > div:last-child button:last-child,
+  .claim-delete-dialog > div:last-child button:last-child {
+    border: 1px solid #111 !important;
+    background: #111 !important;
+    color: #fff !important;
+  }
+  .claim-edit-dialog > div:last-child button:last-child:hover,
+  .claim-delete-dialog > div:last-child button:last-child:hover { background: #111 !important; color: #fff !important; }
+  .claim-edit-dialog button:focus-visible,
+  .claim-delete-dialog button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(232, 117, 50, .14) !important; }
+  .claim-delete-dialog > div:nth-child(2) {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: calc(100dvh - 180px) !important;
+    overflow-y: auto !important;
+    padding: 18px 24px !important;
+    background: #fff !important;
+  }
+  .claim-delete-dialog > div:nth-child(2) > div:first-child { align-items: center; gap: 12px; }
+  .claim-delete-dialog > div:nth-child(2) > div:first-child > div:first-child {
+    border: 1px solid #fecaca;
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+    padding: 10px !important;
+  }
+  .claim-delete-dialog > div:nth-child(2) > div:first-child > div:first-child svg { width: 20px; height: 20px; }
+  .claim-delete-dialog > div:nth-child(2) p { color: #4b5563 !important; white-space: pre-line; }
+  .claim-delete-dialog > div:last-child {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    gap: 8px !important;
+    border-top: 1px solid #e1e4e8 !important;
+    padding: 12px 20px !important;
+    background: #fff !important;
   }
   .claim-review-dialog,
   .claim-detail-dialog {
@@ -1206,9 +1377,31 @@ const CompensationClaims = () => {
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         title="Update Compensation Claim"
+        dialogClassName="claim-edit-dialog"
+        footer={(
+          <>
+            <Button
+              variant="secondary"
+              className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
+              onClick={() => setEditModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="claim-edit-form"
+              variant="primary"
+              loading={submitting}
+              className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
+            >
+              Update Claim
+            </Button>
+          </>
+        )}
       >
 
         <form
+          id="claim-edit-form"
           onSubmit={handleUpdateClaim}
           className="space-y-4"
         >
@@ -1251,29 +1444,6 @@ const CompensationClaims = () => {
             required
           />
 
-
-          <div className="flex justify-end gap-3 pt-2">
-
-            <Button
-              variant="secondary"
-              className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
-              onClick={() =>
-                setEditModalOpen(false)
-              }
-            >
-              Cancel
-            </Button>
-
-            <Button
-              type="submit"
-              variant="primary"
-              loading={submitting}
-              className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
-            >
-              Update Claim
-            </Button>
-
-          </div>
 
         </form>
 
@@ -1454,6 +1624,8 @@ const CompensationClaims = () => {
         isOpen={docModalOpen}
         onClose={() => setDocModalOpen(false)}
         title="Upload Supporting Medical & Claim Evidence"
+        maxWidth="max-w-md"
+        dialogClassName="claim-evidence-dialog"
       >
 
         <form
@@ -1512,6 +1684,7 @@ const CompensationClaims = () => {
         title="Delete Compensation Claim"
         message="Are you sure you want to permanently delete this compensation claim?"
         loading={submitting}
+        dialogClassName="claim-delete-dialog"
       />
 
       </div>

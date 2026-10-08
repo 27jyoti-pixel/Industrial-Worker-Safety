@@ -20,12 +20,12 @@ class ClaimService {
     if (!normalizedClaimData.worker) delete normalizedClaimData.worker;
 
     if (user?.role === ROLES.WORKER) {
+      // Never trust a Worker ID supplied by the client.
+      delete normalizedClaimData.worker;
       const worker = await Worker.findOne({ user: userId }).select('_id');
-      if (!worker) {
-        throw new ApiError(404, 'Worker profile not found for authenticated user');
-      }
-
-      normalizedClaimData.worker = worker._id;
+      // The worker profile link is optional in the claim schema. Ownership is
+      // always recorded in submittedBy, even when no profile document exists.
+      if (worker) normalizedClaimData.worker = worker._id;
 
       if (normalizedClaimData.accidentReport) {
         const accident = await Accident.findOne({
