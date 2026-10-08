@@ -4,13 +4,32 @@ const ApiError = require('../utils/ApiError');
 const cloudinaryService = require('./cloudinaryService');
 const { ROLES } = require('../constants');
 
+const exactFactoryName = (value) => {
+  const escapedValue = String(value).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`^${escapedValue}$`, 'i');
+};
+
 class WorkerService {
   /**
    * Create a new Worker profile
    * @param {Object} workerData
-   * @param {string} createdByUserId
+   * @param {Object} currentUser
    */
-  async createWorker(workerData, createdByUserId) {
+  async createWorker(workerData, currentUser) {
+    const requestedFactoryName = String(workerData.factoryName || '').trim();
+    let factoryName = requestedFactoryName;
+
+    // Keep Factory Admin creates in the same case-insensitive factory scope
+    // enforced by worker list and detail reads.
+    if (currentUser?.role === ROLES.FACTORY_ADMIN) {
+      const assignedFactoryName = String(currentUser.factoryName || '').trim();
+      if (!assignedFactoryName || requestedFactoryName.toLowerCase() !== assignedFactoryName.toLowerCase()) {
+        throw new ApiError(403, 'Workers can only be created within your assigned factory');
+      }
+      factoryName = assignedFactoryName;
+    }
+
+    const scopedWorkerData = { ...workerData, factoryName };
     const existingEmployeeId = await Worker.findOne({ employeeId: workerData.employeeId });
     if (existingEmployeeId) {
       throw new ApiError(409, `Worker with Employee ID '${workerData.employeeId}' already exists`);
@@ -23,20 +42,19 @@ class WorkerService {
 
     
     const newUser = await User.create({
-      name: workerData.name,
-      email: workerData.email,
+      name: scopedWorkerData.name,
+      email: scopedWorkerData.email,
       password: 'Worker@123',
       role: 'Worker',
-      phone: workerData.phone,
-      factoryName: workerData.factoryName,
-      employeeId: workerData.employeeId
+      phone: scopedWorkerData.phone,
+      factoryName: scopedWorkerData.factoryName,
+      employeeId: scopedWorkerData.employeeId
   });
 
-    console.log("WORKER DATA BEFORE CREATE:", workerData);
     const worker = await Worker.create({
-      ...workerData,
+      ...scopedWorkerData,
       user: newUser._id,
-      createdBy: createdByUserId
+      createdBy: currentUser._id
     });
 
     return worker;
@@ -46,10 +64,22 @@ class WorkerService {
    * Get all workers with filtering, search, and pagination
    * @param {Object} queryParams
    */
-  async getAllWorkers(queryParams) {
+  async getAllWorkers(queryParams, currentUser) {
     const { search, factoryName, bloodGroup, page = 1, limit = 10 } = queryParams;
 
     const filter = {};
+
+    // Keep Factory Admin list results within the same factory scope enforced
+    // by getWorkerById, so every listed worker can be opened in the details view.
+    if (currentUser?.role === ROLES.FACTORY_ADMIN) {
+      if (!currentUser.factoryName) {
+        return {
+          workers: [],
+          pagination: { total: 0, page: parseInt(page, 10), limit: parseInt(limit, 10), totalPages: 0 }
+        };
+      }
+      filter.factoryName = exactFactoryName(currentUser.factoryName);
+    }
 
     if (search) {
       filter.$or = [
@@ -60,7 +90,16 @@ class WorkerService {
     }
 
     if (factoryName) {
-      filter.factoryName = { $regex: factoryName, $options: 'i' };
+      const factorySearch = { factoryName: { $regex: factoryName, $options: 'i' } };
+      if (currentUser?.role === ROLES.FACTORY_ADMIN) {
+        filter.$and = [
+          { factoryName: filter.factoryName },
+          factorySearch
+        ];
+        delete filter.factoryName;
+      } else {
+        filter.factoryName = factorySearch.factoryName;
+      }
     }
 
     if (bloodGroup) {
@@ -104,7 +143,7 @@ class WorkerService {
       if (!currentUser.factoryName) {
         throw new ApiError(404, 'Worker profile not found');
       }
-      workerFilter.factoryName = currentUser.factoryName;
+      workerFilter.factoryName = exactFactoryName(currentUser.factoryName);
     }
 
     const worker = await Worker.findOne(workerFilter)

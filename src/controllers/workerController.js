@@ -5,7 +5,7 @@ const asyncHandler = require('../utils/asyncHandler');
  * Create Worker Controller
  */
 const createWorker = asyncHandler(async (req, res) => {
-  const worker = await workerService.createWorker(req.body, req.user._id);
+  const worker = await workerService.createWorker(req.body, req.user);
   return res.status(201).json({
     success: true,
     message: 'Worker profile created successfully',
@@ -20,7 +20,7 @@ const createWorker = asyncHandler(async (req, res) => {
 
 const getAllWorkers = asyncHandler(async (req, res) => {
 
-  const result = await workerService.getAllWorkers(req.query);
+  const result = await workerService.getAllWorkers(req.query, req.user);
 
   return res.status(200).json({
     success: true,

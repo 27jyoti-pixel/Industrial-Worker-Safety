@@ -6,6 +6,7 @@ import Input from '../components/common/Input';
 import { Shield, ShieldCheck, User, Mail, Lock, Phone, Building, BadgeCheck, HardHat, Building2, Cpu, ArrowRight, ArrowLeft, Check, ChevronDown, CalendarDays, MapPin, Droplet, Users } from 'lucide-react';
 import ProfileAvatar from '../components/profile/ProfileAvatar';
 import { AVATAR_GROUPS, PROFILE_AVATARS } from '../components/profile/profileAvatarOptions';
+import { validateRegistration } from '../utils/registrationValidation';
 
 const ROLE_OPTIONS = [
   { value: 'Worker', role: 'Industrial Worker', badge: 'WORKER PORTAL', icon: HardHat, avatarId: 'field-worker-male', points: ['Report incidents', 'Raise concerns', 'Track compensation'] },
@@ -64,17 +65,25 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (currentStep < steps.length - 1) {
+      if (currentStep === 2) {
+        const validationMessage = validateRegistration(formData);
+        if (validationMessage) {
+          showError(validationMessage);
+          return;
+        }
+      }
       setCurrentStep((step) => step + 1);
       setAvatarBrowserOpen(false);
       return;
     }
-    if (!formData.name || !formData.email || !formData.password) {
-      showError('Please fill out all required fields.');
+    const validationMessage = validateRegistration(formData);
+    if (validationMessage) {
+      showError(validationMessage);
       return;
     }
     setLoading(true);
     try {
-      await register(formData);
+      await register({ ...formData, name: formData.name.trim(), email: formData.email.trim() });
       showSuccess('Registration successful! Welcome to the platform.');
       navigate('/dashboard');
     } catch (err) {

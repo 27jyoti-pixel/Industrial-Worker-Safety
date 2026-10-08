@@ -7,10 +7,10 @@ import Input from '../components/common/Input';
 import loginHero from '../assets/login-industrial-background.png';
 
 const ROLE_PRESETS = [
-  { id: 'worker', role: 'Industrial Worker', email: 'worker@industrial.com', badge: 'Worker Portal', capabilities: 'Report incidents, track compensation, access safety services', icon: HardHat },
-  { id: 'admin', role: 'Factory Administrator', email: 'admin@factory.com', badge: 'Plant Operations', capabilities: 'Manage workers, verify incidents, monitor plant safety', icon: Building2 },
-  { id: 'officer', role: 'Government Safety Officer', email: 'officer@gov.in', badge: 'Govt Audit Portal', capabilities: 'Audit compliance, review incidents, approve claims', icon: Shield },
-  { id: 'superadmin', role: 'Super Administrator', email: 'superadmin@system.com', badge: 'System Governance', capabilities: 'Manage platform, control access, view analytics', icon: Cpu }
+  { id: 'worker', accountRole: 'Worker', role: 'Industrial Worker', email: 'worker@industrial.com', badge: 'Worker Portal', capabilities: 'Report incidents, track compensation, access safety services', icon: HardHat },
+  { id: 'admin', accountRole: 'Factory Admin', role: 'Factory Administrator', email: 'admin@factory.com', badge: 'Plant Operations', capabilities: 'Manage workers, verify incidents, monitor plant safety', icon: Building2 },
+  { id: 'officer', accountRole: 'Government Officer', role: 'Government Safety Officer', email: 'officer@gov.in', badge: 'Govt Audit Portal', capabilities: 'Audit compliance, review incidents, approve claims', icon: Shield },
+  { id: 'superadmin', accountRole: 'Super Admin', role: 'Super Administrator', email: 'superadmin@system.com', badge: 'System Governance', capabilities: 'Manage platform, control access, view analytics', icon: Cpu }
 ];
 
 const Login = () => {
@@ -43,7 +43,7 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      const user = await login(email, password);
+      const user = await login(email, password, selectedRole.accountRole);
       showSuccess(`Authenticated successfully: ${user.name} (${user.role})`);
       navigate('/dashboard');
     } catch (err) {

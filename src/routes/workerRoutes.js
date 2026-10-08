@@ -33,16 +33,24 @@ router.post(
 /**
  * @route   GET /api/v1/workers
  * @desc    Get list of all worker profiles (with search & pagination)
- * @access  Private (Worker, Factory Admin, Government Officer, Super Admin)
+ * @access  Private (Factory Admin, Government Officer, Super Admin)
  */
-router.get('/', getAllWorkers);
+router.get(
+  '/',
+  authorize(ROLES.FACTORY_ADMIN, ROLES.GOVERNMENT_OFFICER, ROLES.SUPER_ADMIN),
+  getAllWorkers
+);
 
 /**
  * @route   GET /api/v1/workers/:id
  * @desc    Get single worker profile details
- * @access  Private (Worker, Factory Admin, Government Officer, Super Admin)
+ * @access  Private (Factory Admin, Government Officer, Super Admin)
  */
-router.get('/:id', getWorkerById);
+router.get(
+  '/:id',
+  authorize(ROLES.FACTORY_ADMIN, ROLES.GOVERNMENT_OFFICER, ROLES.SUPER_ADMIN),
+  getWorkerById
+);
 
 /**
  * @route   PUT /api/v1/workers/:id

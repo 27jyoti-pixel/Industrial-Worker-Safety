@@ -6,7 +6,13 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('industrial_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    if (!savedUser) return null;
+    try {
+      return JSON.parse(savedUser);
+    } catch {
+      localStorage.removeItem('industrial_user');
+      return null;
+    }
   });
 
   const [token, setToken] = useState(() => localStorage.getItem('industrial_token') || null);
@@ -14,53 +20,64 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize and verify user session
   useEffect(() => {
+    let active = true;
     const initAuth = async () => {
-      if (token) {
-        try {
-          const data = await authService.getProfile();
-          const userData = data?.user || data?.data?.user || data?.data || data;
-          if (userData && userData._id) {
-            setUser(userData);
-            localStorage.setItem('industrial_user', JSON.stringify(userData));
-          }
-        } catch (err) {
-          console.error('Failed to restore session:', err);
-          logout();
+      if (!token) {
+        localStorage.removeItem('industrial_user');
+        if (active) {
+          setUser(null);
+          setLoading(false);
         }
+        return;
       }
-      setLoading(false);
+
+      setLoading(true);
+      try {
+        const data = await authService.getProfile();
+        const userData = data?.user || data?.data?.user || data?.data || data;
+        if (!userData?._id) throw new Error('Authenticated profile could not be loaded.');
+        if (active) {
+          setUser(userData);
+          localStorage.setItem('industrial_user', JSON.stringify(userData));
+        }
+      } catch (err) {
+        if (active) {
+          console.error('Failed to restore session:', err);
+          localStorage.removeItem('industrial_token');
+          localStorage.removeItem('industrial_user');
+          setToken(null);
+          setUser(null);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
     };
 
     initAuth();
+    return () => { active = false; };
   }, [token]);
 
-  // const login = async (email, password) => {
-  //   const data = await authService.login({ email, password });
-  //   const authToken = data.token;
-  //   const userData = data.user || data.data;
+  const login = async (email, password, expectedRole) => {
+    const response = await authService.login({ email: email.trim(), password, expectedRole });
+    const payload = response?.data || response;
+    const authToken = payload.token || payload.data?.token;
+    const userData = payload.user || payload.data?.user;
 
-  //   localStorage.setItem('industrial_token', authToken);
-  //   localStorage.setItem('industrial_user', JSON.stringify(userData));
+    if (!authToken || !userData?._id) {
+      throw new Error('Authentication response was incomplete. Please try again.');
+    }
+    if (userData.role !== expectedRole) {
+      throw new Error('The account role does not match the selected workspace.');
+    }
 
-  //   setToken(authToken);
-  //   setUser(userData);
-  //   return userData;
-  // };
+    localStorage.setItem('industrial_token', authToken);
+    localStorage.setItem('industrial_user', JSON.stringify(userData));
 
-  const login = async (email, password) => {
-  const response = await authService.login({ email, password });
-  const payload = response?.data || response;
-  const authToken = payload.token || payload.data?.token;
-  const userData = payload.user || payload.data?.user;
+    setToken(authToken);
+    setUser(userData);
 
-  localStorage.setItem('industrial_token', authToken);
-  localStorage.setItem('industrial_user', JSON.stringify(userData));
-
-  setToken(authToken);
-  setUser(userData);
-
-  return userData;
-};
+    return userData;
+  };
 
   const register = async (userData) => {
     const data = await authService.register(userData);
@@ -68,12 +85,14 @@ export const AuthProvider = ({ children }) => {
     const authToken = payload.token || payload.data?.token;
     const userResult = payload.user || payload.data?.user;
 
-    if (authToken) {
-      localStorage.setItem('industrial_token', authToken);
-      localStorage.setItem('industrial_user', JSON.stringify(userResult));
-      setToken(authToken);
-      setUser(userResult);
+    if (!authToken || !userResult?._id || userResult.role !== userData.role) {
+      throw new Error('Registration response did not contain the created account session.');
     }
+
+    localStorage.setItem('industrial_token', authToken);
+    localStorage.setItem('industrial_user', JSON.stringify(userResult));
+    setToken(authToken);
+    setUser(userResult);
     return data;
   };
 

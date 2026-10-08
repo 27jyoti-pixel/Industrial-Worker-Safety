@@ -7,6 +7,9 @@ import {
   Trash2,
   Eye,
   User,
+  Inbox,
+  Briefcase,
+  Phone,
 } from 'lucide-react';
 import Button from '../components/common/Button';
 import Table from '../components/common/Table';
@@ -17,15 +20,14 @@ import SearchFilterSelect from '../components/common/SearchFilterSelect';
 import DataTablePagination from '../components/common/DataTablePagination';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
-import ProfileAvatar from '../components/profile/ProfileAvatar';
 import workerHeroBackground from '../assets/worker-page-hero.png';
 
 const avatarThemes = [
-  'bg-[#fff0e5] text-[#e87532]',
-  'bg-[#e8f1ff] text-[#3574c8]',
-  'bg-[#e6f5ee] text-[#29966b]',
   'bg-[#f0eaff] text-[#7956c7]',
-  'bg-[#ffebed] text-[#d84b56]'
+  'bg-[#fff0e5] text-[#e87532]',
+  'bg-[#ffebed] text-[#d84b56]',
+  'bg-[#fff0e5] text-[#e87532]',
+  'bg-[#f0eaff] text-[#7956c7]'
 ];
 const profileDisplayValue = (value) => {
   if (value === null || value === undefined || (typeof value === 'string' && !value.trim())) {
@@ -53,6 +55,7 @@ const Workers = () => {
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
   const [viewLoadError, setViewLoadError] = useState('');
+  const [activeWorkerSection, setActiveWorkerSection] = useState('Personal Information');
   const workerFetchRequestId = useRef(0);
   const workerViewRequestId = useRef(0);
   const selectedWorkerUser = selectedWorker?.user && typeof selectedWorker.user === 'object'
@@ -70,27 +73,20 @@ const Workers = () => {
   const workerProfileSections = selectedWorker ? [
     {
       title: 'Personal Information',
+      icon: User,
       fields: [
-        { label: 'Full Name', value: selectedWorkerUser.name || selectedWorker.name },
         { label: 'Email Address', value: selectedWorkerUser.email || selectedWorker.email },
-        { label: 'Phone Number', value: selectedWorkerUser.phone || selectedWorker.phone },
         { label: 'Alternate Phone Number', value: selectedWorkerUser.alternatePhone || selectedWorker.alternatePhone },
-        { label: 'Blood Group', value: selectedWorkerUser.bloodGroup || selectedWorker.bloodGroup },
+        { label: 'Phone Number', value: selectedWorkerUser.phone || selectedWorker.phone },
         { label: 'Date of Birth', value: profileDisplayDate(selectedWorkerUser.dateOfBirth || selectedWorker.dateOfBirth) },
-        { label: 'Residential Address', value: residentialAddress },
-        { label: 'City / State', value: cityState }
+        { label: 'Blood Group', value: selectedWorkerUser.bloodGroup || selectedWorker.bloodGroup },
+        { label: 'City / State', value: cityState },
+        { label: 'Residential Address', value: residentialAddress }
       ]
     },
     {
-      title: 'Emergency Contact',
-      fields: [
-        { label: 'Emergency Contact Name', value: selectedWorkerUser.emergencyContactName || selectedWorker.emergencyContact?.name || selectedWorker.emergencyContactName },
-        { label: 'Emergency Contact Relationship', value: selectedWorkerUser.emergencyContactRelationship || selectedWorker.emergencyContact?.relation || selectedWorker.emergencyContactRelationship },
-        { label: 'Emergency Contact Number', value: selectedWorkerUser.emergencyContactNumber || selectedWorker.emergencyContact?.phone || selectedWorker.emergencyContactNumber }
-      ]
-    },
-    {
-      title: 'Work Information',
+      title: 'Work Details',
+      icon: Briefcase,
       fields: [
         { label: 'Employee ID', value: selectedWorkerUser.employeeId || selectedWorker.employeeId },
         { label: 'Role', value: selectedWorkerUser.role || selectedWorker.role },
@@ -102,15 +98,19 @@ const Workers = () => {
         { label: 'Work Location', value: selectedWorkerUser.workLocation || selectedWorker.workLocation },
         { label: 'Supervisor / Reporting Manager', value: selectedWorkerUser.supervisor || selectedWorker.supervisor },
         { label: 'Employment Type', value: selectedWorkerUser.employmentType || selectedWorker.employmentType },
-        { label: 'Employee Status', value: selectedWorkerUser.employeeStatus || selectedWorker.employeeStatus }
+        { label: 'Employee Status', value: selectedWorkerUser.employeeStatus || selectedWorker.employeeStatus },
+        { label: 'Insurance Provider', value: selectedWorker.insuranceDetails?.provider },
+        { label: 'Insurance Policy Number', value: selectedWorker.insuranceDetails?.policyNumber },
+        { label: 'Insurance Valid Through', value: profileDisplayDate(selectedWorker.insuranceDetails?.validTill) }
       ]
     },
     {
-      title: 'Insurance Details',
+      title: 'Emergency Contact',
+      icon: Phone,
       fields: [
-        { label: 'Provider', value: selectedWorker.insuranceDetails?.provider },
-        { label: 'Policy Number', value: selectedWorker.insuranceDetails?.policyNumber },
-        { label: 'Valid Through', value: profileDisplayDate(selectedWorker.insuranceDetails?.validTill) }
+        { label: 'Emergency Contact Name', value: selectedWorkerUser.emergencyContactName || selectedWorker.emergencyContact?.name || selectedWorker.emergencyContactName },
+        { label: 'Emergency Contact Relationship', value: selectedWorkerUser.emergencyContactRelationship || selectedWorker.emergencyContact?.relation || selectedWorker.emergencyContactRelationship },
+        { label: 'Emergency Contact Number', value: selectedWorkerUser.emergencyContactNumber || selectedWorker.emergencyContact?.phone || selectedWorker.emergencyContactNumber }
       ]
     }
   ] : [];
@@ -169,6 +169,8 @@ const Workers = () => {
       }
     } catch (err) {
       if (requestId === workerFetchRequestId.current) {
+        setWorkers([]);
+        setTotalItems(0);
         showError(err.message || 'Failed to fetch worker profiles');
       }
     } finally {
@@ -224,6 +226,7 @@ const Workers = () => {
     const workerId = worker?._id || worker?.id;
     const requestId = ++workerViewRequestId.current;
     setSelectedWorker(worker);
+    setActiveWorkerSection('Personal Information');
     setViewLoading(true);
     setViewLoadError('');
     setViewModalOpen(true);
@@ -261,6 +264,7 @@ const Workers = () => {
     workerViewRequestId.current += 1;
     setViewLoading(false);
     setViewModalOpen(false);
+    setActiveWorkerSection('Personal Information');
   };
 
   const openDeleteDialog = (worker) => {
@@ -275,7 +279,7 @@ const Workers = () => {
       await workerService.createWorker(formData);
       showSuccess('Worker profile created successfully!');
       setCreateModalOpen(false);
-      fetchWorkers();
+      await fetchWorkers();
     } catch (err) {
       showError(err.message || 'Failed to create worker profile');
     } finally {
@@ -320,7 +324,7 @@ const Workers = () => {
       className: 'text-left !text-[14px]',
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-base font-semibold ${avatarThemes[(row.name?.charCodeAt(0) || 0) % avatarThemes.length]}`}>
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-base font-semibold ${avatarThemes[(row.name?.charCodeAt(0) || 0) % avatarThemes.length]}`}>
             {row.profileImage?.url ? (
               <img src={row.profileImage.url} alt={row.name} className="w-full h-full object-cover" />
             ) : (
@@ -386,19 +390,61 @@ const Workers = () => {
     }
   ];
 
+  const renderWorkerProfileSection = (section) => {
+    return (
+      <section key={section.title} className="worker-detail-panel">
+        <dl className={`worker-detail-fields grid ${section.title === 'Emergency Contact' ? 'worker-detail-fields-emergency' : 'worker-detail-fields-two-column'}`}>
+          {section.fields.map(({ label, value }) => (
+            <div key={label} className="min-w-0">
+              <dt>{label}</dt>
+              <dd>{profileDisplayValue(value)}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    );
+  };
+  const activeWorkerProfileSection = workerProfileSections.find(
+    (section) => section.title === activeWorkerSection
+  ) || workerProfileSections[0];
+
   return (
     <>
       
       <style>{`
-        .worker-details-dialog { display: flex; flex-direction: column; min-height: min(70vh, calc(100vh - 2rem)); max-height: calc(100vh - 2rem); }
-        .worker-details-dialog > div:first-child { flex: 0 0 auto; background: #fff !important; border-bottom-color: #e5e5e5 !important; }
-        .worker-details-dialog > div:first-child h3 { color: #111 !important; }
-        .worker-details-dialog > div:first-child button { color: #62666b !important; }
-        .worker-details-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111 !important; }
-        .worker-details-dialog > div:nth-child(2) { flex: 1 1 auto; min-height: 0; max-height: none !important; overflow-y: auto; background: #fff; }
-        .worker-details-dialog > div:last-child { flex: 0 0 auto; border-top-color: #e5e5e5 !important; background: #fff !important; }
-        .fixed.inset-0.z-50:has(.worker-details-dialog) > .fixed,
-        .fixed.inset-0.z-50:has(.worker-create-dialog) > .fixed { background: rgba(17,17,17,.42) !important; backdrop-filter: none !important; }
+        .worker-details-dialog { display: flex !important; flex: 0 0 auto !important; flex-direction: column !important; width: 850px !important; max-width: calc(100vw - 40px) !important; height: 570px !important; min-height: 0 !important; max-height: calc(100vh - 40px) !important; border-radius: 16px !important; box-shadow: none !important; font-family: inherit !important; }
+        .worker-details-dialog * { font-family: inherit !important; }
+        .worker-details-dialog > div:first-child { flex: 0 0 auto !important; min-height: 70px; padding: 14px 28px !important; background: #fff !important; border-bottom-color: #e5e7eb !important; }
+        .worker-details-dialog > div:first-child h3 { color: #111111 !important; font-size: 24px !important; line-height: 1.25 !important; font-weight: 500 !important; }
+        .worker-details-dialog > div:first-child button { border-radius: 8px !important; color: #4b5563 !important; }
+        .worker-details-dialog > div:first-child button svg { width: 20px; height: 20px; }
+        .worker-details-dialog > div:first-child button:hover { background: #f3f4f6 !important; color: #111 !important; }
+        .worker-details-dialog > div:nth-child(2) { display: flex !important; flex: 1 1 0% !important; min-height: 0 !important; max-height: none !important; overflow: hidden !important; padding: 0 !important; background: #fff; }
+        .worker-details-dialog > div:last-child { flex: 0 0 auto !important; margin-top: auto !important; min-height: 66px; padding: 10px 28px !important; border-top-color: #e5e7eb !important; background: #fff !important; }
+        .worker-details-dialog > div:last-child button { min-width: 102px; min-height: 40px; border-radius: 8px !important; font-size: 14px !important; font-weight: 500 !important; }
+        .worker-details-dialog > div:first-child button { font-size: 14px !important; font-weight: 500 !important; }
+        .fixed.inset-0.z-50:has(.worker-details-dialog) > .fixed.top-0.left-0.w-screen.h-screen { background: rgba(17,17,17,.52) !important; backdrop-filter: none !important; }
+        .worker-details-layout { display: grid; width: 100%; height: 100%; min-height: 0; flex: 1 1 auto; grid-template-columns: 225px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+        .worker-details-sidebar { display: flex; min-width: 0; flex-direction: column; align-items: center; overflow: hidden; border-right: 1px solid #e5e7eb; background: #fafbfc; padding: 10px 12px 8px; }
+        .worker-details-identity { display: flex; width: 100%; flex-direction: column; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; text-align: center; }
+        .worker-details-avatar { display: flex; width: 68px; height: 68px; align-items: center; justify-content: center; border-radius: 9999px; background: #fee2e2; color: #e83b2e; font-size: 16px; font-weight: 400; }
+        .worker-details-identity h4 { margin: 5px 0 0; color: #111111; font-size: 18px; font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
+        .worker-details-nav { display: flex; width: 100%; flex-direction: column; gap: 3px; margin-top: 8px; }
+        .worker-detail-nav-item { display: flex; min-height: 44px; width: 100%; align-items: center; gap: 9px; border: 0; border-radius: 12px; background: transparent; padding: 8px 10px; color: #111111; font-size: 15px; font-weight: 400; text-align: left; white-space: nowrap; cursor: pointer; }
+        .worker-detail-nav-item svg { width: 20px; height: 20px; flex: 0 0 auto; color: #111827; }
+        .worker-detail-nav-item.is-active { border: 0; background: #111111; color: #ffffff; font-weight: 500; box-shadow: none; }
+        .worker-detail-nav-item.is-active svg { color: #ffffff; }
+        .worker-details-main { min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: none; padding: 30px; }
+        .worker-details-main::-webkit-scrollbar { display: none; }
+        .worker-detail-panel { border: 0; border-radius: 0; background: transparent; padding: 0; }
+        .worker-detail-fields { align-items: start; row-gap: 20px; padding: 0; }
+        .worker-detail-fields-two-column { max-width: 580px; margin: 0 auto; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 56px; }
+        .worker-detail-fields-emergency { grid-template-columns: minmax(0, 1fr); }
+        .worker-detail-fields dt { color: #475569; font-size: 13px; font-weight: 400; line-height: 1.35; }
+        .worker-detail-fields dd { margin: 5px 0 0; color: #111111; font-size: 15px; font-weight: 400; line-height: 1.4; overflow-wrap: anywhere; }
+        @media (max-width: 900px) { .worker-details-dialog > div:first-child { min-height: 70px; padding: 14px 20px !important; } .worker-details-layout { grid-template-columns: 225px minmax(0,1fr); } .worker-details-sidebar { padding: 8px 10px; } .worker-details-main { padding: 28px; } }
+        @media (max-width: 640px) { .worker-details-dialog > div:last-child { min-height: 66px; padding: 10px 12px !important; } .worker-details-dialog > div:last-child button { min-width: 102px; min-height: 40px; border-radius: 8px !important; font-size: 14px !important; font-weight: 500 !important; } .worker-details-layout { grid-template-columns: minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); } .worker-details-sidebar { gap: 10px; overflow: hidden; border-right: 0; border-bottom: 1px solid #e5e7eb; padding: 10px 12px; } .worker-details-identity { flex-direction: row; gap: 10px; border-bottom: 0; padding: 0; text-align: left; } .worker-details-avatar { width: 68px; height: 68px; flex: 0 0 68px; font-size: 16px; } .worker-details-identity h4 { margin: 0; font-size: 18px; } .worker-details-nav { flex-direction: row; gap: 6px; overflow-x: auto; margin: 0; } .worker-detail-nav-item { min-height: 42px; width: auto; flex: 0 0 auto; gap: 6px; border-radius: 10px; padding: 8px 10px; font-size: 15px; } .worker-detail-nav-item svg { width: 20px; height: 20px; } .worker-details-main { padding: 24px; } .worker-detail-fields { row-gap: 20px; column-gap: 24px; padding: 0; } }
+        .fixed.inset-0.z-50:has(.worker-create-dialog) > .fixed.top-0.left-0.w-screen.h-screen { background: rgba(17,17,17,.42) !important; backdrop-filter: none !important; }
         .worker-create-dialog > div:first-child { background: #fff !important; border-bottom-color: #e5e5e5 !important; }
         .worker-create-dialog > div:first-child h3 { color: #111 !important; }
         .worker-create-dialog > div:first-child button { color: #62666b !important; }
@@ -432,30 +478,48 @@ const Workers = () => {
         .workers-page .workers-create-cta { background-color: #111111 !important; color: #ffffff !important; box-shadow: none !important; }
         .workers-page .workers-create-cta:hover:not(:disabled) { background-color: #111111 !important; color: #ffffff !important; }
         .workers-page .workers-create-cta svg { color: #ffffff !important; }
-        .workers-filter .workers-search input { height: 48px; min-height: 48px; padding-left: 40px !important; padding-right: 36px !important; border: 1px solid #e1e4e8 !important; border-radius: 8px !important; background: #fff !important; color: #111 !important; font-size: 14px !important; box-shadow: none !important; }
+        .workers-filter .workers-search input { height: 44px; min-height: 44px; padding-left: 40px !important; padding-right: 36px !important; border: 1px solid #e1e4e8 !important; border-radius: 8px !important; background: #fff !important; color: #111 !important; font-size: 14px !important; box-shadow: none !important; }
         .workers-filter .workers-search input::placeholder { color: #747b84 !important; opacity: 1; }
         .workers-filter .workers-search input:focus { border-color: #b8b8b8 !important; box-shadow: 0 0 0 2px rgba(232,117,50,.14) !important; outline: none; }
         .workers-filter .workers-search > div { color: #6b7280 !important; }
         .workers-table { border: 1px solid #e5e5e5; border-radius: 10px; background: #fff; }
         .workers-table .industrial-card { border: 0 !important; border-radius: 0 !important; background: #fff !important; box-shadow: none !important; }
-        .app-content .workers-table thead th { height: 42px !important; padding: 11px 14px !important; background: #f3f4f5 !important; border-bottom: 1px solid #e5e5e5 !important; color: #111111 !important; font-size: 14px !important; font-weight: 500 !important; letter-spacing: .08em !important; line-height: 1.35 !important; text-transform: none !important; }
-        .workers-table tbody tr { height: auto !important; }
+        .workers-table table { width: 100% !important; table-layout: fixed !important; }
+        .workers-table th:nth-child(1), .workers-table td:nth-child(1) { width: 18% !important; }
+        .workers-table th:nth-child(2), .workers-table td:nth-child(2) { width: 16% !important; }
+        .workers-table th:nth-child(3), .workers-table td:nth-child(3) { width: 22% !important; }
+        .workers-table th:nth-child(4), .workers-table td:nth-child(4) { width: 19% !important; }
+        .workers-table th:nth-child(5), .workers-table td:nth-child(5) { width: 17% !important; }
+        .workers-table th:nth-child(6), .workers-table td:nth-child(6) { width: 8% !important; }
+        .app-content .workers-table thead th { height: 52px !important; padding: 11px 14px !important; background: #f3f4f5 !important; border-bottom: 1px solid #e5e5e5 !important; color: #111111 !important; font-size: 14px !important; font-weight: 500 !important; letter-spacing: .08em !important; line-height: 1.35 !important; text-transform: none !important; }
+        .workers-table tbody tr { height: 73px !important; }
         .workers-table tbody.divide-y > tr + tr { border-top: none !important; }
-        .workers-table tbody tr,
+        .workers-table tbody tr { border-top: none !important; border-bottom: 1px solid #eeeeee !important; box-shadow: none !important; }
+        .workers-table tbody tr:last-child { border-bottom: none !important; }
         .workers-table tbody td { border-top: none !important; border-bottom: none !important; box-shadow: none !important; }
         .workers-table tbody td { padding: 11px 14px !important; color: #111 !important; font-size: 15px !important; font-weight: 400 !important; line-height: 1.45 !important; }
+        .workers-table .workers-empty-cell { height: 230px !important; padding: 20px 24px !important; text-align: center !important; vertical-align: middle !important; }
+        .workers-table .workers-empty-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #737b84; }
+        .workers-table .workers-empty-heading { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .workers-table .workers-empty-icon { display: flex; width: 36px; height: 36px; flex: 0 0 36px; align-items: center; justify-content: center; border-radius: 9999px; background: #f3f4f4; color: #292929; }
+        .workers-table tbody td .workers-empty-title { margin: 0; color: #111 !important; font-size: 18px !important; font-weight: 600 !important; line-height: 1.4 !important; }
+        .workers-table tbody td .workers-empty-description { max-width: 440px; margin: 0; color: #737b84 !important; font-size: 15px !important; font-weight: 400 !important; line-height: 1.5 !important; }
         .workers-table tbody td > span, .workers-table tbody td p { font-size: 15px !important; font-weight: 400 !important; line-height: 1.45 !important; color: #111 !important; }
         .workers-table th:nth-child(5), .workers-table td:nth-child(5) { text-align: center !important; }
         .workers-table tbody td.workers-blood-cell { position: relative !important; display: table-cell !important; vertical-align: middle !important; text-align: center !important; padding-top: 0 !important; padding-bottom: 0 !important; }
         .workers-table tbody td.workers-blood-cell .workers-blood-value { position: absolute !important; inset: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; line-height: 1 !important; }
         .workers-table .workers-blood-header { text-align: center !important; }
-        .workers-table tbody tr { transition: background-color 160ms ease; }
-        .workers-table tbody tr:hover { transform: none !important; }
+        .workers-table tbody tr { transition: none !important; }
+        .workers-table tbody tr:hover { transform: none !important; background: #fafafa !important; }
         .workers-page .workers-action { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: 6px; padding: 0; color: #62666b; transition: color 140ms ease, background-color 140ms ease; }
         .workers-page .workers-action:hover { background: #f3f4f5; color: #111; }
         .workers-table td:last-child > div { gap: 4px !important; }
         .workers-table .data-table-pagination-control.is-current,
         .workers-table .data-table-pagination-control.is-current:hover { border-color: #111111 !important; background: #111111 !important; color: #FFFFFF !important; }
+        @media (max-width: 767px) {
+          .workers-table table { table-layout: auto !important; min-width: 760px !important; }
+          .workers-table { overflow-x: auto; }
+        }
         .worker-delete-confirm-dialog {
           display: flex !important;
           flex-direction: column !important;
@@ -549,7 +613,7 @@ const Workers = () => {
             placeholder="Search by worker name, employee ID, or factory..."
           />
           {isAdminOrOfficer && (
-            <button type="button" onClick={openCreateModal} className="workers-create-cta midc-primary-cta inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-[13px] font-medium text-white transition-colors">
+            <button type="button" onClick={openCreateModal} className="workers-create-cta midc-primary-cta inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-[14px] font-medium text-white transition-colors">
               <Plus className="h-4 w-4" /> Add New Worker
             </button>
           )}
@@ -557,16 +621,43 @@ const Workers = () => {
 
       {/* Workers Table */}
       <div className="workers-table standard-data-table-shell overflow-hidden rounded-lg">
-        <Table
-          columns={columns}
-          data={workers}
-          loading={loading}
-          className="platform-data-table"
-          emptyTitle="No Workers Found"
-          emptyDescription="No industrial workers match your current search query or criteria."
-          onEmptyAction={isAdminOrOfficer ? openCreateModal : null}
-          emptyActionText="Create Worker Profile"
-        />
+        {!loading && workers.length === 0 ? (
+          <div className="industrial-card overflow-hidden platform-data-table">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#f6f4ee] border-b border-sand-200">
+                    {columns.map((column, index) => (
+                      <th key={index} className={`px-4 py-3 text-sm font-extrabold text-sand-500 tracking-[.12em] ${column.className?.includes('text-right') ? '!text-right' : '!text-left'}`}>
+                        {column.header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="workers-empty-cell" colSpan={columns.length}>
+                      <div className="workers-empty-content">
+                        <div className="workers-empty-heading">
+                          <div className="workers-empty-icon" aria-hidden="true"><Inbox className="h-5 w-5" /></div>
+                          <h3 className="workers-empty-title">No Workers Found</h3>
+                        </div>
+                        <p className="workers-empty-description">There are no industrial workers registered matching your search.</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <Table
+            columns={columns}
+            data={workers}
+            loading={loading}
+            className="platform-data-table"
+          />
+        )}
         <DataTablePagination
           currentPage={currentPage}
           totalItems={totalItems}
@@ -661,7 +752,8 @@ const Workers = () => {
       <Modal
         isOpen={viewModalOpen}
         onClose={closeViewModal}
-        title="Worker Details Profile"
+        title="Worker Details"
+        maxWidth="max-w-[880px]"
         dialogClassName="worker-details-dialog"
         footer={(
           <Button variant="secondary" className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]" onClick={closeViewModal}>
@@ -670,45 +762,36 @@ const Workers = () => {
         )}
       >
         {viewLoading ? (
-          <p className="py-8 text-center text-sm text-[#62666b]" role="status">Loading worker profile…</p>
+          <p className="m-auto py-8 text-center text-sm text-[#62666b]" role="status">Loading worker profile…</p>
         ) : viewLoadError ? (
-          <p className="py-8 text-center text-sm text-[#62666b]" role="alert">Worker profile details could not be loaded.</p>
+          <p className="m-auto py-8 text-center text-sm text-[#62666b]" role="alert">Worker profile details could not be loaded.</p>
         ) : selectedWorker && (
-          <div className="space-y-5">
-            <div className="flex items-center gap-3 border-b border-[#e5e5e5] pb-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#f1f2f3] text-base font-semibold text-[#41464d]">
-                {selectedWorker.profileImage?.url ? (
-                  <img src={selectedWorker.profileImage.url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <ProfileAvatar
-                    avatarId={selectedWorkerUser.avatarId}
-                    role={selectedWorkerUser.role}
-                    initials={(selectedWorkerUser.name || selectedWorker.name || '?').charAt(0).toUpperCase()}
-                  />
-                )}
+          <div className="worker-details-layout">
+            <aside className="worker-details-sidebar">
+              <div className="worker-details-identity">
+                <div className="worker-details-avatar" aria-hidden="true">
+                  {(selectedWorkerUser.name || selectedWorker.name || '?').charAt(0).toUpperCase()}
+                </div>
+                <h4>{profileDisplayValue(selectedWorkerUser.name || selectedWorker.name)}</h4>
               </div>
-              <div className="min-w-0">
-                <h3 className="text-base font-semibold text-[#17191c]">{profileDisplayValue(selectedWorkerUser.name || selectedWorker.name)}</h3>
-                <p className="mt-1 text-sm text-[#62666b]">
-                  {profileDisplayValue(selectedWorkerUser.factoryName || selectedWorker.factoryName)}
-                  {' '}· Employee ID: {profileDisplayValue(selectedWorkerUser.employeeId || selectedWorker.employeeId)}
-                </p>
-              </div>
-            </div>
-
-            {workerProfileSections.map((section) => (
-              <section key={section.title} className="space-y-3">
-                <h4 className="border-b border-[#e5e5e5] pb-2 text-xs font-semibold uppercase tracking-[.08em] text-[#62666b]">{section.title}</h4>
-                <dl className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
-                  {section.fields.map(({ label, value }) => (
-                    <div key={label} className="min-w-0">
-                      <dt className="text-[13px] text-[#62666b]">{label}</dt>
-                      <dd className="mt-1 break-words text-[15px] leading-relaxed text-[#17191c]">{profileDisplayValue(value)}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </section>
-            ))}
+              <nav className="worker-details-nav" aria-label="Worker detail sections">
+                {workerProfileSections.map(({ title, icon: SectionIcon }) => (
+                  <button
+                    key={title}
+                    type="button"
+                    className={`worker-detail-nav-item${activeWorkerSection === title ? ' is-active' : ''}`}
+                    aria-current={activeWorkerSection === title ? 'page' : undefined}
+                    onClick={() => setActiveWorkerSection(title)}
+                  >
+                    <SectionIcon aria-hidden="true" />
+                    <span>{title}</span>
+                  </button>
+                ))}
+              </nav>
+            </aside>
+            <main className="worker-details-main">
+              {activeWorkerProfileSection && renderWorkerProfileSection(activeWorkerProfileSection)}
+            </main>
           </div>
         )}
       </Modal>

@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const ApiError = require('../utils/ApiError');
 const { generateToken } = require('../utils/jwtUtils');
 const { PROFILE_AVATAR_IDS } = require('../constants');
+const EMAIL_PATTERN = /^[A-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,63}$/i;
 
 const OPTIONAL_PROFILE_FIELDS = [
   'alternatePhone',
@@ -32,6 +33,12 @@ class AuthService {
    */
   async registerUser(userData) {
     const { name, email, password, role, phone, factoryName, employeeId, avatarId } = userData;
+    if (typeof name !== 'string' || !name.trim() || typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) {
+      throw new ApiError(400, 'Please provide name, email and password');
+    }
+    if (email !== email.trim() || email.length > 254 || !EMAIL_PATTERN.test(email)) {
+      throw new ApiError(400, 'Please provide a valid email address');
+    }
     const optionalProfileData = OPTIONAL_PROFILE_FIELDS.reduce((fields, field) => {
       if (Object.prototype.hasOwnProperty.call(userData, field)) {
         const value = userData[field];
@@ -45,23 +52,32 @@ class AuthService {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       throw new ApiError(409, 'User with this email already exists');
     }
 
     // Create user
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role,
-      phone,
-      factoryName,
-      employeeId,
-      avatarId: avatarId ?? null,
-      ...optionalProfileData
-    });
+    let user;
+    try {
+      user = await User.create({
+        name,
+        email: normalizedEmail,
+        password,
+        role,
+        phone,
+        factoryName,
+        employeeId,
+        avatarId: avatarId ?? null,
+        ...optionalProfileData
+      });
+    } catch (error) {
+      if (error.code === 11000) {
+        throw new ApiError(409, 'User with this email already exists');
+      }
+      throw error;
+    }
 
     // Generate token
     const token = generateToken(user._id, user.role);
@@ -82,13 +98,13 @@ class AuthService {
    * @param {string} password
    * @returns {Object} User details and JWT token
    */
-  async loginUser(email, password) {
-    if (!email || !password) {
+  async loginUser(email, password, expectedRole) {
+    if (typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) {
       throw new ApiError(400, 'Please provide email and password');
     }
 
     // Find user by email with password included
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+password');
     if (!user) {
       throw new ApiError(401, 'Invalid email or password');
     }
@@ -101,6 +117,10 @@ class AuthService {
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       throw new ApiError(401, 'Invalid email or password');
+    }
+
+    if (expectedRole && expectedRole !== user.role) {
+      throw new ApiError(403, 'The account role does not match the selected workspace');
     }
 
     // Generate token

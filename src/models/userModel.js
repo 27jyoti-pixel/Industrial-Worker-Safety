@@ -16,8 +16,9 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
+      maxlength: [254, 'Email address must be 254 characters or fewer'],
       match: [
-        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+        /^[A-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,63}$/i,
         'Please provide a valid email address'
       ]
     },
@@ -37,9 +38,9 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      trim: true
+      validate: { validator: (value) => !value || /^\d{10}$/.test(value), message: 'Phone number must contain exactly 10 digits' }
     },
-    alternatePhone: { type: String, trim: true },
+    alternatePhone: { type: String, validate: { validator: (value) => !value || /^\d{10}$/.test(value), message: 'Alternate phone number must contain exactly 10 digits' } },
     bloodGroup: { type: String, trim: true },
     dateOfBirth: { type: Date },
     residentialAddress: { type: String, trim: true },
@@ -47,7 +48,7 @@ const userSchema = new mongoose.Schema(
     state: { type: String, trim: true },
     emergencyContactName: { type: String, trim: true },
     emergencyContactRelationship: { type: String, trim: true },
-    emergencyContactNumber: { type: String, trim: true },
+    emergencyContactNumber: { type: String, validate: { validator: (value) => !value || /^\d{10}$/.test(value), message: 'Emergency contact number must contain exactly 10 digits' } },
     factoryName: {
       type: String,
       trim: true

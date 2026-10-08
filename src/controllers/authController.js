@@ -17,8 +17,8 @@ const register = asyncHandler(async (req, res) => {
  * Login User Controller
  */
 const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  const result = await authService.loginUser(email, password);
+  const { email, password, expectedRole } = req.body;
+  const result = await authService.loginUser(email, password, expectedRole);
   return res.status(200).json({
     success: true,
     message: 'User logged in successfully',
