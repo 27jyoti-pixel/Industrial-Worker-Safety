@@ -2,6 +2,7 @@ const Accident = require('../models/accidentModel');
 const Worker = require('../models/workerModel');
 const ApiError = require('../utils/ApiError');
 const cloudinaryService = require('./cloudinaryService');
+const { ROLES } = require('../constants');
 
 
 class AccidentService {
@@ -313,18 +314,23 @@ class AccidentService {
       );
     }
 
-    if (user.role === "Worker") {
+    const reporterId = report.reportedBy?._id || report.reportedBy;
+    const ownerRestrictedRoles = [
+      ROLES.WORKER,
+      ROLES.FACTORY_ADMIN,
+      ROLES.GOVERNMENT_OFFICER,
+      ROLES.SUPER_ADMIN
+    ];
 
-  if (report.reportedBy.toString() !== user._id.toString()) {
-
-    throw new ApiError(
-      403,
-      "You can only upload evidence to your own accident reports"
-    );
-
-  }
-
-}
+    if (
+      ownerRestrictedRoles.includes(user?.role) &&
+      (!user?._id || !reporterId || String(reporterId) !== String(user._id))
+    ) {
+      throw new ApiError(
+        403,
+        'You can only upload evidence to accident reports you reported'
+      );
+    }
 
     const uploadedImages = [];
 

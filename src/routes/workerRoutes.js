@@ -46,17 +46,12 @@ router.get('/:id', getWorkerById);
 
 /**
  * @route   PUT /api/v1/workers/:id
- * @desc    Update worker profile details
- * @access  Private (Factory Admin, Government Officer, Super Admin)
+ * @desc    Update the authenticated worker's own profile
+ * @access  Private (Worker)
  */
-// router.put(
-//   '/:id',
-//   authorize(ROLES.FACTORY_ADMIN, ROLES.GOVERNMENT_OFFICER, ROLES.SUPER_ADMIN),
-//   updateWorker
-// );
-
 router.put(
   '/:id',
+  authorize(ROLES.WORKER),
   updateWorker
 );
 

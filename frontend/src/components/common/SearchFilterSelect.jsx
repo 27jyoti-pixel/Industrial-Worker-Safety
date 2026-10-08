@@ -155,6 +155,7 @@ const SearchFilterSelect = ({
   disabled = false,
   formField = false,
   iconType,
+  matchSelectedOptionColor = false,
   name,
   required = false,
   placeholder
@@ -365,7 +366,13 @@ const SearchFilterSelect = ({
         }}
       >
         <span className="search-filter-selected-content">
-          {SelectedIcon && <SelectedIcon className="search-filter-selected-icon" aria-hidden="true" />}
+          {SelectedIcon && (
+            <SelectedIcon
+              className="search-filter-selected-icon"
+              style={matchSelectedOptionColor ? { color: resolveOptionIconColor(iconType, selectedLabel) } : undefined}
+              aria-hidden="true"
+            />
+          )}
           <span>{selectedLabel}</span>
         </span>
         <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} aria-hidden="true" />

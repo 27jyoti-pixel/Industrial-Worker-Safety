@@ -2,6 +2,7 @@ const Worker = require('../models/workerModel');
 const User = require('../models/userModel');
 const ApiError = require('../utils/ApiError');
 const cloudinaryService = require('./cloudinaryService');
+const { ROLES } = require('../constants');
 
 class WorkerService {
   /**
@@ -92,9 +93,34 @@ class WorkerService {
   /**
    * Get a single worker by ID
    * @param {string} workerId
+   * @param {Object} currentUser
    */
-  async getWorkerById(workerId) {
-    const worker = await Worker.findById(workerId).populate('createdBy', 'name email role');
+  async getWorkerById(workerId, currentUser) {
+    const isFactoryAdmin = currentUser?.role === ROLES.FACTORY_ADMIN;
+    const workerFilter = { _id: workerId };
+
+    // Keep Factory Admin detail access within the factory on their account.
+    if (isFactoryAdmin) {
+      if (!currentUser.factoryName) {
+        throw new ApiError(404, 'Worker profile not found');
+      }
+      workerFilter.factoryName = currentUser.factoryName;
+    }
+
+    const worker = await Worker.findOne(workerFilter)
+      .populate('createdBy', 'name email role')
+      .populate({
+        path: 'user',
+        select: [
+          'name', 'email', 'role', 'phone', 'alternatePhone', 'bloodGroup',
+          'dateOfBirth', 'residentialAddress', 'city', 'state',
+          'emergencyContactName', 'emergencyContactRelationship',
+          'emergencyContactNumber', 'factoryName', 'employeeId',
+          'department', 'designation', 'shift', 'joiningDate',
+          'workLocation', 'supervisor', 'employmentType', 'employeeStatus',
+          'avatarId'
+        ].join(' ')
+      });
     if (!worker) {
       throw new ApiError(404, 'Worker profile not found');
     }

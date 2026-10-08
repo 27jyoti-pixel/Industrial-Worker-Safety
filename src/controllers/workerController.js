@@ -34,7 +34,7 @@ const getAllWorkers = asyncHandler(async (req, res) => {
  * Get Worker by ID Controller
  */
 const getWorkerById = asyncHandler(async (req, res) => {
-  const worker = await workerService.getWorkerById(req.params.id);
+  const worker = await workerService.getWorkerById(req.params.id, req.user);
   return res.status(200).json({
     success: true,
     message: 'Worker profile fetched successfully',

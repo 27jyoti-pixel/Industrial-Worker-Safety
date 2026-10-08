@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import accidentService from '../services/accidentService';
@@ -11,6 +11,8 @@ import {
   Upload,
   CheckCircle,
   FileText,
+  AlertTriangle,
+  UserRound,
 } from 'lucide-react';
 import Button from '../components/common/Button';
 import Table from '../components/common/Table';
@@ -20,11 +22,49 @@ import SearchFilterSelect from '../components/common/SearchFilterSelect';
 import Textarea from '../components/common/Textarea';
 import StatusBadge from '../components/common/StatusBadge';
 import SearchBar from '../components/common/SearchBar';
-import Pagination from '../components/common/Pagination';
+import DataTablePagination from '../components/common/DataTablePagination';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import FileUpload from '../components/common/FileUpload';
 import accidentHeroWide from '../assets/accident-reports-hero-wide.png';
+
+const accidentTableValue = (value) => (
+  value === null || value === undefined || (typeof value === 'string' && !value.trim())
+    ? 'N/A'
+    : value
+);
+
+const accidentTableDate = (value) => {
+  if (!value) return 'N/A';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+};
+
+const accidentDetailValue = (value) => (
+  value === null || value === undefined || (typeof value === 'string' && !value.trim())
+    ? 'Not provided'
+    : value
+);
+
+const accidentDetailDate = (value, includeTime = false) => {
+  if (!value) return 'Not provided';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? 'Not provided'
+    : date.toLocaleString(undefined, includeTime ? undefined : { dateStyle: 'medium' });
+};
+
+const canUploadEvidenceForReport = (report, user) => {
+  const restrictedUploaderRoles = ['Worker', 'Factory Admin', 'Government Officer', 'Super Admin'];
+  const reporterId = typeof report?.reportedBy === 'object'
+    ? report.reportedBy?._id || report.reportedBy?.id
+    : report?.reportedBy;
+  const currentUserId = user?._id || user?.id;
+
+  return restrictedUploaderRoles.includes(user?.role)
+    && Boolean(reporterId && currentUserId)
+    && String(reporterId) === String(currentUserId);
+};
 
 const AccidentReports = () => {
   const { user, isAdminOrOfficer, isSuperAdmin, isFactoryAdmin } = useAuth();
@@ -36,8 +76,9 @@ const AccidentReports = () => {
   const [severityFilter, setSeverityFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
+  const fetchRequestId = useRef(0);
 
   // Modals state
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -72,7 +113,7 @@ const AccidentReports = () => {
 
   useEffect(() => {
     fetchReports();
-  }, [currentPage, searchQuery, severityFilter, statusFilter]);
+  }, [currentPage, searchQuery, severityFilter, statusFilter, itemsPerPage]);
 
   useEffect(() => {
     // Load workers list for dropdown assignment
@@ -88,6 +129,7 @@ const AccidentReports = () => {
   }, []);
 
   const fetchReports = async () => {
+    const requestId = ++fetchRequestId.current;
     setLoading(true);
     try {
       const response = await accidentService.getAllReports({
@@ -95,16 +137,23 @@ const AccidentReports = () => {
         severity: severityFilter,
         status: statusFilter,
         page: currentPage,
-        limit: 10
+        limit: itemsPerPage
       });
-      const dataList = response.accidents || response.data || [];
+      if (requestId !== fetchRequestId.current) return;
+      const dataList = Array.isArray(response.accidents)
+        ? response.accidents
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+      const total = Number(response.pagination?.total ?? response.total ?? dataList.length) || 0;
+      const pages = Math.ceil(total / itemsPerPage);
       setReports(dataList);
-      setTotalPages(response.pages || response.totalPages || 1);
-      setTotalItems(response.total || dataList.length);
+      setTotalItems(total);
+      if (currentPage > Math.max(1, pages)) setCurrentPage(Math.max(1, pages));
     } catch (err) {
-      showError(err.message || 'Failed to load accident reports');
+      if (requestId === fetchRequestId.current) showError(err.message || 'Failed to load accident reports');
     } finally {
-      setLoading(false);
+      if (requestId === fetchRequestId.current) setLoading(false);
     }
   };
 
@@ -175,6 +224,7 @@ const AccidentReports = () => {
   };
 
   const openImageModal = (report) => {
+    if (!canUploadEvidenceForReport(report, user)) return;
     setSelectedReport(report);
     setSelectedImages([]);
     setImageModalOpen(true);
@@ -264,6 +314,11 @@ const AccidentReports = () => {
 
   const handleUploadImages = async (e) => {
     e.preventDefault();
+    if (!selectedReport || !canUploadEvidenceForReport(selectedReport, user)) {
+      showError('You can only upload evidence to accident reports you reported.');
+      setImageModalOpen(false);
+      return;
+    }
     if (!selectedReport || !selectedImages.length) {
       showError('Please select at least one evidence image to upload.');
       return;
@@ -306,12 +361,12 @@ const AccidentReports = () => {
       render: (row) => <p className="text-sm font-semibold text-[#1E1E1E]">{row.title}</p>
     },
     {
-      header: 'Factory / Location',
-      render: (row) => <span className="text-sm text-[#333]">{row.factory || '—'}</span>
+      header: 'Factory',
+      render: (row) => <span className="text-sm text-[#333]">{accidentTableValue(row.factory)}</span>
     },
     {
       header: 'Injury Type',
-      render: (row) => <span className="text-sm text-[#333]">{row.injuryType || '—'}</span>
+      render: (row) => <span className="text-sm text-[#333]">{accidentTableValue(row.injuryType)}</span>
     },
     {
       header: 'Severity',
@@ -323,7 +378,7 @@ const AccidentReports = () => {
     },
     {
       header: 'Reported Date',
-      render: (row) => <span className="whitespace-nowrap text-sm text-[#444]">{row.date ? new Date(row.date).toLocaleDateString() : '—'}</span>
+      render: (row) => <span className="whitespace-nowrap text-sm text-[#444]">{accidentTableDate(row.date)}</span>
     },
     {
       header: 'Actions',
@@ -334,7 +389,7 @@ const AccidentReports = () => {
           <button type="button" onClick={() => openViewModal(row)} className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]" title="View Details" aria-label="View details">
             <Eye className="h-4 w-4" />
           </button>
-          {(user?.role === 'Worker' || isFactoryAdmin || isSuperAdmin) && (
+          {canUploadEvidenceForReport(row, user) && (
             <button type="button" onClick={() => openImageModal(row)} className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]" title="Upload Evidence" aria-label="Upload evidence">
               <Upload className="h-4 w-4" />
             </button>
@@ -467,6 +522,148 @@ const AccidentReports = () => {
           border-radius: 8px !important;
           font-weight: 500;
         }
+        .accident-status-dialog,
+        .accident-evidence-dialog {
+          display: flex !important;
+          flex-direction: column !important;
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: calc(100dvh - 48px) !important;
+          border-color: #e1e4e8 !important;
+          border-radius: 14px !important;
+          background: #fff !important;
+          box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+        }
+        .fixed.inset-0.z-50:has(.accident-status-dialog) > .fixed.top-0.left-0.w-screen.h-screen,
+        .fixed.inset-0.z-50:has(.accident-evidence-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .42) !important;
+          backdrop-filter: none !important;
+        }
+        .accident-status-dialog > div:first-child,
+        .accident-evidence-dialog > div:first-child {
+          flex: 0 0 auto;
+          border-bottom-color: #e1e4e8 !important;
+          background: #fff !important;
+        }
+        .accident-status-dialog > div:first-child h3,
+        .accident-evidence-dialog > div:first-child h3 { color: #111 !important; font-weight: 600 !important; }
+        .accident-status-dialog > div:first-child button,
+        .accident-evidence-dialog > div:first-child button { color: #62666b !important; }
+        .accident-status-dialog > div:first-child button:hover,
+        .accident-evidence-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111 !important; }
+        .accident-status-dialog > div:nth-child(2),
+        .accident-evidence-dialog > div:nth-child(2) {
+          flex: 0 1 auto;
+          min-height: 0;
+          max-height: min(65vh, calc(100dvh - 150px)) !important;
+          overflow-y: auto !important;
+          background: #fff !important;
+          padding: 18px 24px !important;
+        }
+        .accident-status-dialog form,
+        .accident-evidence-dialog form { display: flex; flex-direction: column; gap: 12px; }
+        .accident-status-dialog form > :not([hidden]) ~ :not([hidden]),
+        .accident-evidence-dialog form > :not([hidden]) ~ :not([hidden]) { margin-top: 0 !important; }
+        .accident-status-dialog form > div:last-child,
+        .accident-evidence-dialog form > div:last-child { display: flex; justify-content: flex-end; gap: 10px; padding-top: 2px; }
+        .accident-status-dialog form button,
+        .accident-evidence-dialog form button { min-height: 40px; border-radius: 8px !important; box-shadow: none !important; transform: none !important; }
+        .accident-status-dialog form button:focus,
+        .accident-evidence-dialog form button:focus { outline: none !important; box-shadow: none !important; }
+        .accident-evidence-dialog label { color: #292929 !important; font-size: 13px !important; font-weight: 500 !important; text-transform: none !important; letter-spacing: normal !important; }
+        .accident-evidence-dialog .border-dashed {
+          border: 1px dashed #cfd3d8 !important;
+          border-radius: 10px !important;
+          background: #fff !important;
+          padding: 22px !important;
+        }
+        .accident-evidence-dialog .border-dashed:hover { border-color: #e87532 !important; background: #fff !important; }
+        .accident-evidence-dialog .border-dashed svg { color: #e87532 !important; }
+        .accident-evidence-dialog .border-dashed .text-sand-700 { color: #111 !important; }
+        .accident-evidence-dialog .border-dashed .text-sand-500 { color: #6b7280 !important; }
+        .accident-evidence-dialog .bg-sand-50 { border-color: #e1e4e8 !important; background: #f8f9fa !important; }
+        .accident-evidence-dialog .text-sand-700 { color: #292929 !important; }
+        .accident-evidence-dialog .text-sand-400 { color: #6b7280 !important; }
+        .accident-status-menu .search-filter-option { min-height: 36px !important; padding: 7px 9px !important; }
+        .accident-status-menu .search-filter-option-content {
+          display: inline-flex !important;
+          min-width: 0;
+          align-items: center !important;
+          gap: 10px !important;
+        }
+        .accident-status-menu .search-filter-option-icon {
+          width: 16px !important;
+          height: 16px !important;
+          flex: 0 0 16px !important;
+        }
+        .accident-status-menu .search-filter-option-content > span { min-width: 0; }
+        .accident-status-dialog .dialog-search-filter-trigger[data-icon-type="status"] {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+        }
+        .accident-status-dialog .dialog-search-filter-trigger[data-icon-type="status"] .search-filter-selected-content {
+          display: inline-flex !important;
+          flex: 1 1 auto;
+          min-width: 0;
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 8px !important;
+        }
+        .accident-status-dialog .dialog-search-filter-trigger[data-icon-type="status"] .search-filter-selected-icon {
+          width: 16px !important;
+          height: 16px !important;
+          flex: 0 0 16px !important;
+        }
+        .accident-status-dialog .dialog-search-filter-trigger[data-icon-type="status"] .search-filter-selected-content > span {
+          min-width: 0;
+          line-height: 1.3;
+        }
+        .accident-status-dialog .dialog-search-filter-trigger[data-icon-type="status"] > svg:last-child {
+          flex: 0 0 16px;
+          align-self: center;
+        }
+        .accident-view-dialog {
+          display: flex !important;
+          height: auto;
+          min-height: 0 !important;
+          max-height: calc(100dvh - 32px);
+          flex-direction: column !important;
+          border-color: #e1e4e8 !important;
+          background: #fff !important;
+          box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+        }
+        .fixed.inset-0.z-50:has(.accident-view-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .32) !important;
+          backdrop-filter: none !important;
+        }
+        .accident-view-dialog > div:first-child {
+          flex: 0 0 auto;
+          border-bottom-color: #e5e5e5 !important;
+          background: #fff !important;
+        }
+        .accident-view-dialog > div:first-child h3 { color: #111 !important; font-weight: 600; }
+        .accident-view-dialog > div:first-child button { color: #62666b !important; }
+        .accident-view-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111 !important; }
+        .accident-view-dialog > div:nth-child(2) {
+          flex: 1 1 auto;
+          min-height: 0;
+          max-height: none !important;
+          overflow-y: auto !important;
+          background: #fff;
+        }
+        .accident-view-dialog > div:last-child {
+          flex: 0 0 auto;
+          border-top: 1px solid #e5e5e5 !important;
+          background: #fff !important;
+        }
+        .accidents-table .data-table-pagination-control.is-current,
+        .accidents-table .data-table-pagination-control.is-current:hover {
+          border-color: #111111 !important;
+          background: #111111 !important;
+          color: #ffffff !important;
+        }
         .accidents-hero-art {
           right: -6px;
           background-size: auto calc(100% + 2px);
@@ -523,22 +720,6 @@ const AccidentReports = () => {
           box-shadow: 0 0 0 2px rgba(232, 117, 50, .14) !important;
           outline: none;
         }
-        .accidents-table .industrial-card {
-          border: 1px solid #e5e5e5 !important;
-          border-radius: 10px !important;
-          background: #fff !important;
-          box-shadow: none !important;
-        }
-        .accidents-pagination > div {
-          border-color: #e5e5e5 !important;
-          border-radius: 10px !important;
-          box-shadow: none !important;
-        }
-        .accidents-pagination button {
-          border-color: #e5e5e5 !important;
-          border-radius: 8px !important;
-          color: #333 !important;
-        }
       `}</style>
 
       <div className="accidents-page space-y-6">
@@ -572,7 +753,7 @@ const AccidentReports = () => {
               setSearchQuery(val);
               setCurrentPage(1);
             }}
-            onClear={() => setSearchQuery('')}
+            onClear={() => { setSearchQuery(''); setCurrentPage(1); }}
             placeholder="Search by accident title, factory, or department..."
           />
 
@@ -603,12 +784,11 @@ const AccidentReports = () => {
           </button>
         </section>
 
-        {loading || reports.length > 0 ? (
-          <div className="accidents-table overflow-hidden rounded-lg">
+        <div className="accidents-table standard-data-table-shell">
+          {loading || reports.length > 0 ? (
             <Table columns={columns} data={reports} loading={loading} className="platform-data-table" />
-          </div>
-        ) : (
-          <section className="flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-[#e5e5e5] bg-white px-5 py-6 text-center" aria-live="polite">
+          ) : (
+          <section className="standard-data-table-empty flex min-h-[160px] flex-col items-center justify-center px-5 py-6 text-center" aria-live="polite">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f2f2f2] text-[#59616a]">
               <FileText className="h-5 w-5" aria-hidden="true" />
             </span>
@@ -617,14 +797,14 @@ const AccidentReports = () => {
               There are no industrial accident reports registered matching your search.
             </p>
           </section>
-        )}
-
-        <div className="accidents-pagination">
-          <Pagination
+          )}
+          <DataTablePagination
             currentPage={currentPage}
-            totalPages={totalPages}
             totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
             onPageChange={(page) => setCurrentPage(page)}
+            onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }}
+            itemLabel="accident reports"
           />
         </div>
 
@@ -730,94 +910,129 @@ const AccidentReports = () => {
         isOpen={viewModalOpen}
         onClose={() => setViewModalOpen(false)}
         title="Accident Incident Detail View"
-      >
-        {selectedReport && (
-          <div className="space-y-4">
-            <div className="flex items-start justify-between gap-3 p-4 bg-[#FFF8E8] rounded-2xl border border-[#E0E0E0]">
-              <div>
-                <h3 className="text-base font-bold text-[#1E1E1E]">{selectedReport.title}</h3>
-                <p className="text-xs text-[#6C757D] mt-1">
-                  {selectedReport.factory} &bull; Department: {selectedReport.department}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-1.5">
-                <StatusBadge status={selectedReport.severity} />
-                <StatusBadge status={selectedReport.status} />
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold text-[#6C757D] uppercase tracking-wider mb-1">Description</p>
-              <p className="text-sm text-[#111] bg-white p-3 rounded-xl border border-[#E0E0E0] leading-relaxed">
-                {selectedReport.description}
-              </p>
-            </div>
-
-           {selectedReport.images && selectedReport.images.length > 0 && (
-  <div>
-    <p className="text-xs font-semibold text-[#6C757D] uppercase tracking-wider mb-2">
-      Evidence Photo Attachments
-    </p>
-
-    <div className="space-y-3">
-      {selectedReport.images.map((img, idx) => (
-        <div
-          key={idx}
-          className="border border-[#E0E0E0] rounded-xl p-3"
-        >
-
-          <a
-            href={img.url}
-            target="_blank"
-            rel="noreferrer"
+        maxWidth="max-w-[820px]"
+        dialogClassName="accident-view-dialog"
+        footer={(
+          <Button
+            variant="secondary"
+            className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
+            onClick={() => setViewModalOpen(false)}
           >
-            <img
-              src={img.url}
-              alt="Evidence"
-              className="w-32 h-32 object-cover rounded-xl"
-            />
-          </a>
+            Close
+          </Button>
+        )}
+      >
+        <style>{`
+          .accident-view-dialog { display: flex !important; flex-direction: column !important; height: 78vh !important; min-height: 0 !important; max-height: min(80vh, calc(100dvh - 80px)) !important; border-radius: 14px !important; box-shadow: 0 18px 50px rgba(0,0,0,.18) !important; }
+          .accident-view-dialog > div:first-child { padding: 16px 20px !important; background: #fff !important; }
+          .accident-view-dialog > div:first-child h3 { color: #111 !important; font-size: 20px !important; line-height: 1.3 !important; font-weight: 700 !important; }
+          .accident-view-dialog > div:first-child button { border-radius: 8px !important; color: #626b78 !important; }
+          .accident-view-dialog > div:first-child button:hover { background: #f3f4f6 !important; color: #111 !important; }
+          .fixed.inset-0.z-50:has(.accident-view-dialog) > .fixed.top-0.left-0.w-screen.h-screen { background: rgba(17,17,17,.52) !important; backdrop-filter: none !important; }
+          .accident-view-dialog > div:nth-child(2) { flex: 1 1 auto !important; min-height: 0 !important; max-height: none !important; overflow-y: auto !important; overscroll-behavior: contain; padding: 12px 16px !important; }
+          .accident-view-dialog > div:last-child { flex: 0 0 auto !important; margin-top: auto !important; padding: 10px 24px !important; background: #fff !important; }
+          @media (max-width: 640px) { .accident-view-dialog { height: min(78vh, calc(100dvh - 80px)) !important; } }
+        `}</style>
+        {selectedReport && (
+          <div className="space-y-2.5 text-[#111]">
+            {(() => {
+              const severity = String(selectedReport.severity || 'Not provided');
+              const status = String(selectedReport.status || 'Not provided');
+              const severityColor = /fatal|critical|severe/i.test(severity) ? '#dc2626' : '#f59e0b';
+              const statusColor = /resolved|closed/i.test(status) ? '#16a34a' : /investigat/i.test(status) ? '#f59e0b' : '#64748b';
+              const DetailField = ({ label, value, className = '' }) => (
+                <div className={`min-w-0 ${className}`}>
+                  <dt className="text-[13px] leading-5 text-[#596579]">{label}</dt>
+                  <dd className="mt-0.5 break-words text-[15px] leading-5 text-[#111]">{accidentDetailValue(value)}</dd>
+                </div>
+              );
+              const DetailCard = ({ title, icon: Icon, children, className = '' }) => (
+                <section className={`rounded-xl border border-[#e6e9ee] bg-white p-3 ${className}`}>
+                  <h4 className="mb-3 flex items-center gap-2.5 text-[16px] font-semibold leading-5 text-[#111]">
+                    <Icon className="h-5 w-5 shrink-0 text-[#111]" aria-hidden="true" />
+                    {title}
+                  </h4>
+                  {children}
+                </section>
+              );
+              const factory = selectedReport.factory || selectedReport.factoryName;
+              const location = selectedReport.location || factory;
+              const description = accidentDetailValue(selectedReport.description);
+              const evidence = Array.isArray(selectedReport.images) ? selectedReport.images : [];
+              return (
+                <>
+                  <section className="grid grid-cols-1 items-center gap-3 rounded-xl border border-[#e2e6eb] bg-[#fbfcfd] p-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                    <div className="flex min-w-0 items-center gap-3.5">
+                      <span className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-xl bg-[#fff0e5] text-[#f26722]">
+                        <AlertTriangle className="h-8 w-8" strokeWidth={2.2} aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <h4 className="break-words text-[18px] font-semibold leading-6 text-black">{accidentDetailValue(selectedReport.title)}</h4>
+                        <p className="mt-1 break-words text-[14px] leading-5 text-[#596579]">
+                          {accidentDetailValue(factory)} <span className="mx-1">•</span> Department: {accidentDetailValue(selectedReport.department)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-5 pl-[74px] sm:pl-0">
+                      <div className="min-w-[88px]">
+                        <p className="text-[13px] leading-5 text-[#596579]">Severity</p>
+                        <p className="mt-0.5 flex items-center gap-2 text-[15px] leading-5 text-[#111]"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: severityColor }} />{accidentDetailValue(selectedReport.severity)}</p>
+                      </div>
+                      <div className="min-w-[88px]">
+                        <p className="text-[13px] leading-5 text-[#596579]">Status</p>
+                        <p className="mt-0.5 flex items-center gap-2 text-[15px] leading-5 text-[#111]"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: statusColor }} />{accidentDetailValue(selectedReport.status)}</p>
+                      </div>
+                    </div>
+                  </section>
 
+                  <div className="grid grid-cols-1 gap-2.5 md:grid-cols-[1.05fr_1fr]">
+                    <DetailCard title="Incident Information" icon={FileText} className="md:row-span-2">
+                      <dl className="grid grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)] gap-x-3 gap-y-3">
+                        <DetailField label="Accident Title" value={selectedReport.title} />
+                        <div />
+                        <DetailField label="Accident Date" value={accidentDetailDate(selectedReport.date)} />
+                        <DetailField label="Time" value={selectedReport.time} />
+                        <DetailField label="Factory / Location" value={location} className="col-span-2" />
+                        <DetailField label="Department" value={selectedReport.department} className="col-span-2" />
+                        <DetailField label="Report Source" value={selectedReport.reportSource} className="col-span-2" />
+                      </dl>
+                    </DetailCard>
 
-          <div className="mt-2 text-xs text-[#6C757D]">
+                    <DetailCard title="Involved Worker" icon={UserRound}>
+                      <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                        <DetailField label="Worker Name" value={selectedReport.worker?.name} />
+                        <DetailField label="Employee ID" value={selectedReport.worker?.employeeId} />
+                        <DetailField label="Phone Number" value={selectedReport.worker?.phone} className="col-span-2" />
+                      </dl>
+                    </DetailCard>
 
-            <p>
-              Uploaded By:
-              {" "}
-              <span className="font-semibold">
-                {img.uploadedBy?.name || "Unknown User"}
-              </span>
-            </p>
+                    <DetailCard title="Witness Details" icon={Eye}>
+                      <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                        <DetailField label="Witness Name" value={selectedReport.witnessDetails?.name} />
+                        <DetailField label="Witness Phone" value={selectedReport.witnessDetails?.phone} />
+                        <DetailField label="Witness Statement" value={selectedReport.witnessDetails?.statement} className="col-span-2" />
+                      </dl>
+                    </DetailCard>
+                  </div>
 
-            <p>
-              Role:
-              {" "}
-              <span className="font-semibold">
-                {img.uploadedBy?.role || img.uploadedByRole || "Unknown"}
-              </span>
-            </p>
+                  <DetailCard title="Description" icon={FileText}>
+                    <p className="rounded-lg bg-[#f3f4f6] px-3.5 py-2.5 text-[15px] leading-5 text-[#111] whitespace-pre-wrap break-words">{description}</p>
+                  </DetailCard>
 
-
-            <p>
-              Uploaded At:
-              {" "}
-              {img.uploadedAt
-                ? new Date(img.uploadedAt).toLocaleString()
-                : "Unknown"}
-            </p>
-
-          </div>
-
-        </div>
-      ))}
-    </div>
-
-  </div>
-)}
-
-            <div className="flex justify-end">
-              <Button variant="secondary" className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]" onClick={() => setViewModalOpen(false)}>Close</Button>
-            </div>
+                  {evidence.length > 0 && (
+                    <DetailCard title="Evidence Photos" icon={FileText}>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {evidence.map((image, index) => (
+                          <a key={image._id || image.publicId || image.url || index} href={image.url} target="_blank" rel="noreferrer" className="block">
+                            <img src={image.url} alt="Accident evidence" className="h-28 w-full rounded-lg border border-[#e5e5e5] object-cover" />
+                          </a>
+                        ))}
+                      </div>
+                    </DetailCard>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
       </Modal>
@@ -827,14 +1042,21 @@ const AccidentReports = () => {
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}
         title="Update Incident Status"
+        maxWidth="max-w-md"
+        dialogClassName="accident-status-dialog"
       >
         <form onSubmit={handleUpdateStatus} className="space-y-4">
-          <Select
+          <SearchFilterSelect
             label="Select New Status"
+            formField
             value={newStatus}
-            onChange={(e) => setNewStatus(e.target.value)}
+            onValueChange={setNewStatus}
             options={statusOptions}
             required
+            allowClear={false}
+            iconType="status"
+            menuClassName="accident-status-menu"
+            matchSelectedOptionColor
           />
           <div className="flex justify-end gap-3">
             <Button variant="secondary" className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]" onClick={() => setStatusModalOpen(false)}>Cancel</Button>
@@ -848,6 +1070,8 @@ const AccidentReports = () => {
         isOpen={imageModalOpen}
         onClose={() => setImageModalOpen(false)}
         title="Attach Evidence Photos"
+        maxWidth="max-w-md"
+        dialogClassName="accident-evidence-dialog"
       >
         <form onSubmit={handleUploadImages} className="space-y-4">
           <FileUpload

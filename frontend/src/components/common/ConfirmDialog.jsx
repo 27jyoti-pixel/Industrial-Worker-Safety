@@ -12,7 +12,8 @@ const ConfirmDialog = ({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   loading = false,
-  variant = 'danger'
+  variant = 'danger',
+  dialogClassName = ''
 }) => {
   return (
     <Modal
@@ -20,6 +21,7 @@ const ConfirmDialog = ({
       onClose={onClose}
       title={title}
       maxWidth="max-w-md"
+      dialogClassName={dialogClassName}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={loading}>

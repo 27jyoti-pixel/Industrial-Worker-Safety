@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SearchFilterSelect from '../components/common/SearchFilterSelect';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -24,7 +24,7 @@ import Select from '../components/common/Select';
 import Textarea from '../components/common/Textarea';
 import StatusBadge from '../components/common/StatusBadge';
 import SearchBar from '../components/common/SearchBar';
-import Pagination from '../components/common/Pagination';
+import DataTablePagination from '../components/common/DataTablePagination';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import FileUpload from '../components/common/FileUpload';
@@ -39,8 +39,9 @@ const CompensationClaims = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
+  const fetchRequestId = useRef(0);
 
   // Modals state
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -85,7 +86,7 @@ const CompensationClaims = () => {
 
   useEffect(() => {
     fetchClaims();
-  }, [currentPage, searchQuery, statusFilter]);
+  }, [currentPage, searchQuery, statusFilter, itemsPerPage]);
 
 
   useEffect(() => {
@@ -106,6 +107,7 @@ const CompensationClaims = () => {
 
 
   const fetchClaims = async () => {
+    const requestId = ++fetchRequestId.current;
     setLoading(true);
 
     try {
@@ -113,18 +115,25 @@ const CompensationClaims = () => {
         search: searchQuery,
         status: statusFilter,
         page: currentPage,
-        limit: 10
+        limit: itemsPerPage
       });
 
-      const dataList = response.claims || response.data || [];
+      if (requestId !== fetchRequestId.current) return;
+      const dataList = Array.isArray(response.claims)
+        ? response.claims
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+      const total = Number(response.pagination?.total ?? response.total ?? dataList.length) || 0;
+      const pages = Math.ceil(total / itemsPerPage);
 
       setClaims(dataList);
-      setTotalPages(response.pages || response.totalPages || 1);
-      setTotalItems(response.total || dataList.length);
+      setTotalItems(total);
+      if (currentPage > Math.max(1, pages)) setCurrentPage(Math.max(1, pages));
     } catch (err) {
-      showError(err.message || 'Failed to load compensation claims');
+      if (requestId === fetchRequestId.current) showError(err.message || 'Failed to load compensation claims');
     } finally {
-      setLoading(false);
+      if (requestId === fetchRequestId.current) setLoading(false);
     }
   };
 
@@ -388,7 +397,7 @@ const CompensationClaims = () => {
       header: 'Claim Number',
 
       render: (row) => (
-        <span className="font-mono text-xs font-semibold text-[#111] bg-[#f5f5f5] px-2.5 py-1 rounded-md border border-[#E0E0E0]">
+        <span className="font-mono text-xs font-semibold text-[#111]">
           {row.claimNumber || 'CLM-PENDING'}
         </span>
       )
@@ -603,6 +612,154 @@ const CompensationClaims = () => {
     font-size: 13px;
     font-weight: 500;
   }
+  .claim-review-dialog,
+  .claim-detail-dialog {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 48px) !important;
+    border-color: #e1e4e8 !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+  }
+  .fixed.inset-0.z-50:has(.claim-review-dialog) > .fixed.top-0.left-0.w-screen.h-screen,
+  .fixed.inset-0.z-50:has(.claim-detail-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+    background: rgba(17, 17, 17, .42) !important;
+    backdrop-filter: none !important;
+  }
+  .claim-review-dialog > div:first-child,
+  .claim-detail-dialog > div:first-child {
+    flex: 0 0 auto;
+    border-bottom-color: #e1e4e8 !important;
+    background: #fff !important;
+  }
+  .claim-review-dialog > div:first-child h3,
+  .claim-detail-dialog > div:first-child h3 { color: #111 !important; font-weight: 600 !important; }
+  .claim-review-dialog > div:first-child button,
+  .claim-detail-dialog > div:first-child button { color: #62666b !important; }
+  .claim-review-dialog > div:first-child button:hover,
+  .claim-detail-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111 !important; }
+  .claim-review-dialog > div:nth-child(2),
+  .claim-detail-dialog > div:nth-child(2) {
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: min(68vh, calc(100dvh - 150px)) !important;
+    overflow-y: auto !important;
+    background: #fff !important;
+    padding: 18px 24px !important;
+  }
+  .claim-review-dialog > div:nth-child(2) { padding: 14px 24px !important; }
+  .claim-detail-dialog > div:nth-child(2) { padding: 14px 20px !important; }
+  .claim-review-dialog form { display: flex; flex-direction: column; gap: 10px; }
+  .claim-review-dialog form > :not([hidden]) ~ :not([hidden]) { margin-top: 0 !important; }
+  .claim-review-dialog label {
+    margin-bottom: 6px !important;
+    color: #59616a !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+  }
+  .claim-review-dialog label span { color: #e87532 !important; }
+  .claim-review-dialog input:not(.dialog-select-native),
+  .claim-review-dialog textarea {
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    color: #111 !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+  }
+  .claim-review-dialog input:not(.dialog-select-native) { height: 54px !important; min-height: 54px !important; }
+  .claim-review-dialog input:not(.dialog-select-native)::placeholder,
+  .claim-review-dialog textarea::placeholder { font-weight: 400 !important; }
+  .claim-review-dialog textarea { height: 106px !important; min-height: 106px !important; resize: none !important; }
+  .claim-review-dialog input:focus,
+  .claim-review-dialog textarea:focus {
+    border-color: #f2c7b0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  .claim-review-dialog .dialog-search-filter-label { color: #59616a !important; }
+  .claim-review-dialog .dialog-search-filter-trigger[data-icon-type="status"] {
+    display: flex !important;
+    height: 54px !important;
+    min-height: 54px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .claim-review-dialog .dialog-search-filter-trigger[data-icon-type="status"] .search-filter-selected-content {
+    display: inline-flex !important;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  .claim-review-dialog .dialog-search-filter-trigger[data-icon-type="status"] .search-filter-selected-icon {
+    width: 16px !important;
+    height: 16px !important;
+    flex: 0 0 16px !important;
+  }
+  .claim-review-dialog .dialog-search-filter-trigger[data-icon-type="status"] > svg:last-child {
+    flex: 0 0 16px;
+    align-self: center;
+  }
+  .claim-review-dialog .dialog-search-filter-trigger[data-icon-type="status"]:focus-visible {
+    border-color: #f2c7b0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  .claim-review-status-menu .search-filter-option {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .claim-review-status-menu .search-filter-option-content {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .claim-review-status-menu .search-filter-option-icon {
+    width: 16px !important;
+    height: 16px !important;
+    flex: 0 0 16px !important;
+  }
+  .claim-review-dialog form > div:last-child { display: flex; justify-content: flex-end; gap: 10px; padding-top: 2px; }
+  .claim-review-dialog form > div:last-child button,
+  .claim-detail-dialog > div:last-child button {
+    min-height: 40px;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    transform: none !important;
+    font-weight: 500 !important;
+  }
+  .claim-review-dialog form > div:last-child button:first-child,
+  .claim-detail-dialog > div:last-child button {
+    border: 1px solid #d1d5db !important;
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .claim-review-dialog form > div:last-child button:first-child:hover,
+  .claim-detail-dialog > div:last-child button:hover { background: #f7f7f7 !important; }
+  .claim-review-dialog form > div:last-child button:last-child {
+    border: 1px solid #111 !important;
+    background: #111 !important;
+    color: #fff !important;
+  }
+  .claim-review-dialog form > div:last-child button:last-child:hover { background: #111 !important; color: #fff !important; }
+  .claim-detail-dialog > div:last-child {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    border-top: 1px solid #e1e4e8 !important;
+    background: #fff !important;
+    padding: 12px 24px !important;
+  }
   #compensation-claims-page .claims-hero-art {
     right: -6px;
     background-size: cover;
@@ -647,6 +804,13 @@ const CompensationClaims = () => {
     transition: none;
   }
 
+  .claims-table-wrap .data-table-pagination-control.is-current,
+  .claims-table-wrap .data-table-pagination-control.is-current:hover {
+    border-color: #111111 !important;
+    background: #111111 !important;
+    color: #ffffff !important;
+  }
+
   #compensation-claims-page .claims-search-card:has(.claims-status-menu) {
     position: relative;
     z-index: 20;
@@ -681,6 +845,13 @@ const CompensationClaims = () => {
     background-color: #fefefe !important;
   }
 
+  #compensation-claims-page .claims-search-card .search-filter-trigger,
+  #compensation-claims-page .claims-search-card .search-filter-trigger:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    transition: border-color 160ms ease, background-color 160ms ease !important;
+  }
+
   #compensation-claims-page .claims-search-card .search-filter-trigger:focus-visible {
     border-color: #b8b8b8 !important;
     box-shadow: 0 0 0 2px rgba(232, 117, 50, .14) !important;
@@ -702,8 +873,8 @@ const CompensationClaims = () => {
 
   #compensation-claims-page .claims-empty-state {
     min-height: 160px;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    border: 0;
+    border-radius: 0;
     background: #fff;
     padding: 24px 20px;
   }
@@ -846,7 +1017,7 @@ const CompensationClaims = () => {
             setSearchQuery(val);
             setCurrentPage(1);
           }}
-          onClear={() => setSearchQuery('')}
+          onClear={() => { setSearchQuery(''); setCurrentPage(1); }}
           placeholder="Search by claim number, worker, or description..."
         />
 
@@ -874,11 +1045,11 @@ const CompensationClaims = () => {
           CLAIMS TABLE
           ===================================================== */}
 
-      <div className="claims-table-wrap overflow-hidden rounded-lg">
+      <div className="claims-table-wrap standard-data-table-shell">
       {loading || claims.length > 0 ? (
         <Table columns={columns} data={claims} loading={loading} className="platform-data-table" />
       ) : (
-        <section className="claims-empty-state flex flex-col items-center justify-center text-center" aria-live="polite">
+        <section className="claims-empty-state standard-data-table-empty flex flex-col items-center justify-center text-center" aria-live="polite">
           <span className="claims-empty-icon flex items-center justify-center rounded-full">
             <FileText className="h-6 w-6" aria-hidden="true" />
           </span>
@@ -888,21 +1059,15 @@ const CompensationClaims = () => {
           </p>
         </section>
       )}
-      </div>
-
-
-      {/* =====================================================
-          PAGINATION
-          ===================================================== */}
-
-      {totalItems > 0 && (
-        <Pagination
+        <DataTablePagination
           currentPage={currentPage}
-          totalPages={totalPages}
           totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
           onPageChange={(page) => setCurrentPage(page)}
+          onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }}
+          itemLabel="claims"
         />
-      )}
+      </div>
 
 
       {/* =====================================================
@@ -1117,129 +1282,67 @@ const CompensationClaims = () => {
         isOpen={viewModalOpen}
         onClose={() => setViewModalOpen(false)}
         title="Compensation Claim Details"
+        maxWidth="max-w-[680px]"
+        dialogClassName="claim-detail-dialog"
+        footer={(
+          <Button
+            variant="secondary"
+            className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
+            onClick={() => setViewModalOpen(false)}
+          >
+            Close
+          </Button>
+        )}
       >
 
         {selectedClaim && (
-          <div className="space-y-4">
-
-            <div className="flex items-start justify-between p-4 bg-[#F4F4F4] rounded-2xl border border-[#E0E0E0]">
-
-              <div>
-
-                <span className="font-mono text-xs font-semibold text-[#111] bg-[#f5f5f5] px-2 py-0.5 rounded">
-                  {selectedClaim.claimNumber}
-                </span>
-
-                <p className="text-xs text-[#6C757D] mt-2">
-                  Submitted:{' '}
-                  {new Date(
-                    selectedClaim.createdAt
-                  ).toLocaleDateString()}
+          <div className="space-y-4 text-[#111]">
+            <section className="flex items-center justify-between gap-4 border-b border-[#e5e7eb] pb-3">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[.08em] text-[#626b78]">Claim Number</p>
+                <p className="mt-0.5 break-all font-mono text-[15px] font-semibold text-[#111]">{selectedClaim.claimNumber || 'Not provided'}</p>
+                <p className="mt-1.5 text-[13px] text-[#626b78]">
+                  Submitted: {selectedClaim.createdAt && !Number.isNaN(new Date(selectedClaim.createdAt).getTime())
+                    ? new Date(selectedClaim.createdAt).toLocaleDateString()
+                    : 'Not provided'}
                 </p>
-
               </div>
-
-              <StatusBadge
-                status={selectedClaim.status}
-              />
-
-            </div>
-
-
-            <div className="grid grid-cols-3 gap-3 text-center">
-
-              <div className="p-3 bg-white border border-[#E0E0E0] rounded-xl">
-
-                <span className="text-[11px] text-[#6C757D] font-medium">
-                  Claim Amount
-                </span>
-
-                <p className="text-base font-semibold text-[#1E1E1E] mt-0.5">
-                  ₹
-                  {(
-                    selectedClaim.claimAmount || 0
-                  ).toLocaleString('en-IN')}
-                </p>
-
+              <div className="shrink-0 text-right">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-[.08em] text-[#626b78]">Status</p>
+                <StatusBadge status={selectedClaim.status} variant="dot" />
               </div>
+            </section>
 
-
-              <div className="p-3 bg-white border border-[#E0E0E0] rounded-xl">
-
-                <span className="text-[11px] text-[#6C757D] font-medium">
-                  Medical Expenses
-                </span>
-
-                <p className="text-base font-semibold text-[#111] mt-0.5">
-                  ₹
-                  {(
-                    selectedClaim.medicalExpenses || 0
-                  ).toLocaleString('en-IN')}
-                </p>
-
+            <section className="grid grid-cols-3">
+              <div className="min-w-0 py-1 pr-3 sm:pr-5">
+                <p className="text-[11px] font-medium text-[#626b78] sm:text-[12px]">Claim Amount</p>
+                <p className="mt-1 whitespace-nowrap text-[14px] font-semibold text-[#111] sm:text-[16px]">₹{(selectedClaim.claimAmount || 0).toLocaleString('en-IN')}</p>
               </div>
-
-
-              <div className="p-3 bg-[#fafafa] border border-[#e1e4e8] rounded-xl">
-
-                <span className="text-[11px] text-[#6C757D] font-medium">
-                  Approved Amount
-                </span>
-
-                <p className="text-base font-semibold text-[#111] mt-0.5">
-                  ₹
-                  {(
-                    selectedClaim.approvedAmount || 0
-                  ).toLocaleString('en-IN')}
-                </p>
-
+              <div className="min-w-0 border-l border-[#e1e4e8] px-3 py-1 sm:px-5">
+                <p className="text-[11px] font-medium text-[#626b78] sm:text-[12px]">Medical Expenses</p>
+                <p className="mt-1 whitespace-nowrap text-[14px] font-semibold text-[#111] sm:text-[16px]">₹{(selectedClaim.medicalExpenses || 0).toLocaleString('en-IN')}</p>
               </div>
+              <div className="min-w-0 border-l border-[#e1e4e8] pl-3 py-1 sm:pl-5">
+                <p className="text-[11px] font-medium text-[#626b78] sm:text-[12px]">Approved Amount</p>
+                <p className="mt-1 whitespace-nowrap text-[14px] font-semibold text-[#111] sm:text-[16px]">₹{(selectedClaim.approvedAmount || 0).toLocaleString('en-IN')}</p>
+              </div>
+            </section>
 
-            </div>
-
-
-            <div>
-
-              <p className="text-xs font-semibold text-[#6C757D] uppercase tracking-wider mb-1">
-                Claim Description
+            <section>
+              <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[.08em] text-[#626b78]">Claim Description</h4>
+              <p className="whitespace-pre-wrap break-words rounded-md bg-[#f5f6f7] px-3.5 py-3 text-[14px] leading-5 text-[#111]">
+                {selectedClaim.description || 'Not provided'}
               </p>
-
-              <p className="text-sm text-[#111] bg-white p-3 rounded-xl border border-[#E0E0E0]">
-                {selectedClaim.description}
-              </p>
-
-            </div>
-
+            </section>
 
             {selectedClaim.remarks && (
-              <div>
-
-                <p className="text-xs font-semibold text-[#6C757D] uppercase tracking-wider mb-1">
-                  Officer Remarks
-                </p>
-
-                <p className="text-sm text-[#111] bg-[#FFF8E8]/50 p-3 rounded-xl border border-[#E9C46A]">
+              <section>
+                <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[.08em] text-[#626b78]">Officer Remarks</h4>
+                <p className="whitespace-pre-wrap break-words rounded-md bg-[#f5f6f7] px-3.5 py-3 text-[14px] leading-5 text-[#111]">
                   {selectedClaim.remarks}
                 </p>
-
-              </div>
+              </section>
             )}
-
-
-            <div className="flex justify-end">
-
-              <Button
-                variant="secondary"
-                className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
-                onClick={() =>
-                  setViewModalOpen(false)
-                }
-              >
-                Close
-              </Button>
-
-            </div>
-
           </div>
         )}
 
@@ -1254,6 +1357,8 @@ const CompensationClaims = () => {
         isOpen={statusModalOpen}
         onClose={() => setStatusModalOpen(false)}
         title="Review & Approve Compensation Claim"
+        maxWidth="max-w-[560px]"
+        dialogClassName="claim-review-dialog"
       >
 
         <form
@@ -1261,17 +1366,22 @@ const CompensationClaims = () => {
           className="space-y-4"
         >
 
-          <Select
+          <SearchFilterSelect
             label="Claim Status"
+            formField
             value={statusFormData.status}
-            onChange={(e) =>
+            onValueChange={(value) =>
               setStatusFormData({
                 ...statusFormData,
-                status: e.target.value
+                status: value
               })
             }
             options={claimStatusOptions}
             required
+            allowClear={false}
+            iconType="status"
+            matchSelectedOptionColor
+            menuClassName="claim-review-status-menu"
           />
 
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SearchFilterSelect from '../components/common/SearchFilterSelect';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -22,10 +22,22 @@ import Select from '../components/common/Select';
 import Textarea from '../components/common/Textarea';
 import StatusBadge from '../components/common/StatusBadge';
 import SearchBar from '../components/common/SearchBar';
-import Pagination from '../components/common/Pagination';
+import DataTablePagination from '../components/common/DataTablePagination';
 import Modal from '../components/common/Modal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import FileUpload from '../components/common/FileUpload';
+
+const complaintDetailValue = (value) => (
+  value === null || value === undefined || (typeof value === 'string' && !value.trim())
+    ? 'Not provided'
+    : value
+);
+
+const complaintDetailDate = (value) => {
+  if (!value) return 'Not provided';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Not provided' : date.toLocaleDateString();
+};
 
 const SafetyComplaints = () => {
   const { user, isAdminOrOfficer, isSuperAdmin, isFactoryAdmin } = useAuth();
@@ -36,8 +48,9 @@ const SafetyComplaints = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
+  const fetchRequestId = useRef(0);
 
   // Modals
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -88,9 +101,10 @@ const SafetyComplaints = () => {
 
   useEffect(() => {
     fetchComplaints();
-  }, [currentPage, searchQuery, typeFilter]);
+  }, [currentPage, searchQuery, typeFilter, itemsPerPage]);
 
   const fetchComplaints = async () => {
+    const requestId = ++fetchRequestId.current;
     setLoading(true);
 
     try {
@@ -98,18 +112,25 @@ const SafetyComplaints = () => {
         search: searchQuery,
         complaintType: typeFilter,
         page: currentPage,
-        limit: 10
+        limit: itemsPerPage
       });
 
-      const dataList = response.complaints || response.data || [];
+      if (requestId !== fetchRequestId.current) return;
+      const dataList = Array.isArray(response.complaints)
+        ? response.complaints
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+      const total = Number(response.pagination?.total ?? response.total ?? dataList.length) || 0;
+      const pages = Math.ceil(total / itemsPerPage);
 
       setComplaints(dataList);
-      setTotalPages(response.pages || response.totalPages || 1);
-      setTotalItems(response.total || dataList.length);
+      setTotalItems(total);
+      if (currentPage > Math.max(1, pages)) setCurrentPage(Math.max(1, pages));
     } catch (err) {
-      showError(err.message || 'Failed to fetch safety complaints');
+      if (requestId === fetchRequestId.current) showError(err.message || 'Failed to fetch safety complaints');
     } finally {
-      setLoading(false);
+      if (requestId === fetchRequestId.current) setLoading(false);
     }
   };
 
@@ -397,14 +418,14 @@ const SafetyComplaints = () => {
     {
       header: 'Severity',
       render: (row) => (
-        <StatusBadge status={row.severity} variant="dot" className="!text-[15px] !font-medium" />
+        <StatusBadge status={row.severity} variant="dot" className="!text-[15px] !font-normal" />
       )
     },
 
     {
       header: 'Status',
       render: (row) => (
-        <StatusBadge status={row.status} variant="dot" className="!text-[15px] !font-medium" />
+        <StatusBadge status={row.status} variant="dot" className="!text-[15px] !font-normal" />
       )
     },
 
@@ -588,6 +609,185 @@ const SafetyComplaints = () => {
           outline: none;
           box-shadow: 0 0 0 2px rgba(232, 117, 50, .14) !important;
         }
+        .complaint-view-dialog {
+          display: flex !important;
+          flex-direction: column !important;
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: calc(100dvh - 48px) !important;
+          border: 1px solid #e1e4e8 !important;
+          border-radius: 14px !important;
+          background: #fff !important;
+          box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+        }
+        .fixed.inset-0.z-50:has(.complaint-view-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .42) !important;
+          backdrop-filter: none !important;
+        }
+        .complaint-view-dialog > div:first-child {
+          flex: 0 0 auto;
+          border-bottom: 1px solid #e1e4e8 !important;
+          background: #fff !important;
+        }
+        .complaint-view-dialog > div:first-child h3 { color: #111 !important; font-weight: 600 !important; }
+        .complaint-view-dialog > div:first-child button { color: #62666b !important; }
+        .complaint-view-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111 !important; }
+        .complaint-view-dialog > div:nth-child(2) {
+          flex: 0 1 auto;
+          min-height: 0;
+          max-height: min(70vh, calc(100dvh - 150px)) !important;
+          overflow-y: auto !important;
+          background: #fff !important;
+          padding: 16px 20px !important;
+        }
+        .complaint-view-dialog > div:last-child {
+          flex: 0 0 auto;
+          justify-content: flex-end;
+          border-top: 1px solid #e1e4e8 !important;
+          background: #fff !important;
+          padding: 12px 24px !important;
+        }
+        .complaint-view-dialog > div:last-child button {
+          min-height: 40px;
+          border: 1px solid #d1d5db !important;
+          border-radius: 8px !important;
+          background: #fff !important;
+          color: #111 !important;
+          box-shadow: none !important;
+          transform: none !important;
+          font-weight: 500 !important;
+        }
+        .complaint-view-dialog > div:last-child button:hover { background: #f7f7f7 !important; }
+        .complaint-status-dialog {
+          display: flex !important;
+          flex-direction: column !important;
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: calc(100dvh - 48px) !important;
+          border-color: #e1e4e8 !important;
+          border-radius: 14px !important;
+          background: #fff !important;
+          box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+        }
+        .fixed.inset-0.z-50:has(.complaint-status-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .42) !important;
+          backdrop-filter: none !important;
+        }
+        .complaint-status-dialog > div:first-child {
+          flex: 0 0 auto;
+          border-bottom: 1px solid #e1e4e8 !important;
+          background: #fff !important;
+        }
+        .complaint-status-dialog > div:first-child h3 { color: #111 !important; font-weight: 600 !important; }
+        .complaint-status-dialog > div:first-child button { color: #62666b !important; }
+        .complaint-status-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111 !important; }
+        .complaint-status-dialog > div:nth-child(2) {
+          flex: 0 1 auto;
+          min-height: 0;
+          max-height: calc(100dvh - 160px) !important;
+          overflow-y: auto !important;
+          padding: 16px 24px !important;
+          background: #fff !important;
+        }
+        .complaint-status-dialog form { display: flex; flex-direction: column; gap: 12px; }
+        .complaint-status-dialog form > :not([hidden]) ~ :not([hidden]) { margin-top: 0 !important; }
+        .complaint-status-dialog label {
+          margin-bottom: 6px !important;
+          color: #59616a !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          text-transform: uppercase !important;
+          letter-spacing: .04em !important;
+        }
+        .complaint-status-dialog label span { color: #e87532 !important; }
+        .complaint-status-dialog textarea {
+          border: 1px solid #d1d5db !important;
+          border-radius: 8px !important;
+          background: #fff !important;
+          color: #111 !important;
+          box-shadow: none !important;
+          font-size: 14px !important;
+        }
+        .complaint-status-dialog textarea {
+          height: 116px !important;
+          min-height: 116px !important;
+          resize: none !important;
+          line-height: 1.5;
+        }
+        .complaint-status-dialog textarea::placeholder { color: #858b92 !important; opacity: 1; }
+        .complaint-status-dialog textarea:focus {
+          border-color: #f2c7b0 !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        .complaint-status-dialog .dialog-search-filter-label { color: #59616a !important; }
+        .complaint-status-dialog .dialog-search-filter-trigger[data-icon-type="status"] {
+          display: flex !important;
+          height: 46px !important;
+          min-height: 46px !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+        }
+        .complaint-status-dialog .dialog-search-filter-trigger[data-icon-type="status"] .search-filter-selected-content {
+          display: inline-flex !important;
+          min-width: 0;
+          flex: 1 1 auto;
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 8px !important;
+        }
+        .complaint-status-dialog .dialog-search-filter-trigger[data-icon-type="status"] .search-filter-selected-icon {
+          width: 16px !important;
+          height: 16px !important;
+          flex: 0 0 16px !important;
+        }
+        .complaint-status-dialog .dialog-search-filter-trigger[data-icon-type="status"] > svg:last-child {
+          flex: 0 0 16px;
+          align-self: center;
+        }
+        .complaint-status-dialog .dialog-search-filter-trigger[data-icon-type="status"]:focus-visible {
+          border-color: #f2c7b0 !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        .complaint-status-update-menu .search-filter-option {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 10px !important;
+        }
+        .complaint-status-update-menu .search-filter-option-content {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center !important;
+          gap: 10px !important;
+        }
+        .complaint-status-update-menu .search-filter-option-icon {
+          width: 16px !important;
+          height: 16px !important;
+          flex: 0 0 16px !important;
+        }
+        .complaint-status-dialog form > div:last-child { display: flex; justify-content: flex-end; gap: 10px; padding-top: 2px; }
+        .complaint-status-dialog form > div:last-child button {
+          min-height: 40px;
+          border-radius: 8px !important;
+          box-shadow: none !important;
+          transform: none !important;
+          font-weight: 500 !important;
+        }
+        .complaint-status-dialog form > div:last-child button:first-child {
+          border: 1px solid #d1d5db !important;
+          background: #fff !important;
+          color: #111 !important;
+        }
+        .complaint-status-dialog form > div:last-child button:first-child:hover { background: #f7f7f7 !important; }
+        .complaint-status-dialog form > div:last-child button:last-child {
+          border: 1px solid #111 !important;
+          background: #111 !important;
+          color: #fff !important;
+        }
+        .complaint-status-dialog form > div:last-child button:last-child:hover { background: #111 !important; color: #fff !important; }
         #complaints-page .complaints-hero-art {
           background-size: cover;
           background-position: right center;
@@ -626,25 +826,10 @@ const SafetyComplaints = () => {
           box-shadow: 0 0 0 2px rgba(107, 114, 128, .1) !important;
           outline: none;
         }
-        #complaints-page .complaints-table .industrial-card {
-          border: 1px solid #e5e5e5 !important;
-          border-radius: 10px !important;
-          background: #fff !important;
-          box-shadow: none !important;
-        }
-        #complaints-page .complaints-table th {
-          color: #62666b !important;
-          font-size: 14px !important;
-          font-weight: 600 !important;
-          letter-spacing: .08em !important;
-        }
-        #complaints-page .complaints-table td {
-          font-size: 15px;
-        }
         #complaints-page .complaints-table > .flex.flex-col.items-center {
           min-height: 220px;
-          border: 1px solid #e5e5e5;
-          border-radius: 10px;
+          border: 0;
+          border-radius: 0;
           background: #fff;
           padding: 32px 20px;
         }
@@ -672,6 +857,12 @@ const SafetyComplaints = () => {
         }
         #complaints-page button.midc-primary-cta:hover:not(:disabled) {
           background-color: #2b2b2b !important;
+        }
+        #complaints-page .complaints-table .data-table-pagination-control.is-current,
+        #complaints-page .complaints-table .data-table-pagination-control.is-current:hover {
+          border-color: #111111 !important;
+          background: #111111 !important;
+          color: #FFFFFF !important;
         }
       `}</style>
 
@@ -706,7 +897,7 @@ const SafetyComplaints = () => {
               setSearchQuery(val);
               setCurrentPage(1);
             }}
-            onClear={() => setSearchQuery('')}
+            onClear={() => { setSearchQuery(''); setCurrentPage(1); }}
             placeholder="Search by complaint title, factory, or department..."
           />
 
@@ -727,11 +918,11 @@ const SafetyComplaints = () => {
           </button>
         </section>
 
-        <div className="complaints-table overflow-hidden rounded-lg">
+        <div className="complaints-table standard-data-table-shell">
           {loading || complaints.length > 0 ? (
             <Table columns={columns} data={complaints} loading={loading} className="platform-data-table" />
           ) : (
-            <section className="flex min-h-[220px] flex-col items-center justify-center rounded-lg border border-[#e5e5e5] bg-white px-5 py-8 text-center" aria-live="polite">
+            <section className="standard-data-table-empty flex min-h-[220px] flex-col items-center justify-center px-5 py-8 text-center" aria-live="polite">
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f2f2f2] text-[#59616a]">
                 <FileText className="h-5 w-5" aria-hidden="true" />
               </span>
@@ -741,18 +932,15 @@ const SafetyComplaints = () => {
               </p>
             </section>
           )}
+          <DataTablePagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={(page) => setCurrentPage(page)}
+            onItemsPerPageChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }}
+            itemLabel="complaints"
+          />
         </div>
-
-        {/* --------------------------------------------------
-            PAGINATION
-        -------------------------------------------------- */}
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
 
         {/* --------------------------------------------------
             MODAL: CREATE COMPLAINT
@@ -957,164 +1145,109 @@ const SafetyComplaints = () => {
           isOpen={viewModalOpen}
           onClose={() => setViewModalOpen(false)}
           title="Safety Complaint Information View"
+          maxWidth="max-w-[760px]"
+          dialogClassName="complaint-view-dialog"
+          footer={(
+            <Button
+              variant="secondary"
+              className="!border !border-[#d1d5db] !bg-white !text-[#111] !shadow-none hover:!bg-[#f7f7f7]"
+              onClick={() => setViewModalOpen(false)}
+            >
+              Close
+            </Button>
+          )}
         >
-
           {selectedComplaint && (
-
-            <div className="space-y-5">
-
-              <div className="flex flex-col sm:flex-row items-start justify-between gap-4 p-5 bg-[#F4F4F4] rounded-2xl border border-[#E0E0E0]">
-
-                <div>
-
-                  <span className="inline-flex font-mono text-xs font-semibold text-[#111] bg-[#f5f5f5] px-2.5 py-1 rounded-md">
-                    {selectedComplaint.complaintNumber}
-                  </span>
-
-                  <h3 className="text-lg font-semibold text-[#1E1E1E] mt-2">
-                    {selectedComplaint.title}
-                  </h3>
-
-                  <p className="text-xs text-[#6C757D] mt-1">
-                    {selectedComplaint.factoryName} •{' '}
-                    {selectedComplaint.department}
-                  </p>
-
-                  <div className="mt-4 text-xs text-[#6C757D] space-y-1.5">
-
-                    <p>
-                      <span className="font-semibold">
-                        Reported By:
-                      </span>{' '}
-                      {selectedComplaint.reportedBy?.name || 'Unknown'}
-                    </p>
-
-                    <p>
-                      <span className="font-semibold">
-                        Role:
-                      </span>{' '}
-                      {selectedComplaint.reportedBy?.role || 'Unknown'}
-                    </p>
-
-                    <p>
-                      <span className="font-semibold">
-                        Reported Date:
-                      </span>{' '}
-                      {new Date(
-                        selectedComplaint.createdAt
-                      ).toLocaleDateString()}
-                    </p>
-
+            <div className="space-y-4 text-[#111]">
+              <section className="rounded-xl border border-[#e1e4e8] bg-white p-4" aria-labelledby="complaint-overview-title">
+                <div className="mb-3 flex flex-wrap items-start justify-between gap-3 border-b border-[#e5e7eb] pb-3">
+                  <div className="min-w-0">
+                    <h4 id="complaint-overview-title" className="text-[15px] font-semibold text-[#111]">Complaint Overview</h4>
+                    <p className="mt-1 font-mono text-[12px] text-[#59616a]">{complaintDetailValue(selectedComplaint.complaintNumber)}</p>
                   </div>
-
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                    <div>
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-[#6b7280]">Severity</p>
+                      <StatusBadge status={complaintDetailValue(selectedComplaint.severity)} variant="dot" className="!text-[13px] !font-normal" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-[#6b7280]">Status</p>
+                      <StatusBadge status={complaintDetailValue(selectedComplaint.status)} variant="dot" className="!text-[13px] !font-normal" />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-row sm:flex-col items-start sm:items-end gap-2">
+                <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+                  <div className="min-w-0 sm:col-span-2">
+                    <dt className="text-[12px] text-[#626b78]">Complaint Title</dt>
+                    <dd className="mt-0.5 break-words text-[15px] font-medium text-[#111]">{complaintDetailValue(selectedComplaint.title)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[12px] text-[#626b78]">Factory</dt>
+                    <dd className="mt-0.5 break-words text-[14px] text-[#111]">{complaintDetailValue(selectedComplaint.factoryName)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[12px] text-[#626b78]">Department</dt>
+                    <dd className="mt-0.5 break-words text-[14px] text-[#111]">{complaintDetailValue(selectedComplaint.department)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[12px] text-[#626b78]">Location</dt>
+                    <dd className="mt-0.5 break-words text-[14px] text-[#111]">{complaintDetailValue(selectedComplaint.locationDetails)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[12px] text-[#626b78]">Reported Date</dt>
+                    <dd className="mt-0.5 text-[14px] text-[#111]">{complaintDetailDate(selectedComplaint.createdAt)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[12px] text-[#626b78]">Reported By</dt>
+                    <dd className="mt-0.5 break-words text-[14px] text-[#111]">{complaintDetailValue(selectedComplaint.reportedBy?.name)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[12px] text-[#626b78]">Role</dt>
+                    <dd className="mt-0.5 break-words text-[14px] text-[#111]">{complaintDetailValue(selectedComplaint.reportedBy?.role)}</dd>
+                  </div>
+                </dl>
+              </section>
 
-                  <StatusBadge
-                    status={selectedComplaint.severity}
-                  />
-
-                  <StatusBadge
-                    status={selectedComplaint.status}
-                  />
-
-                </div>
-
-              </div>
-
-              <div>
-
-                <p className="text-xs font-semibold text-[#6C757D] uppercase tracking-wider mb-2">
-                  Hazard Description
-                </p>
-
-                <p className="text-sm leading-6 text-[#1E1E1E] bg-white p-4 rounded-xl border border-[#E0E0E0]">
-                  {selectedComplaint.description}
-                </p>
-
-              </div>
+              <section aria-labelledby="complaint-description-title">
+                <h4 id="complaint-description-title" className="mb-2 text-[11px] font-semibold uppercase tracking-[.08em] text-[#626b78]">Hazard Description</h4>
+                <p className="whitespace-pre-wrap break-words rounded-lg bg-[#f3f4f5] px-3.5 py-3 text-[14px] leading-5 text-[#111]">{complaintDetailValue(selectedComplaint.description)}</p>
+              </section>
 
               {selectedComplaint.resolutionDetails && (
-
-                <div>
-
-                  <p className="text-xs font-semibold text-[#111] uppercase tracking-wider mb-2">
-                    Resolution Details
-                  </p>
-
-                  <p className="text-sm leading-6 text-[#1E1E1E] bg-[#fafafa] p-4 rounded-xl border border-[#e1e4e8]">
-                    {selectedComplaint.resolutionDetails}
-                  </p>
-
-                </div>
-
+                <section>
+                  <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[.08em] text-[#626b78]">Resolution Details</h4>
+                  <p className="whitespace-pre-wrap break-words rounded-lg bg-[#f3f4f5] px-3.5 py-3 text-[14px] leading-5 text-[#111]">{selectedComplaint.resolutionDetails}</p>
+                </section>
               )}
 
               {selectedComplaint.images?.length > 0 && (
-
-                <div>
-
-                  <p className="text-xs font-semibold text-[#6C757D] uppercase tracking-wider mb-2">
-                    Evidence Images
-                  </p>
-
+                <section>
+                  <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-[.08em] text-[#626b78]">Evidence Images</h4>
                   <div className="flex flex-wrap gap-3">
-
                     {selectedComplaint.images.map((img) => (
-
-                      <div
-                        key={img._id}
-                        className="relative"
-                      >
-
+                      <div key={img._id} className="relative">
                         <img
                           src={img.url}
                           alt="Complaint Evidence"
-                          onClick={() =>
-                            window.open(img.url, '_blank')
-                          }
-                          className="w-64 h-48 object-cover rounded-xl border border-[#E0E0E0] cursor-pointer"
+                          onClick={() => window.open(img.url, '_blank')}
+                          className="h-36 w-48 cursor-pointer rounded-lg border border-[#e1e4e8] object-cover"
                         />
-
                         {isOwner(selectedComplaint) && (
-
                           <button
-                            onClick={() =>
-                              handleDeleteImage(img._id)
-                            }
-                            className="absolute top-2 right-2 bg-[#E63946] text-white rounded-full p-2 hover:bg-[#C51F2F]"
+                            onClick={() => handleDeleteImage(img._id)}
+                            className="absolute right-2 top-2 rounded-full bg-[#E63946] p-2 text-white hover:bg-[#C51F2F]"
                             title="Delete Image"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
-
                         )}
-
                       </div>
-
                     ))}
-
                   </div>
-
-                </div>
-
+                </section>
               )}
-
-              <div className="flex justify-end">
-
-                <Button
-                  variant="secondary"
-                  className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
-                  onClick={() => setViewModalOpen(false)}
-                >
-                  Close
-                </Button>
-
-              </div>
-
             </div>
-
           )}
 
         </Modal>
@@ -1127,6 +1260,8 @@ const SafetyComplaints = () => {
           isOpen={statusModalOpen}
           onClose={() => setStatusModalOpen(false)}
           title="Update Resolution Status"
+          maxWidth="max-w-xl"
+          dialogClassName="complaint-status-dialog"
         >
 
           <form
@@ -1134,17 +1269,23 @@ const SafetyComplaints = () => {
             className="space-y-4"
           >
 
-            <Select
+            <SearchFilterSelect
               label="Complaint Status"
+              formField
               value={statusFormData.status}
-              onChange={(e) =>
+              onValueChange={(value) =>
                 setStatusFormData({
                   ...statusFormData,
-                  status: e.target.value
+                  status: value === '__select_option__' ? '' : value
                 })
               }
-              options={statusOptions}
+              options={[{ value: '__select_option__', label: 'Select an option' }, ...statusOptions]}
+              placeholder="Select an option"
               required
+              allowClear={false}
+              iconType="status"
+              matchSelectedOptionColor
+              menuClassName="complaint-status-update-menu"
             />
 
             <Textarea
