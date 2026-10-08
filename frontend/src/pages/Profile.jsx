@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import authService from '../services/authService';
-import profileHeroRefinery from '../assets/profile-hero-refinery.png';
+import profileHeroRefinery from '../assets/profile-hero-refinery-golden-hour.png';
 
 import {
   User,
@@ -22,7 +22,6 @@ import {
   UsersRound,
   Droplet,
   Check,
-  Pencil,
   X
 } from 'lucide-react';
 
@@ -262,17 +261,13 @@ const Profile = () => {
         #profile-redesign .profile-hero-avatar { border-radius: 50% !important; }
         #profile-redesign .profile-hero-avatar > img { border-radius: 50% !important; }
         #profile-redesign .profile-designation-value { font-size: clamp(26px, 2vw, 30px) !important; font-weight: 600 !important; }
-        .profile-hero-curtain {
-          -webkit-backdrop-filter: blur(2px);
-          backdrop-filter: blur(2px);
-        }
         .profile-hero-curtain::before {
           content: '';
           position: absolute;
           inset: 0;
-          background: rgba(255, 255, 255, .84);
-          -webkit-mask-image: radial-gradient(ellipse 38% 100% at 50% 50%, #000 0%, #000 54%, rgba(0, 0, 0, .88) 80%, transparent 100%);
-          mask-image: radial-gradient(ellipse 38% 100% at 50% 50%, #000 0%, #000 54%, rgba(0, 0, 0, .88) 80%, transparent 100%);
+          background: rgba(255, 255, 255, .96);
+          -webkit-mask-image: radial-gradient(ellipse 32% 100% at 50% 50%, rgba(0, 0, 0, .94) 0%, rgba(0, 0, 0, .94) 50%, rgba(0, 0, 0, .72) 74%, transparent 100%);
+          mask-image: radial-gradient(ellipse 32% 100% at 50% 50%, rgba(0, 0, 0, .94) 0%, rgba(0, 0, 0, .94) 50%, rgba(0, 0, 0, .72) 74%, transparent 100%);
         }
         #profile-redesign input:focus {
           border-color: #F2C7B0 !important;
@@ -302,7 +297,7 @@ const Profile = () => {
         <section className="profile-hero-section relative min-h-[490px] bg-transparent sm:min-h-[440px] lg:h-[380px] lg:min-h-[380px]" aria-label="Profile hero">
           <div className="profile-hero-content relative mx-auto grid min-h-[490px] w-full grid-cols-1 items-center gap-3 px-6 py-8 sm:min-h-[440px] sm:px-10 lg:h-[380px] lg:min-h-[380px] lg:-translate-y-[128px] lg:grid-cols-[minmax(0,1fr)_minmax(160px,205px)_minmax(0,1fr)] lg:gap-6 lg:px-[6vw] lg:py-0">
             <div className="order-2 z-10 mx-auto w-full max-w-[300px] text-left lg:order-1 lg:col-start-1 lg:mx-0 lg:justify-self-end lg:pr-4 lg:translate-x-[112px]">
-              <p className="text-[13px] font-semibold tracking-[.06em] text-[#526274]">DESIGNATION</p>
+              <p className="text-[13px] font-semibold tracking-[.06em] text-[#1F2937]">DESIGNATION</p>
               <h1 className="profile-designation-value mt-2 text-[26px] font-semibold leading-tight tracking-[-.02em] text-[#111] sm:text-[28px]">{profileDisplayValue(user?.designation || user?.role)}</h1>
               <div className="mt-4 h-[2px] w-[70px] bg-[#E87532]" />
             </div>
@@ -312,10 +307,9 @@ const Profile = () => {
               onClick={() => { setSelectedAvatarId(user?.avatarId || null); setAvatarPickerOpen(true); }}
               aria-label="Change profile avatar"
               title="Change profile avatar"
-              className="profile-hero-avatar group relative order-1 mx-auto h-[170px] w-[170px] overflow-hidden rounded-full border-[5px] border-white bg-transparent shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E87532] sm:h-[190px] sm:w-[190px] lg:order-2 lg:col-start-2 lg:h-[180px] lg:w-[180px] lg:-translate-x-4"
+              className="profile-hero-avatar relative order-1 mx-auto h-[170px] w-[170px] overflow-hidden rounded-full border-[5px] border-white bg-transparent shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E87532] sm:h-[190px] sm:w-[190px] lg:order-2 lg:col-start-2 lg:h-[180px] lg:w-[180px] lg:-translate-x-4"
             >
               <ProfileAvatar avatarId={user?.avatarId} role={user?.role} initials={initials} />
-              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden="true"><Pencil className="h-5 w-5" /></span>
             </button>
 
             <div className="order-3 z-10 mx-auto w-full max-w-[350px] text-left lg:col-start-3 lg:mx-0 lg:max-w-[340px] lg:translate-x-14">
@@ -341,13 +335,13 @@ const Profile = () => {
                 type="button"
                 onClick={() => selectProfileTab(tab)}
                 aria-current={selected ? 'page' : undefined}
-                className={`profile-tab relative min-h-[52px] shrink-0 border-b-2 px-1 text-[14px] font-medium sm:text-[15px] ${selected ? 'border-[#f2670a] text-[#111]' : 'border-transparent text-[#536982] hover:text-[#222]'}`}
+                className={`profile-tab relative min-h-[52px] shrink-0 border-b-2 px-1 text-[14px] font-medium sm:text-[15px] ${selected ? 'border-[#f2670a] text-[#111]' : 'border-transparent text-[#1F2937] hover:text-[#222]'}`}
               >
                 {label}
               </button>
             );
           })}
-          <span className="flex min-h-[52px] shrink-0 cursor-not-allowed items-center border-b-2 border-transparent px-1 text-[14px] font-medium text-[#a1a3a6] sm:text-[15px]" aria-disabled="true" title="Notifications are not available in this profile yet">Notifications</span>
+          <span className="flex min-h-[52px] shrink-0 cursor-not-allowed items-center border-b-2 border-transparent px-1 text-[14px] font-medium text-[#1F2937] sm:text-[15px]" aria-disabled="true" title="Notifications are not available in this profile yet">Notifications</span>
           <button
             type="button"
             onClick={() => setEditMode(!editMode)}
@@ -378,7 +372,7 @@ const Profile = () => {
                   <div key={label} className="profile-information-row profile-personal-row flex min-w-0 items-center gap-3 sm:gap-4">
                     <span className={`flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full ${['bg-[#fff0e5] text-[#ef6709]', 'bg-[#e8f1ff] text-[#1476e8]', 'bg-[#edf1f6] text-[#526982]', 'bg-[#edf1f6] text-[#526982]', 'bg-[#fdebed] text-[#e33346]', 'bg-[#fff0e5] text-[#ef6709]', 'bg-[#e8f1ff] text-[#1476e8]', 'bg-[#e4f8f0] text-[#18a86b]', 'bg-[#f0e9ff] text-[#8641dd]', 'bg-[#f0e9ff] text-[#8641dd]', 'bg-[#edf1f6] text-[#526982]'][index]}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
                     <div className="min-w-0">
-                      <p className="text-[13px] text-[#536982]">{label}</p>
+                      <p className="text-[13px] text-[#1F2937]">{label}</p>
                       <p className="break-words text-[14px] font-semibold text-[#17191c]">{profileDisplayValue(value)}</p>
                     </div>
                   </div>
@@ -406,7 +400,7 @@ const Profile = () => {
                   <div key={label} className="profile-information-row profile-personal-row flex min-w-0 items-center gap-3 sm:gap-4">
                     <span className={`flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full ${['bg-[#e8f1ff] text-[#1476e8]', 'bg-[#f0e9ff] text-[#8641dd]', 'bg-[#fff0e5] text-[#ef6709]', 'bg-[#e4f8f0] text-[#18a86b]', 'bg-[#e8f1ff] text-[#1476e8]', 'bg-[#fff0e5] text-[#ef6709]', 'bg-[#f0e9ff] text-[#8641dd]', 'bg-[#e4f8f0] text-[#18a86b]', 'bg-[#e8f1ff] text-[#1476e8]', 'bg-[#fff0e5] text-[#ef6709]', 'bg-[#e4f8f0] text-[#18a86b]'][index]}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
                     <div className="min-w-0">
-                      <p className="text-[13px] text-[#536982]">{label}</p>
+                      <p className="text-[13px] text-[#1F2937]">{label}</p>
                       <p className="break-words text-[14px] font-semibold text-[#17191c]">{profileDisplayValue(value)}</p>
                     </div>
                   </div>
@@ -468,7 +462,7 @@ const Profile = () => {
                       <KeyRound className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <div className="flex min-w-0 flex-col items-start">
-                      <p className="text-[13px] leading-5 text-[#536982]">A secure reset token will be sent to your registered account email.</p>
+                      <p className="text-[13px] leading-5 text-[#1F2937]">A secure reset token will be sent to your registered account email.</p>
                     </div>
                   </div>
                   <div className="flex min-w-0 items-start gap-3">
@@ -476,7 +470,7 @@ const Profile = () => {
                       <Mail className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <div className="security-email-value min-w-0">
-                      <label className="mb-1 block text-[13px] font-medium text-[#536982]">Registered Account Email</label>
+                      <label className="mb-1 block text-[13px] font-medium text-[#1F2937]">Registered Account Email</label>
                       <p className="break-words text-[14px] font-semibold text-[#17191c]">{profileDisplayValue(passwordEmail)}</p>
                     </div>
                   </div>
