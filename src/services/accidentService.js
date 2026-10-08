@@ -25,14 +25,9 @@ class AccidentService {
       user: userId
     });
 
-    if (!worker) {
-      throw new ApiError(
-        404,
-        'Worker profile not found for this user'
-      );
-    }
-
-    workerId = worker._id;
+    // The authenticated account remains the report owner via reportedBy even
+    // when it has no linked Worker profile; worker is an optional relation.
+    workerId = worker?._id || null;
     reportSource = "Worker Report";
   }
 
@@ -154,9 +149,12 @@ class AccidentService {
   /**
    * Get accident report by ID
    */
-  async getReportById(reportId) {
+  async getReportById(reportId, user) {
+    const reportQuery = user?.role === ROLES.WORKER
+      ? { _id: reportId, reportedBy: user._id }
+      : { _id: reportId };
 
-    const report = await Accident.findById(reportId)
+    const report = await Accident.findOne(reportQuery)
       .populate('reportedBy', 'name email role phone')
       .populate('worker')
       .populate('images.uploadedBy', 'name email role');
@@ -204,7 +202,25 @@ class AccidentService {
       }
     }
 
-    Object.assign(report, updateData);
+    if (user.role === ROLES.WORKER) {
+      const workerEditableFields = [
+        'title',
+        'description',
+        'date',
+        'time',
+        'factory',
+        'department',
+        'severity',
+        'witnessDetails'
+      ];
+      for (const field of workerEditableFields) {
+        if (Object.prototype.hasOwnProperty.call(updateData, field)) {
+          report[field] = updateData[field];
+        }
+      }
+    } else {
+      Object.assign(report, updateData);
+    }
     await report.save();
     return report;
   }

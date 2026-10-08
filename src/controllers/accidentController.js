@@ -40,7 +40,7 @@ const getAllReports = asyncHandler(async (req, res) => {
  * Get Accident Report by ID Controller
  */
 const getReportById = asyncHandler(async (req, res) => {
-  const report = await accidentService.getReportById(req.params.id);
+  const report = await accidentService.getReportById(req.params.id, req.user);
   return res.status(200).json({
     success: true,
     message: 'Accident report details fetched successfully',

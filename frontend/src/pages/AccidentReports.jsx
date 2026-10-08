@@ -66,8 +66,18 @@ const canUploadEvidenceForReport = (report, user) => {
     && String(reporterId) === String(currentUserId);
 };
 
+const isOwnedByUser = (report, user) => {
+  const reporterId = typeof report?.reportedBy === 'object'
+    ? report.reportedBy?._id || report.reportedBy?.id
+    : report?.reportedBy;
+  const currentUserId = user?._id || user?.id;
+
+  return Boolean(reporterId && currentUserId)
+    && String(reporterId) === String(currentUserId);
+};
+
 const AccidentReports = () => {
-  const { user, isAdminOrOfficer, isSuperAdmin, isFactoryAdmin } = useAuth();
+  const { user, isWorker, isAdminOrOfficer, isSuperAdmin, isFactoryAdmin } = useAuth();
   const { showSuccess, showError } = useToast();
 
   const [reports, setReports] = useState([]);
@@ -116,8 +126,9 @@ const AccidentReports = () => {
   }, [currentPage, searchQuery, severityFilter, statusFilter, itemsPerPage]);
 
   useEffect(() => {
-    // Load workers list for dropdown assignment
+    // The worker directory is restricted to administrative roles.
     const loadWorkers = async () => {
+      if (!isAdminOrOfficer) return;
       try {
         const res = await workerService.getAllWorkers({ limit: 100 });
         setWorkersList(res.workers || res.data || []);
@@ -126,7 +137,7 @@ const AccidentReports = () => {
       }
     };
     loadWorkers();
-  }, []);
+  }, [isAdminOrOfficer]);
 
   const fetchReports = async () => {
     const requestId = ++fetchRequestId.current;
@@ -394,7 +405,7 @@ const AccidentReports = () => {
               <Upload className="h-4 w-4" />
             </button>
           )}
-          {isSuperAdmin && (
+          {(isSuperAdmin || (isWorker && isOwnedByUser(row, user) && row.status === 'Reported')) && (
             <button type="button" onClick={() => openEditModal(row)} className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]" title="Edit Report" aria-label="Edit report">
               <Pencil className="h-4 w-4" />
             </button>
@@ -404,7 +415,7 @@ const AccidentReports = () => {
               <CheckCircle className="h-4 w-4" />
             </button>
           )}
-          {isSuperAdmin && (
+          {(isSuperAdmin || (isWorker && isOwnedByUser(row, user))) && (
             <button type="button" onClick={() => openDeleteDialog(row)} className="rounded-md p-1.5 text-[#62666b] transition-colors hover:bg-[#f3f4f5] hover:text-[#111]" title="Delete Report" aria-label="Delete report">
               <Trash2 className="h-4 w-4" />
             </button>
@@ -720,6 +731,188 @@ const AccidentReports = () => {
           box-shadow: 0 0 0 2px rgba(232, 117, 50, .14) !important;
           outline: none;
         }
+        .worker-accident-delete-dialog {
+          display: flex !important;
+          flex-direction: column !important;
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: calc(100dvh - 48px) !important;
+          border-color: #e1e4e8 !important;
+          border-radius: 14px !important;
+          background: #ffffff !important;
+          box-shadow: 0 12px 32px rgba(17, 17, 17, .12) !important;
+        }
+        .fixed.inset-0.z-50:has(.worker-accident-delete-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .42) !important;
+          backdrop-filter: none !important;
+        }
+        .worker-accident-delete-dialog > div:first-child {
+          flex: 0 0 auto;
+          border-bottom: 1px solid #e1e4e8 !important;
+          background: #ffffff !important;
+        }
+        .worker-accident-delete-dialog > div:first-child h3 {
+          color: #111111 !important;
+          font-weight: 600 !important;
+        }
+        .worker-accident-delete-dialog > div:first-child button {
+          color: #64748b !important;
+        }
+        .worker-accident-delete-dialog > div:first-child button:hover {
+          background: #f1f5f9 !important;
+          color: #111111 !important;
+        }
+        .worker-accident-delete-dialog > div:nth-child(2) {
+          flex: 0 1 auto;
+          min-height: 0;
+          max-height: calc(100dvh - 180px) !important;
+          overflow-y: auto !important;
+          padding: 18px 24px !important;
+          background: #ffffff !important;
+        }
+        .worker-accident-delete-dialog > div:nth-child(2) > div:first-child {
+          align-items: center;
+          gap: 12px;
+        }
+        .worker-accident-delete-dialog > div:nth-child(2) > div:first-child > div:first-child {
+          background: #f1f5f9 !important;
+          color: #e87532 !important;
+          padding: 10px !important;
+          box-shadow: none !important;
+        }
+        .worker-accident-delete-dialog > div:nth-child(2) > div:first-child > div:first-child svg {
+          width: 20px;
+          height: 20px;
+        }
+        .worker-accident-delete-dialog > div:nth-child(2) p {
+          color: #1f2937 !important;
+          font-size: 15px !important;
+          font-weight: 400 !important;
+          line-height: 1.5 !important;
+        }
+        .worker-accident-delete-dialog > div:last-child {
+          flex: 0 0 auto;
+          justify-content: flex-end;
+          gap: 8px !important;
+          border-top: 1px solid #e1e4e8 !important;
+          padding: 12px 20px !important;
+          background: #ffffff !important;
+        }
+        .worker-accident-delete-dialog > div:last-child button {
+          min-height: 40px;
+          border-radius: 8px !important;
+          font-weight: 500 !important;
+          box-shadow: none !important;
+          transform: none !important;
+        }
+        .worker-accident-delete-dialog > div:last-child button:first-child {
+          border: 1px solid #cbd5e1 !important;
+          background: #ffffff !important;
+          color: #111111 !important;
+        }
+        .worker-accident-delete-dialog > div:last-child button:first-child:hover:not(:disabled) {
+          background: #f8fafc !important;
+          border-color: #94a3b8 !important;
+        }
+        .worker-accident-delete-dialog > div:last-child button:last-child {
+          border: 1px solid #111111 !important;
+          background: #111111 !important;
+          color: #ffffff !important;
+        }
+        .worker-accident-delete-dialog > div:last-child button:last-child:hover:not(:disabled) {
+          background: #292929 !important;
+          border-color: #292929 !important;
+        }
+        .worker-accident-delete-dialog > div:last-child button:focus-visible {
+          outline: 2px solid #94a3b8 !important;
+          outline-offset: 2px;
+          box-shadow: none !important;
+        }
+        .worker-accident-edit-dialog {
+          display: flex !important;
+          flex-direction: column !important;
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: calc(100dvh - 48px) !important;
+          border-color: #e1e4e8 !important;
+          background: #ffffff !important;
+          box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+        }
+        .fixed.inset-0.z-50:has(.worker-accident-edit-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .32) !important;
+          backdrop-filter: none !important;
+        }
+        .worker-accident-edit-dialog > div:first-child {
+          flex: 0 0 auto;
+          border-bottom-color: #e1e4e8 !important;
+          background: #ffffff !important;
+        }
+        .worker-accident-edit-dialog > div:nth-child(2) {
+          flex: 0 1 auto;
+          min-height: 0;
+          max-height: calc(100dvh - 180px) !important;
+          overflow-y: auto !important;
+          background: #ffffff !important;
+        }
+        .worker-accident-edit-dialog > div:last-child {
+          flex: 0 0 auto;
+          border-top: 1px solid #e1e4e8 !important;
+          background: #ffffff !important;
+          padding-bottom: 16px !important;
+        }
+        .worker-accident-edit-dialog > div:first-child h3 { color: #111111 !important; font-weight: 600 !important; }
+        .worker-accident-edit-dialog > div:first-child button { color: #62666b !important; }
+        .worker-accident-edit-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111111 !important; }
+        .worker-accident-edit-dialog label {
+          margin-bottom: 6px !important;
+          color: #292929 !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          text-transform: none !important;
+          letter-spacing: normal !important;
+        }
+        .worker-accident-edit-dialog label span { color: #e87532 !important; }
+        .worker-accident-edit-dialog input,
+        .worker-accident-edit-dialog select {
+          height: 46px !important;
+          min-height: 46px !important;
+          padding: 0 14px !important;
+          border: 1px solid #dedede !important;
+          border-radius: 8px !important;
+          background-color: #ffffff !important;
+          color: #111111 !important;
+          font-size: 14px !important;
+          box-shadow: none !important;
+        }
+        .worker-accident-edit-dialog textarea {
+          min-height: 120px !important;
+          padding: 11px 14px !important;
+          border: 1px solid #dedede !important;
+          border-radius: 8px !important;
+          background: #ffffff !important;
+          color: #111111 !important;
+          font-size: 14px !important;
+          line-height: 1.5;
+          resize: none !important;
+          box-shadow: none !important;
+        }
+        .worker-accident-edit-dialog input:focus,
+        .worker-accident-edit-dialog select:focus,
+        .worker-accident-edit-dialog textarea:focus {
+          border-color: #d1a184 !important;
+          box-shadow: 0 0 0 2px rgba(232, 117, 50, .12) !important;
+          outline: none;
+        }
+        .worker-accident-edit-dialog > div:last-child button {
+          min-height: 40px;
+          border-radius: 8px !important;
+          font-size: 13px;
+          font-weight: 500;
+        }
+        .worker-accident-edit-dialog button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(232, 117, 50, .14) !important; }
+        @media (max-width: 640px) {
+          .worker-accident-edit-dialog > div:nth-child(2) { max-height: calc(100dvh - 160px) !important; }
+        }
       `}</style>
 
       <div className="accidents-page space-y-6">
@@ -885,23 +1078,59 @@ const AccidentReports = () => {
       <Modal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        title="Edit Accident Report"
+        title={isWorker ? 'Update Accident Report' : 'Edit Accident Report'}
+        dialogClassName={isWorker ? 'worker-accident-edit-dialog' : ''}
+        footer={isWorker ? (
+          <>
+            <Button
+              variant="secondary"
+              className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
+              onClick={() => setEditModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="worker-accident-edit-form"
+              variant="primary"
+              loading={submitting}
+              className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
+            >
+              Update Report
+            </Button>
+          </>
+        ) : undefined}
       >
-        <form onSubmit={handleUpdateReport} className="space-y-4">
-          <Input label="Accident Title" name="title" value={formData.title} onChange={handleInputChange} required />
-          <Textarea label="Accident Description" name="description" value={formData.description} onChange={handleInputChange} required />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input label="Factory Name" name="factory" value={formData.factory} onChange={handleInputChange} required />
-            <Input label="Department" name="department" value={formData.department} onChange={handleInputChange} required />
-          </div>
-
-          <Select label="Incident Severity" name="severity" value={formData.severity} onChange={handleInputChange} options={severityOptions} required />
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="secondary" className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]" onClick={() => setEditModalOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={submitting} className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]">Update Report</Button>
-          </div>
+        <form
+          id={isWorker ? 'worker-accident-edit-form' : undefined}
+          onSubmit={handleUpdateReport}
+          className="space-y-4"
+        >
+          {isWorker ? (
+            <>
+              <Input label="Accident Title" name="title" value={formData.title} onChange={handleInputChange} required />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input label="Factory Name" name="factory" value={formData.factory} onChange={handleInputChange} required />
+                <Input label="Department" name="department" value={formData.department} onChange={handleInputChange} required />
+              </div>
+              <Select label="Incident Severity" name="severity" value={formData.severity} onChange={handleInputChange} options={severityOptions} required />
+              <Textarea label="Accident Description" name="description" value={formData.description} onChange={handleInputChange} required />
+            </>
+          ) : (
+            <>
+              <Input label="Accident Title" name="title" value={formData.title} onChange={handleInputChange} required />
+              <Textarea label="Accident Description" name="description" value={formData.description} onChange={handleInputChange} required />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input label="Factory Name" name="factory" value={formData.factory} onChange={handleInputChange} required />
+                <Input label="Department" name="department" value={formData.department} onChange={handleInputChange} required />
+              </div>
+              <Select label="Incident Severity" name="severity" value={formData.severity} onChange={handleInputChange} options={severityOptions} required />
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="secondary" className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]" onClick={() => setEditModalOpen(false)}>Cancel</Button>
+                <Button type="submit" variant="primary" loading={submitting} className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]">Update Report</Button>
+              </div>
+            </>
+          )}
         </form>
       </Modal>
 
@@ -1095,6 +1324,7 @@ const AccidentReports = () => {
         title="Delete Accident Report"
         message="Are you sure you want to permanently delete this accident report?"
         loading={submitting}
+        dialogClassName={isWorker ? 'worker-accident-delete-dialog' : ''}
       />
       </div>
     </>

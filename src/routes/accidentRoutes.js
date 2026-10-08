@@ -45,7 +45,7 @@ router.get('/:id', getReportById);
  */
 router.put(
   '/:id',
-  authorize(ROLES.SUPER_ADMIN),
+  authorize(ROLES.WORKER, ROLES.SUPER_ADMIN),
   updateReport
 );
 
@@ -67,7 +67,7 @@ router.patch(
  */
 router.delete(
   '/:id',
-  authorize(ROLES.SUPER_ADMIN),
+  authorize(ROLES.WORKER, ROLES.SUPER_ADMIN),
   deleteReport
 );
 
