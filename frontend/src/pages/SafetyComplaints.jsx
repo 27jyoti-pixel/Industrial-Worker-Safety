@@ -41,6 +41,7 @@ const complaintDetailDate = (value) => {
 
 const SafetyComplaints = () => {
   const { user, isAdminOrOfficer, isSuperAdmin, isFactoryAdmin } = useAuth();
+  const isWorker = user?.role === 'Worker';
   const { showSuccess, showError } = useToast();
 
   const [complaints, setComplaints] = useState([]);
@@ -788,6 +789,206 @@ const SafetyComplaints = () => {
           color: #fff !important;
         }
         .complaint-status-dialog form > div:last-child button:last-child:hover { background: #111 !important; color: #fff !important; }
+        .worker-complaint-evidence-dialog {
+          display: flex !important;
+          flex-direction: column !important;
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: calc(100dvh - 48px) !important;
+          border: 1px solid #e1e4e8 !important;
+          border-radius: 14px !important;
+          background: #fff !important;
+          box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+        }
+        .fixed.inset-0.z-50:has(.worker-complaint-evidence-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .42) !important;
+          backdrop-filter: none !important;
+        }
+        .worker-complaint-evidence-dialog > div:first-child {
+          flex: 0 0 auto;
+          border-bottom-color: #e1e4e8 !important;
+          background: #fff !important;
+        }
+        .worker-complaint-evidence-dialog > div:first-child h3 { color: #111 !important; font-weight: 600 !important; }
+        .worker-complaint-evidence-dialog > div:first-child button { color: #62666b !important; }
+        .worker-complaint-evidence-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111 !important; }
+        .worker-complaint-evidence-dialog > div:nth-child(2) {
+          flex: 0 1 auto;
+          min-height: 0;
+          max-height: min(65vh, calc(100dvh - 150px)) !important;
+          overflow-y: auto !important;
+          background: #fff !important;
+          padding: 18px 24px !important;
+        }
+        .worker-complaint-evidence-dialog form { display: flex; flex-direction: column; gap: 12px; }
+        .worker-complaint-evidence-dialog form > :not([hidden]) ~ :not([hidden]) { margin-top: 0 !important; }
+        .worker-complaint-evidence-dialog form > div:last-child { display: flex; justify-content: flex-end; gap: 10px; padding-top: 2px; }
+        .worker-complaint-evidence-dialog form button { min-height: 40px; border-radius: 8px !important; box-shadow: none !important; transform: none !important; }
+        .worker-complaint-evidence-dialog form button:focus { outline: none !important; box-shadow: none !important; }
+        .worker-complaint-evidence-dialog label { color: #292929 !important; font-size: 13px !important; font-weight: 500 !important; text-transform: none !important; letter-spacing: normal !important; }
+        .worker-complaint-evidence-dialog .border-dashed {
+          border: 1px dashed #cfd3d8 !important;
+          border-radius: 10px !important;
+          background: #fff !important;
+          padding: 22px !important;
+        }
+        .worker-complaint-evidence-dialog .border-dashed:hover { border-color: #e87532 !important; background: #fff !important; }
+        .worker-complaint-evidence-dialog .border-dashed svg { color: #e87532 !important; }
+        .worker-complaint-evidence-dialog .border-dashed .text-sand-700 { color: #111 !important; }
+        .worker-complaint-evidence-dialog .border-dashed .text-sand-500 { color: #6b7280 !important; }
+        .worker-complaint-evidence-dialog .bg-sand-50 { border-color: #e1e4e8 !important; background: #f8f9fa !important; }
+        .worker-complaint-evidence-dialog .text-sand-700 { color: #292929 !important; }
+        .worker-complaint-evidence-dialog .text-sand-400 { color: #6b7280 !important; }
+        .worker-complaint-edit-dialog {
+          display: flex !important;
+          flex-direction: column !important;
+          height: auto !important;
+          min-height: 70vh !important;
+          max-height: calc(100dvh - 48px) !important;
+          border-color: #e1e4e8 !important;
+          background: #fff !important;
+          box-shadow: 0 16px 40px rgba(17, 17, 17, .12) !important;
+        }
+        .fixed.inset-0.z-50:has(.worker-complaint-edit-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .32) !important;
+          backdrop-filter: none !important;
+        }
+        .worker-complaint-edit-dialog > div:first-child {
+          flex: 0 0 auto;
+          border-bottom-color: #e1e4e8 !important;
+          background: #fff !important;
+        }
+        .worker-complaint-edit-dialog > div:nth-child(2) {
+          flex: 0 0 auto;
+          min-height: 0;
+          max-height: none !important;
+          overflow-y: visible !important;
+        }
+        .worker-complaint-edit-dialog > div:last-child {
+          flex: 0 0 auto;
+          border-top: 1px solid #e1e4e8 !important;
+          background: #fff !important;
+          padding-bottom: 16px !important;
+        }
+        .worker-complaint-edit-dialog > div:first-child h3 { color: #111 !important; font-weight: 600 !important; }
+        .worker-complaint-edit-dialog > div:first-child button { color: #62666b !important; }
+        .worker-complaint-edit-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111 !important; }
+        .worker-complaint-edit-dialog label {
+          margin-bottom: 6px !important;
+          color: #292929 !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          text-transform: none !important;
+          letter-spacing: normal !important;
+        }
+        .worker-complaint-edit-dialog label span { color: #E87532 !important; }
+        .worker-complaint-edit-dialog input,
+        .worker-complaint-edit-dialog select {
+          height: 46px !important;
+          min-height: 46px !important;
+          padding: 0 14px !important;
+          border: 1px solid #dedede !important;
+          border-radius: 8px !important;
+          background-color: #fff !important;
+          color: #111 !important;
+          font-size: 14px !important;
+          box-shadow: none !important;
+        }
+        .worker-complaint-edit-dialog textarea {
+          min-height: 120px !important;
+          padding: 11px 14px !important;
+          border: 1px solid #dedede !important;
+          border-radius: 8px !important;
+          background: #fff !important;
+          color: #111 !important;
+          font-size: 14px !important;
+          line-height: 1.5;
+          resize: none !important;
+          box-shadow: none !important;
+        }
+        .worker-complaint-edit-dialog input::placeholder,
+        .worker-complaint-edit-dialog textarea::placeholder { color: #858b92 !important; opacity: 1; }
+        .worker-complaint-edit-dialog input:focus,
+        .worker-complaint-edit-dialog select:focus,
+        .worker-complaint-edit-dialog textarea:focus {
+          border-color: #d1a184 !important;
+          box-shadow: 0 0 0 2px rgba(232, 117, 50, .12) !important;
+          outline: none;
+        }
+        .worker-complaint-edit-dialog > div:last-child button {
+          min-height: 40px;
+          border-radius: 8px !important;
+          font-size: 13px;
+          font-weight: 500;
+        }
+        .worker-complaint-edit-dialog button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(232, 117, 50, .14) !important; }
+        .worker-complaint-delete-dialog {
+          display: flex !important;
+          flex-direction: column !important;
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: calc(100dvh - 48px) !important;
+          border-color: #e1e4e8 !important;
+          border-radius: 14px !important;
+          background: #fff !important;
+          box-shadow: 0 12px 32px rgba(17, 17, 17, .12) !important;
+        }
+        .fixed.inset-0.z-50:has(.worker-complaint-delete-dialog) > .fixed.top-0.left-0.w-screen.h-screen {
+          background: rgba(17, 17, 17, .4) !important;
+          backdrop-filter: none !important;
+        }
+        .worker-complaint-delete-dialog > div:first-child {
+          flex: 0 0 auto;
+          border-bottom: 1px solid #e1e4e8 !important;
+          background: #fff !important;
+        }
+        .worker-complaint-delete-dialog > div:first-child h3 { color: #111 !important; font-weight: 600 !important; }
+        .worker-complaint-delete-dialog > div:first-child button { color: #62666b !important; }
+        .worker-complaint-delete-dialog > div:first-child button:hover { background: #f3f4f5 !important; color: #111 !important; }
+        .worker-complaint-delete-dialog > div:nth-child(2) {
+          flex: 0 1 auto;
+          min-height: 0;
+          max-height: calc(100dvh - 180px) !important;
+          overflow-y: auto !important;
+          padding: 18px 24px !important;
+          background: #fff !important;
+        }
+        .worker-complaint-delete-dialog > div:nth-child(2) > div:first-child { align-items: center; gap: 12px; }
+        .worker-complaint-delete-dialog > div:nth-child(2) > div:first-child > div:first-child {
+          border: 1px solid #fecaca;
+          background: #fef2f2 !important;
+          color: #dc2626 !important;
+          padding: 10px !important;
+        }
+        .worker-complaint-delete-dialog > div:nth-child(2) > div:first-child > div:first-child svg { width: 20px; height: 20px; }
+        .worker-complaint-delete-dialog > div:nth-child(2) p { color: #4b5563 !important; white-space: pre-line; }
+        .worker-complaint-delete-dialog > div:last-child {
+          flex: 0 0 auto;
+          justify-content: flex-end;
+          gap: 8px !important;
+          border-top: 1px solid #e1e4e8 !important;
+          padding: 12px 20px !important;
+          background: #fff !important;
+        }
+        .worker-complaint-delete-dialog > div:last-child button {
+          min-height: 40px;
+          border-radius: 8px !important;
+          box-shadow: none !important;
+          transform: none !important;
+          font-weight: 500 !important;
+        }
+        .worker-complaint-delete-dialog > div:last-child button:first-child {
+          border: 1px solid #d1d5db !important;
+          background: #fff !important;
+          color: #111 !important;
+        }
+        .worker-complaint-delete-dialog > div:last-child button:first-child:hover { background: #f7f7f7 !important; }
+        .worker-complaint-delete-dialog > div:last-child button:last-child {
+          border: 1px solid #111 !important;
+          background: #111 !important;
+          color: #fff !important;
+        }
+        .worker-complaint-delete-dialog > div:last-child button:last-child:hover { background: #111 !important; color: #fff !important; }
         #complaints-page .complaints-hero-art {
           background-size: cover;
           background-position: right center;
@@ -1067,9 +1268,31 @@ const SafetyComplaints = () => {
           isOpen={editModalOpen}
           onClose={() => setEditModalOpen(false)}
           title="Update Safety Complaint"
+          dialogClassName={isWorker ? 'worker-complaint-edit-dialog' : ''}
+          footer={isWorker ? (
+            <>
+              <Button
+                variant="secondary"
+                className="!border !border-[#dedede] !bg-white !text-[#111] !shadow-none hover:!bg-[#f8f8f8]"
+                onClick={() => setEditModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="worker-complaint-edit-form"
+                variant="primary"
+                loading={submitting}
+                className="!bg-[#111111] !text-white !shadow-none hover:!bg-[#2b2b2b]"
+              >
+                Update Complaint
+              </Button>
+            </>
+          ) : undefined}
         >
 
           <form
+            id={isWorker ? 'worker-complaint-edit-form' : undefined}
             onSubmit={handleUpdateComplaint}
             className="space-y-4"
           >
@@ -1084,23 +1307,49 @@ const SafetyComplaints = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-              <Select
-                label="Hazard Type"
-                name="complaintType"
-                value={formData.complaintType}
-                onChange={handleInputChange}
-                options={typeOptions}
-                required
-              />
+              {isWorker ? (
+                <SearchFilterSelect
+                  label="Hazard Type"
+                  formField
+                  name="complaintType"
+                  value={formData.complaintType}
+                  onValueChange={(value) => handleInputChange({ target: { name: 'complaintType', value } })}
+                  options={typeOptions}
+                  required
+                  allowClear={false}
+                />
+              ) : (
+                <Select
+                  label="Hazard Type"
+                  name="complaintType"
+                  value={formData.complaintType}
+                  onChange={handleInputChange}
+                  options={typeOptions}
+                  required
+                />
+              )}
 
-              <Select
-                label="Severity Level"
-                name="severity"
-                value={formData.severity}
-                onChange={handleInputChange}
-                options={severityOptions}
-                required
-              />
+              {isWorker ? (
+                <SearchFilterSelect
+                  label="Severity Level"
+                  formField
+                  name="severity"
+                  value={formData.severity}
+                  onValueChange={(value) => handleInputChange({ target: { name: 'severity', value } })}
+                  options={severityOptions}
+                  required
+                  allowClear={false}
+                />
+              ) : (
+                <Select
+                  label="Severity Level"
+                  name="severity"
+                  value={formData.severity}
+                  onChange={handleInputChange}
+                  options={severityOptions}
+                  required
+                />
+              )}
 
             </div>
 
@@ -1112,7 +1361,7 @@ const SafetyComplaints = () => {
               required
             />
 
-            <div className="flex justify-end gap-3 pt-2">
+            {!isWorker && <div className="flex justify-end gap-3 pt-2">
 
               <Button
                 variant="secondary"
@@ -1131,7 +1380,7 @@ const SafetyComplaints = () => {
                 Update Complaint
               </Button>
 
-            </div>
+            </div>}
 
           </form>
 
@@ -1334,6 +1583,8 @@ const SafetyComplaints = () => {
           isOpen={imageModalOpen}
           onClose={() => setImageModalOpen(false)}
           title="Upload Photo Evidence of Safety Hazard"
+          maxWidth={user?.role === 'Worker' ? 'max-w-md' : 'max-w-xl'}
+          dialogClassName={user?.role === 'Worker' ? 'worker-complaint-evidence-dialog' : ''}
         >
 
           <form
@@ -1386,6 +1637,7 @@ const SafetyComplaints = () => {
           title="Delete Safety Complaint"
           message="Are you sure you want to delete this safety complaint log?"
           loading={submitting}
+          dialogClassName={isWorker ? 'worker-complaint-delete-dialog' : ''}
         />
 
       </div>
