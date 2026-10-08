@@ -1,4 +1,6 @@
 const Claim = require('../models/claimModel');
+const Worker = require('../models/workerModel');
+const Accident = require('../models/accidentModel');
 const ApiError = require('../utils/ApiError');
 const cloudinaryService = require('./cloudinaryService');
 const { CLAIM_STATUS, ROLES } = require('../constants');
@@ -9,9 +11,35 @@ class ClaimService {
    * @param {Object} claimData
    * @param {string} userId - ID of user submitting claim
    */
-  async submitClaim(claimData, userId) {
+  async submitClaim(claimData, userId, user) {
+    const normalizedClaimData = { ...claimData };
+
+    // Empty optional ObjectId fields arrive from the form as empty strings,
+    // which Mongoose cannot cast to ObjectIds.
+    if (!normalizedClaimData.accidentReport) delete normalizedClaimData.accidentReport;
+    if (!normalizedClaimData.worker) delete normalizedClaimData.worker;
+
+    if (user?.role === ROLES.WORKER) {
+      const worker = await Worker.findOne({ user: userId }).select('_id');
+      if (!worker) {
+        throw new ApiError(404, 'Worker profile not found for authenticated user');
+      }
+
+      normalizedClaimData.worker = worker._id;
+
+      if (normalizedClaimData.accidentReport) {
+        const accident = await Accident.findOne({
+          _id: normalizedClaimData.accidentReport,
+          reportedBy: userId
+        }).select('_id');
+        if (!accident) {
+          throw new ApiError(403, 'You are not authorized to link this accident report');
+        }
+      }
+    }
+
     const claim = await Claim.create({
-      ...claimData,
+      ...normalizedClaimData,
       submittedBy: userId,
       status: CLAIM_STATUS.SUBMITTED
     });
@@ -87,14 +115,12 @@ class ClaimService {
 
     const claim = await Claim.findById(claimId);
 
-    console.log("Claim found:", claim);
-
     if (!claim) {
         throw new ApiError(404, 'Compensation claim not found');
     }
 
 
-    if (user.role === ROLES.WORKER && claim.submittedBy._id.toString() !== user._id.toString()) {
+    if (user.role === ROLES.WORKER && claim.submittedBy.toString() !== user._id.toString()) {
   throw new ApiError(403, 'You are not authorized to view this claim');
 }
 
@@ -143,7 +169,17 @@ async updateClaim(claimId, updateData, user) {
   }
 
 
-  Object.assign(claim, updateData);
+  const workerEditableFields = [
+    'claimAmount',
+    'medicalExpenses',
+    'disabilityType',
+    'description'
+  ];
+  for (const field of workerEditableFields) {
+    if (Object.prototype.hasOwnProperty.call(updateData, field)) {
+      claim[field] = updateData[field];
+    }
+  }
 
   await claim.save();
 

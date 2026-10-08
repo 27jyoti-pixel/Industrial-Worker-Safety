@@ -5,7 +5,7 @@ const asyncHandler = require('../utils/asyncHandler');
  * Submit Compensation Claim Controller
  */
 const submitClaim = asyncHandler(async (req, res) => {
-  const claim = await claimService.submitClaim(req.body, req.user._id);
+  const claim = await claimService.submitClaim(req.body, req.user._id, req.user);
   return res.status(201).json({
     success: true,
     message: 'Compensation claim submitted successfully',

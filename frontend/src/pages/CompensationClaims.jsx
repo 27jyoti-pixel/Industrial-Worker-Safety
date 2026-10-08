@@ -95,15 +95,21 @@ const CompensationClaims = () => {
         const accRes = await accidentService.getAllReports({ limit: 100 });
         setAccidentsList(accRes.accidents || accRes.data || []);
 
-        const wrkRes = await workerService.getAllWorkers({ limit: 100 });
-        setWorkersList(wrkRes.workers || wrkRes.data || []);
+        if (user?.role === 'Worker') {
+          const wrkRes = await workerService.getMyWorkerProfile();
+          const workerProfile = wrkRes.data || wrkRes.worker || wrkRes;
+          setWorkersList(workerProfile?._id ? [workerProfile] : []);
+        } else {
+          const wrkRes = await workerService.getAllWorkers({ limit: 100 });
+          setWorkersList(wrkRes.workers || wrkRes.data || []);
+        }
       } catch (err) {
         console.error('Failed to load dropdown lists', err);
       }
     };
 
     loadDropdowns();
-  }, []);
+  }, [user?.role]);
 
 
   const fetchClaims = async () => {

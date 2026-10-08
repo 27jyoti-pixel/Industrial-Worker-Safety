@@ -399,6 +399,23 @@ ${navigationText}`;
           height: 440px !important;
           aspect-ratio: auto;
         }
+        @media (min-width: 1280px) {
+          #hospitals-page .hospital-results-panel {
+            display: flex;
+            flex-direction: column;
+            height: 440px;
+            min-height: 0;
+          }
+          #hospitals-page .hospital-results-list {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            scrollbar-width: none;
+          }
+          #hospitals-page .hospital-results-list::-webkit-scrollbar {
+            display: none;
+          }
+        }
         @media (max-width: 1279px) {
           #hospitals-page .hospital-map .leaflet-container { height: 390px !important; aspect-ratio: auto; }
         }
@@ -540,7 +557,7 @@ ${navigationText}`;
         </section>
 
         <section className="hospital-results relative z-0 grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1.13fr)_minmax(0,1fr)]" aria-label="Hospital results and map">
-          <div className="min-w-0 px-4 pt-3">
+          <div className="hospital-results-panel min-w-0 px-4 pt-3">
             <div className="flex items-center justify-between gap-3 border-b border-[#e5e7eb] pb-2">
               <div>
                 <h2 className="text-[22px] font-semibold leading-6 text-[#111] lg:text-[24px]">Nearby Hospitals</h2>
@@ -551,7 +568,7 @@ ${navigationText}`;
               </span>
             </div>
 
-            <div className="mt-3 space-y-3">
+            <div className="hospital-results-list mt-3 space-y-3">
               {loading && !nearbyActive ? (
                 <div className="flex min-h-[180px] items-center justify-center gap-2 text-sm text-[#737b84]" aria-live="polite">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading hospitals...
