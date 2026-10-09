@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import dashboardService from '../services/dashboardService';
 import {
@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom';
 import Loader from '../components/common/Loader';
 import workerHeroBackground from '../assets/worker-dashboard-hero-background.png';
 import actionWorkerBackground from '../assets/dashboard-action-worker.png';
+import EmergencyAlerts from '../components/EmergencyAlerts';
 
 const activityStatusColors = {
   open: '#6B9B73',
@@ -88,8 +89,7 @@ const buildTrendPath = (records, totalCount) => {
 
 const WorkerDashboard = ({ user, kpis, recentAccidents, recentClaims, recentComplaints, isWorker = true }) => {
   const [activityFilter, setActivityFilter] = useState('All');
-  const [activityPanelHeight, setActivityPanelHeight] = useState(null);
-  const activityPanelRef = useRef(null);
+  const [emergencyDialogOpen, setEmergencyDialogOpen] = useState(false);
   const metricPresentation = isWorker
     ? [
         { label: 'Accident reports', emptyText: 'No reports yet', path: '/accidents', action: 'Report an accident', iconColor: '#E87532' },
@@ -140,56 +140,6 @@ const WorkerDashboard = ({ user, kpis, recentAccidents, recentClaims, recentComp
       status: record.status,
     })),
   ].sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));
-  const accidentActivityCount = activityRecords.filter((record) => record.type === 'Accidents').length;
-
-  useLayoutEffect(() => {
-    const panel = activityPanelRef.current;
-    if (!panel) return undefined;
-
-    const referencePanel = panel.cloneNode(true);
-    referencePanel.classList.add('worker-dashboard');
-    referencePanel.setAttribute('aria-hidden', 'true');
-    Object.assign(referencePanel.style, {
-      position: 'absolute',
-      left: '-100000px',
-      top: '0',
-      visibility: 'hidden',
-      height: 'auto',
-      minHeight: '0',
-    });
-    referencePanel.querySelectorAll('[data-activity-type]').forEach((row) => {
-      if (row.dataset.activityType !== 'Accidents') row.remove();
-    });
-    const referenceRecords = referencePanel.querySelector('.dashboard-activity-records');
-    if (referenceRecords && accidentActivityCount === 0) {
-      const emptyMessage = document.createElement('div');
-      const message = document.createElement('p');
-      emptyMessage.className = 'dashboard-activity-empty flex h-full min-h-0 items-center justify-center px-3 text-center';
-      message.className = 'text-[13px] font-normal text-[#777]';
-      message.textContent = 'No accident reports to display';
-      emptyMessage.appendChild(message);
-      referenceRecords.replaceChildren(emptyMessage);
-    }
-    document.body.appendChild(referencePanel);
-
-    const measureReferenceHeight = () => {
-      referencePanel.style.width = `${panel.getBoundingClientRect().width}px`;
-      const measuredHeight = referencePanel.getBoundingClientRect().height;
-      setActivityPanelHeight((currentHeight) => (
-        currentHeight != null && Math.abs(currentHeight - measuredHeight) < 0.5
-          ? currentHeight
-          : measuredHeight
-      ));
-    };
-
-    measureReferenceHeight();
-    window.addEventListener('resize', measureReferenceHeight);
-    return () => {
-      window.removeEventListener('resize', measureReferenceHeight);
-      referencePanel.remove();
-    };
-  }, []);
-
   const visibleActivity = activityFilter === 'All'
     ? activityRecords
     : activityRecords.filter((record) => record.type === activityFilter);
@@ -244,7 +194,7 @@ const WorkerDashboard = ({ user, kpis, recentAccidents, recentClaims, recentComp
                 : 'Monitor workers, review incidents, track claims and resolve safety concerns — all in one place.'}
             </p>
             <div className="mt-5">
-              <button type="button" disabled title="Emergency alert workflow is not configured" className="group inline-flex h-[60px] w-[260px] max-w-full items-stretch overflow-hidden rounded-[9px] border border-[#ffb18d] bg-[#fff7f2] p-0 text-left text-[#171717] shadow-[0_2px_6px_rgba(159,55,25,.12)] transition-colors hover:bg-[#fff0e8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d83a16] disabled:cursor-not-allowed disabled:opacity-100">
+              <button type="button" onClick={() => setEmergencyDialogOpen(true)} title="Send a critical emergency alert to your factory" className="group inline-flex h-[60px] w-[260px] max-w-full items-stretch overflow-hidden rounded-[9px] border border-[#ffb18d] bg-[#fff7f2] p-0 text-left text-[#171717] shadow-[0_2px_6px_rgba(159,55,25,.12)] transition-colors hover:bg-[#fff0e8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d83a16]">
                 <span className="flex w-[60px] shrink-0 items-center justify-center bg-[#ef3b12] text-white transition-colors group-hover:bg-[#dc310e]">
                   <Siren className="h-7 w-7" aria-hidden="true" />
                 </span>
@@ -303,7 +253,7 @@ const WorkerDashboard = ({ user, kpis, recentAccidents, recentClaims, recentComp
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" aria-label="Recent activity and next steps">
-        <div ref={activityPanelRef} className="flex min-h-0 min-w-0 flex-col rounded-[10px] border border-[#e7e7e7] bg-white p-4 sm:p-5" style={activityPanelHeight == null ? undefined : { height: `${activityPanelHeight}px` }}>
+        <div className="flex h-[298px] min-h-0 min-w-0 flex-col rounded-[10px] border border-[#e7e7e7] bg-white p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-[17px] font-semibold tracking-[-.02em] text-[#111]">Recent activity</h2>
@@ -325,11 +275,11 @@ const WorkerDashboard = ({ user, kpis, recentAccidents, recentClaims, recentComp
             ))}
           </div>
 
-          <div className="dashboard-activity-records mt-1 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="dashboard-activity-records mt-1 max-h-[153px] min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {visibleActivity.length ? (
               <div className="divide-y divide-[#ededed]">
                 {visibleActivity.map((activity) => (
-                  <div key={activity.id} data-activity-type={activity.type} className="flex h-[76px] shrink-0 items-center justify-between gap-3 py-2.5">
+                  <div key={activity.id} className="flex h-[76px] shrink-0 items-center justify-between gap-3 py-2.5">
                     <div className="flex min-w-0 items-center gap-3">
                       <span className={`flex h-10 w-10 shrink-0 items-center justify-center ${activity.type === 'Accidents' ? 'text-[#E87532]' : activity.type === 'Claims' ? 'text-[#C94A4A]' : 'text-[#587A96]'}`}>
                         {activity.type === 'Accidents' ? <AlertTriangle className="h-5 w-5" aria-hidden="true" /> : activity.type === 'Claims' ? <FileCheck2 className="h-5 w-5" aria-hidden="true" /> : <AlertOctagon className="h-5 w-5" aria-hidden="true" />}
@@ -351,10 +301,11 @@ const WorkerDashboard = ({ user, kpis, recentAccidents, recentClaims, recentComp
           </div>
         </div>
 
-        <aside className="dashboard-action-panel relative overflow-hidden rounded-[10px] border border-[#f0e4dc] p-5 sm:p-6" style={activityPanelHeight == null ? undefined : { height: `${activityPanelHeight}px` }}>
+        <aside className="dashboard-action-panel relative h-[298px] overflow-hidden rounded-[10px] border border-[#f0e4dc] p-5 sm:p-6">
           <div className="relative z-10 max-w-[390px]"><p className="text-[10px] font-bold uppercase tracking-[.17em] text-[#68635e]">Safety first</p><h2 className="mt-1 text-[23px] font-semibold tracking-[-.03em] text-[#111]">Need to take action?</h2><p className="mt-1 text-[14px] leading-[1.5] text-[#57534f]">Choose what you want to do. In case of an emergency, alert everyone immediately.</p></div>
         </aside>
       </section>
+      <EmergencyAlerts user={user} dialogOpen={emergencyDialogOpen} onDialogClose={() => setEmergencyDialogOpen(false)} />
     </div>
   );
 };

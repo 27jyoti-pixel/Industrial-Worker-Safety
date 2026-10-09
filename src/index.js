@@ -4,6 +4,7 @@ dns.setDefaultResultOrder('ipv4first');
 const app = require('./app');
 const config = require('./config/env');
 const connectDB = require('./config/db');
+const { initializeEmergencySocket } = require('./sockets/emergencySocket');
 
 // Handle Uncaught Exceptions
 process.on('uncaughtException', (err) => {
@@ -16,7 +17,9 @@ let server;
 // Connect Database and Start Server
 connectDB()
   .then(() => {
-    server = app.listen(config.port, () => {
+    server = require('http').createServer(app);
+    initializeEmergencySocket(server);
+    server.listen(config.port, () => {
       console.log('=======================================================');
       console.log(' Industrial Worker Safety & Compensation Backend API ');
       console.log(` Environment : ${config.env}`);

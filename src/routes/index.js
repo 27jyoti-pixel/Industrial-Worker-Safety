@@ -7,6 +7,7 @@ const claimRoutes = require('./claimRoutes');
 const hospitalRoutes = require('./hospitalRoutes');
 const complaintRoutes = require('./complaintRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
+const emergencyRoutes = require('./emergencyRoutes');
 
 const router = express.Router();
 
@@ -33,5 +34,6 @@ router.use('/complaints', complaintRoutes);
 
 // Mount Dashboard routes
 router.use('/dashboard', dashboardRoutes);
+router.use('/emergencies', emergencyRoutes);
 
 module.exports = router;
